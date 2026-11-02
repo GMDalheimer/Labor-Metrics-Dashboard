@@ -28,7 +28,8 @@ export async function overview(root) {
     `${M.desc} The map and the ranking show one year at a time. The year slider and the play control step through the available years; the color scale is fixed across years so that changes over time remain comparable.`));
 
   // Indicator selector grouped by category
-  const picker = h("div", { class: "picker" });
+  const picker = h("div", { class: "picker", role: "group", "aria-label": "Indicator" },
+    h("p", { class: "picker-title" }, "Indicator ", h("span", {}, "· select one to update the map and the ranking")));
   for (const cat of CATEGORIES) {
     const ms = METRICS.filter(m => m.cat === cat);
     picker.append(h("div", { class: "picker-row" }, h("span", { class: "picker-cat" }, cat),
@@ -475,17 +476,15 @@ function computeHour(d) {
   const nw = d.nonwage ? d.nonwage.v : .2;
   const wedge = d.wedge ? Math.max(d.wedge.v, nw) : nw + .15;
   const employer = cost0 * nw, employeeTax = cost0 * Math.max(0, wedge - nw), net = cost0 - employer - employeeTax;
-  const hours = d.hrs ? d.hrs.v : 1700, lost = S.sick * 8;
-  const absence = cost0 * (S.paidShare / 100) * lost / Math.max(1, hours - lost);
-  const total = cost0 + absence, va = d.vah ? d.vah.v : null;
-  return { net, employeeTax, employer, absence, total, va, per100: va ? 100 * total / va : null, assumed: { nonwage: !d.nonwage, wedge: !d.wedge } };
+  const total = cost0, va = d.vah ? d.vah.v : null;
+  return { net, employeeTax, employer, total, va, per100: va ? 100 * total / va : null, assumed: { nonwage: !d.nonwage, wedge: !d.wedge } };
 }
 
 export function hour(root) {
   const other = S.comps.find(c => c !== S.focus) || (S.focus === "DE" ? "PL" : "DE");
   root.append(pageHeader("Cost of an hour of work", "Composition of hourly labor cost",
     `Hourly labor cost per hour actually worked is split into net earnings, income tax and employee contributions, and employer contributions and other non-wage costs. ` +
-    `It is then related to nominal value added per hour worked. The scenario controls apply hypothetical changes to both economies. The comparison economy is the first country in the comparison list.`));
+    `It is then related to nominal value added per hour worked. The slider applies a hypothetical percentage change to hourly labor cost in both economies. The comparison economy is the first country in the comparison list.`));
   const sliders = h("div", { class: "sliders" });
   const mk = (label, key, min, max, step, unit) => {
     const out = h("b", {}, `${S[key]}${unit}`);
@@ -494,8 +493,6 @@ export function hour(root) {
     return h("div", { class: "slider" }, h("label", {}, h("span", {}, label), out), inp);
   };
   sliders.append(
-    mk("Additional employer-paid sick days per year", "sick", 0, 30, 1, " days"),
-    mk("Share of sick pay borne by employer", "paidShare", 0, 100, 5, "%"),
     mk("Change in hourly labor cost", "wageChange", -30, 50, 1, "%"));
   root.append(h("div", { class: "view-controls" },
     seg("Sector", [{ value: "C", label: "Manufacturing" }, { value: "TOTAL", label: "Business economy" }], S.hourNace, v => set({ hourNace: v })), sliders));
@@ -504,7 +501,6 @@ export function hour(root) {
     { key: "net", label: "Net earnings", color: cssVar("--s1") },
     { key: "employeeTax", label: "Income tax and employee contributions", color: cssVar("--s3") },
     { key: "employer", label: "Employer contributions and other costs", color: cssVar("--s4") },
-    { key: "absence", label: "Scenario: additional paid sick leave", color: cssVar("--s2") },
   ];
   const f1 = figure({ title: "Hourly labor cost by component", span: 7, sub: "EUR per hour actually worked, latest available year.",
     csv: () => [S.focus, other].map(g => ({ country: cname(g), ...computeHour(hourData(g)) })) });

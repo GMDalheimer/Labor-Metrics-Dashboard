@@ -19,7 +19,7 @@ export const S = {
   metric: "prod_hour",
   // view-specific
   year: null, ulcBasis: "per", tier: "manuf14", trend: "prod_hour", index: false,
-  hourNace: "C", sick: 0, paidShare: 100, wageChange: 0,
+  hourNace: "C", wageChange: 0,
   indLevel: "division", industry: "C29", indMetric: "va_worker", indYear: null,
   treeColor: "prod_nat", treeRoot: "TOTAL",
   model: "passthrough", regions: null, customY: "comp_pe", customX: "prod", customTY: "growth", customTX: "growth",
