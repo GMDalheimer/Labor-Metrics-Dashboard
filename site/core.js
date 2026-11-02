@@ -169,8 +169,11 @@ export const pct = d3.format("+.1%");
 export const pp = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1);
 export const cname = g => D.name.get(g) || g;
 export const sectorLabel = n => (D.sectors.find(s => s.nace === n) || {}).label || (D.nace?.get(n)) || n;
-export const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-export const isDark = () => document.documentElement.dataset.theme === "dark";
+// Colors are read from the document, or from a scoped element (the case-study slides are always light)
+let colorScope = null;
+export const setColorScope = el => { colorScope = el; };
+export const cssVar = n => getComputedStyle(colorScope || document.documentElement).getPropertyValue(n).trim();
+export const isDark = () => (colorScope || document.documentElement).dataset.theme === "dark";
 
 // Fixed categorical slots: focus, then comparison countries in the order chosen, EU27 neutral
 export function countryColor(geo) {

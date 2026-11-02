@@ -462,7 +462,7 @@ export function compare(root) {
 // ---------------------------------------------------------------------------
 // Composition of hourly labor cost
 // ---------------------------------------------------------------------------
-function hourData(geo) {
+export function hourData(geo) {
   const manuf = S.hourNace === "C";
   const lc = latest(manuf ? "lc_hour_c" : "lc_hour", geo);
   const fallback = !lc ? latest("comp_ph", geo, S.hourNace) : null;
@@ -470,9 +470,9 @@ function hourData(geo) {
     nonwage: latest(manuf ? "nonwage_share_c" : "nonwage_share", geo), wedge: latest("tax_wedge", geo),
     vah: latest("va_hour_nom", geo, S.hourNace), hrs: latest("hours_worker", geo, S.hourNace) };
 }
-function computeHour(d) {
+export function computeHour(d, change = 0) {
   if (!d.lc) return null;
-  const cost0 = d.lc.v * (1 + S.wageChange / 100);
+  const cost0 = d.lc.v * (1 + change / 100);
   const nw = d.nonwage ? d.nonwage.v : .2;
   const wedge = d.wedge ? Math.max(d.wedge.v, nw) : nw + .15;
   const employer = cost0 * nw, employeeTax = cost0 * Math.max(0, wedge - nw), net = cost0 - employer - employeeTax;
@@ -484,7 +484,7 @@ export function hour(root) {
   const other = S.comps.find(c => c !== S.focus) || (S.focus === "DE" ? "PL" : "DE");
   root.append(pageHeader("Cost of an hour of work", "Composition of hourly labor cost",
     `Hourly labor cost per hour actually worked is split into net earnings, income tax and employee contributions, and employer contributions and other non-wage costs. ` +
-    `It is then related to nominal value added per hour worked. The slider applies a hypothetical percentage change to hourly labor cost in both economies. The comparison economy is the first country in the comparison list.`));
+    `It is then related to nominal value added per hour worked. The slider applies a hypothetical percentage change to hourly labor cost in the selected economy only, holding value added per hour constant; the comparison economy is unchanged. The comparison economy is the first country in the comparison list.`));
   const sliders = h("div", { class: "sliders" });
   const mk = (label, key, min, max, step, unit) => {
     const out = h("b", {}, `${S[key]}${unit}`);
@@ -493,7 +493,7 @@ export function hour(root) {
     return h("div", { class: "slider" }, h("label", {}, h("span", {}, label), out), inp);
   };
   sliders.append(
-    mk("Change in hourly labor cost", "wageChange", -30, 50, 1, "%"));
+    mk(`Hypothetical change in hourly labor cost, ${cname(S.focus)} only`, "wageChange", -30, 80, 1, "%"));
   root.append(h("div", { class: "view-controls" },
     seg("Sector", [{ value: "C", label: "Manufacturing" }, { value: "TOTAL", label: "Business economy" }], S.hourNace, v => set({ hourNace: v })), sliders));
 
@@ -503,7 +503,7 @@ export function hour(root) {
     { key: "employer", label: "Employer contributions and other costs", color: cssVar("--s4") },
   ];
   const f1 = figure({ title: "Hourly labor cost by component", span: 7, sub: "EUR per hour actually worked, latest available year.",
-    csv: () => [S.focus, other].map(g => ({ country: cname(g), ...computeHour(hourData(g)) })) });
+    csv: () => [S.focus, other].map(g => ({ country: cname(g), ...computeHour(hourData(g), g === S.focus ? S.wageChange : 0) })) });
   const f2 = figure({ title: "Labor cost per EUR 100 of value added", span: 5, sub: "Hourly labor cost divided by nominal gross value added per hour worked, multiplied by 100." });
   root.append(grid(f1.el, f2.el));
   const summary = h("div", { class: "summary" });
@@ -516,7 +516,7 @@ export function hour(root) {
   const svg2 = svgEl(f2.body, w2, h2);
 
   function update() {
-    const rows = [S.focus, other].map(g => ({ geo: g, name: cname(g), d: hourData(g) })).map(r => ({ ...r, c: computeHour(r.d) })).filter(r => r.c);
+    const rows = [S.focus, other].map(g => ({ geo: g, name: cname(g), d: hourData(g) })).map(r => ({ ...r, c: computeHour(r.d, r.geo === S.focus ? S.wageChange : 0) })).filter(r => r.c);
     const x = d3.scaleLinear([0, (d3.max(rows, r => r.c.total) || 1) * 1.05], [m.l, width - m.r]);
     const y = d3.scaleBand(rows.map(r => r.geo), [m.t, height - m.b]).padding(.35);
     const t = svg.transition().duration(450);
@@ -553,6 +553,11 @@ export function hour(root) {
     if (a && b) {
       items.push({ label: `Ratio of hourly labor cost, ${b.name} / ${a.name}`, value: (b.c.total / a.c.total).toFixed(2), foot: "" });
       if (a.c.va && b.c.va) items.push({ label: `Ratio of value added per hour, ${b.name} / ${a.name}`, value: (b.c.va / a.c.va).toFixed(2), foot: "nominal" });
+      const a0 = computeHour(a.d, 0);
+      if (a0?.per100 && b.c.per100) {
+        const be = b.c.per100 / a0.per100 - 1;
+        items.push({ label: `Change in ${a.name}'s hourly labor cost at which its cost per €100 of value added equals ${b.name}'s`, value: pct(be), foot: "value added per hour held constant" });
+      }
     }
     summary.innerHTML = ""; summary.append(kpiRow(items));
     const caveats = rows.flatMap(r => [
