@@ -1,14 +1,19 @@
 {
-  "built": "2026-11-02T10:43:48Z",
+  "built": "2026-11-02T11:13:44Z",
   "sources": {
     "eurostat:nama_10_a64": {
       "ok": true,
-      "rows": 114195,
+      "rows": 411284,
       "note": ""
     },
     "eurostat:nama_10_a64_e": {
       "ok": true,
-      "rows": 88878,
+      "rows": 307770,
+      "note": ""
+    },
+    "eurostat:nama_10_lp_ulc": {
+      "ok": true,
+      "rows": 3464,
       "note": ""
     },
     "eurostat:earn_mw_cur": {
@@ -53,7 +58,7 @@
     },
     "eurostat:sbs": {
       "ok": true,
-      "rows": 2785,
+      "rows": 67504,
       "note": ""
     }
   },
@@ -61,7 +66,7 @@
   "coverage": {
     "sector_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE", "EL", "ES", "EU27_2020", "FI", "FR", "HR", "HU", "IE", "IS", "IT", "LT", "LU", "LV", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TR"],
     "country_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "DZ", "EE", "EG", "EL", "ES", "EU27_2020", "FI", "FR", "GH", "HR", "HU", "IE", "IS", "IT", "KE", "LT", "LU", "LV", "MA", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TN", "TR", "UK"],
-    "country_metrics": ["hours_week", "hours_week_c", "ilo_earnings_c_ppp", "ilo_earnings_c_usd", "ilo_earnings_ppp", "ilo_earnings_usd", "ilo_min_wage_ppp", "ilo_min_wage_usd", "ilo_output_worker_ppp", "lc_hour", "lc_hour_c", "min_wage_eur", "min_wage_pps", "min_wage_ratio", "nonwage_share", "nonwage_share_c", "tax_wedge"],
-    "industry_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE", "EL", "ES", "EU27_2020", "FI", "FR", "HR", "HU", "IE", "IS", "IT", "LT", "LU", "LV", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TR", "UK"]
+    "country_metrics": ["hours_week", "hours_week_c", "ilo_earnings_c_ppp", "ilo_earnings_c_usd", "ilo_earnings_ppp", "ilo_earnings_usd", "ilo_min_wage_ppp", "ilo_min_wage_usd", "ilo_output_worker_ppp", "lc_hour", "lc_hour_c", "min_wage_eur", "min_wage_pps", "min_wage_ratio", "nonwage_share", "nonwage_share_c", "rlp_index_hw", "rlp_index_per", "tax_wedge", "ulc_index_hw", "ulc_index_per"],
+    "industry_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE", "EL", "ES", "EU27_2020", "FI", "FR", "HR", "HU", "IE", "IS", "IT", "LT", "LU", "LV", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TR", "UK"]
   }
 }
