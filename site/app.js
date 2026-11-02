@@ -45,7 +45,7 @@ function buildContext() {
     const add = h("select", { class: "select add", "aria-label": "Add comparison country", onchange: e => { if (e.target.value) change({ comps: [...S.comps, e.target.value].slice(0, 3) }); } },
       h("option", { value: "" }, S.comps.length >= 3 ? "Maximum of three" : "Add country"),
       ...(S.comps.length >= 3 ? [] : countryOptions(true).filter(o => o.value !== S.focus && !S.comps.includes(o.value)).map(o => h("option", { value: o.value }, o.label))));
-    parts.push(h("div", { class: "field" }, h("span", { class: "field-label" }, "Compared with (highlighted)"), h("div", { class: "tags" }, tags, add)));
+    parts.push(h("div", { class: "field" }, h("span", { class: "field-label" }, "Compared with"), h("div", { class: "tags" }, tags, add)));
     // Context: any number of grey economies and regional groups
     const regions = [...new Set(D.countries.map(c => c.region))].filter(r => r !== "Aggregate");
     const ctxTags = [
@@ -61,7 +61,7 @@ function buildContext() {
       h("option", { value: "" }, "Add group"), ...regions.filter(r => !S.groups.includes(r)).map(r => h("option", { value: r }, r)));
     const allRegion = h("button", { class: "link-btn", title: "Add all economies of the selected country's region as grey context lines",
       onclick: () => change({ context: [...new Set([...S.context, ...D.countries.filter(c => c.region === D.region.get(S.focus) && c.geo !== S.focus && !S.comps.includes(c.geo)).map(c => c.geo)])] }) }, "+ region");
-    parts.push(h("div", { class: "field" }, h("span", { class: "field-label" }, "Also show (grey; hover to identify)"), h("div", { class: "tags" }, ctxTags, addCtx, addGrp, allRegion)));
+    parts.push(h("div", { class: "field" }, h("span", { class: "field-label" }, "Also show in grey"), h("div", { class: "tags" }, ctxTags, addCtx, addGrp, allRegion)));
   }
   if (ctx.includes("period")) {
     const ys = coverage("prod", "TOTAL").years;
@@ -86,7 +86,7 @@ async function render() {
   const token = ++rendering;
   const root = h("div", { class: "view" });
   app.innerHTML = ""; app.append(root);
-  document.title = `${VIEWS[S.view].label} · Labor Cost Atlas`;
+  document.title = `${VIEWS[S.view].label} | Labor Cost Atlas`;
   try { await VIEWS[S.view].fn(root); }
   catch (e) { console.error(e); if (token === rendering) root.append(h("p", { class: "empty" }, "This view could not be drawn: " + e.message)); }
 }
