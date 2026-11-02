@@ -26,7 +26,7 @@ export async function overview(root) {
 
   root.append(pageHeader("Overview",
     `${M.label}, ${D.countries.length} economies`,
-    `${M.desc} The map and the ranking show one year at a time. The year slider and the play control step through the available years; the color scale is fixed across years so that changes over time remain comparable.`));
+    `${M.desc} Use the slider to change the year, or press play to step through all years. Colors use the same scale in every year, so a darker shade always means a higher value.`));
 
   // Indicator selector grouped by category
   const picker = h("div", { class: "picker", role: "group", "aria-label": "Indicator" },
@@ -208,9 +208,8 @@ export function ulc(root) {
   const lg = (f, geo, y0, y1, nace) => { const a = f(geo, y0, nace), b = f(geo, y1, nace); return a > 0 && b > 0 ? 100 * Math.log(b / a) : null; };
 
   root.append(pageHeader("Unit labor costs", "Unit labor costs",
-    `Unit labor cost (ULC) is the cost of labor per unit of real output: compensation per employee divided by real value added per person employed. ` +
-    `Its change over time is decomposed exactly in logarithms, as shown below. ` +
-    `ULC levels are not comparable across countries because output is measured in national price levels; comparisons are therefore made in growth rates and indices.`));
+    `Unit labor cost (ULC) is what labor costs per unit of output: pay per employee divided by real output per worker. It goes up when pay grows faster than productivity. ` +
+    `Real output is measured at each country's own prices, so ULC levels can't be compared between countries. The charts compare how ULC has changed instead.`));
 
   root.append(disclosure("Definition and decomposition", tex(String.raw`\mathit{ULC}_{it} = \frac{W_{it}}{P_{it}} = \frac{D1_{it}/L_{it}}{\mathit{GVA}^{\,real}_{it}/E_{it}} \qquad\Longrightarrow\qquad \Delta\ln \mathit{ULC}_{i} = \underbrace{\Delta\ln W_{i}}_{\text{compensation}} \;-\; \underbrace{\Delta\ln P_{i}}_{\text{productivity}}`)));
   root.append(h("div", { class: "view-controls" },
@@ -451,7 +450,7 @@ function drawPosition(host, geo, metrics) {
 export function compare(root) {
   const geos = [...new Set([S.focus, ...S.comps])];
   root.append(pageHeader("Comparison", `${geos.map(cname).join(", ")}`,
-    "All indicators for the selected economies. Each economy keeps the same color in every chart. Countries are added or removed in the bar above."));
+    "Every indicator for the countries chosen in the bar above. A country has the same color in all charts."));
   root.append(h("div", { class: "view-controls" },
     seg("Scale", [{ value: false, label: "Levels" }, { value: true, label: `Index, ${S.base} = 100` }], S.index, v => set({ index: v })),
     legend([...geos.map(g => ({ label: cname(g), color: countryColor(g) })), { label: "EU27", color: cssVar("--eu") }])));
@@ -495,8 +494,8 @@ export function computeHour(d, change = 0) {
 export function hour(root) {
   const other = S.comps.find(c => c !== S.focus) || (S.focus === "DE" ? "PL" : "DE");
   root.append(pageHeader("Cost of an hour of work", "Composition of hourly labor cost",
-    `Hourly labor cost per hour actually worked is split into net earnings, income tax and employee contributions, and employer contributions and other non-wage costs. ` +
-    `It is then related to nominal value added per hour worked. The slider applies a hypothetical percentage change to hourly labor cost in the selected economy only, holding value added per hour constant; the comparison economy is unchanged. The comparison economy is the first country in the comparison list.`));
+    `What an employer pays for one hour of work, split into the worker's take-home pay, the taxes and contributions the worker pays, and the contributions the employer pays on top. ` +
+    `The second chart sets this cost against the value produced in that hour. The comparison country is the first one in the bar above. The slider changes labor cost in the selected country only.`));
   const sliders = h("div", { class: "sliders" });
   const mk = (label, key, min, max, step, unit) => {
     const out = h("b", {}, `${S[key]}${unit}`);
