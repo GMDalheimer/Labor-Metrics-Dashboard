@@ -4,10 +4,10 @@ import {
   d3, EU, S, D, writeHash, loadWorld, isSector, val, series, latest, snapshot, coverage, rankOf, endYear, growth,
   fmt, pct, pp, cname, sectorLabel, cssVar, countryColor, seqRamp, divRamp, h, showTip, hideTip, ttRow,
   pageHeader, figure, grid, select, seg, sectorOptions, kpiRow, svgEl, widthOf, axisLeft, axisBottom,
-  sparkline, lineChart, legend, scatter, yearOptions, comparisonSeries,
+  sparkline, lineChart, legend, scatter, yearOptions, comparisonSeries, tex, disclosure,
 } from "./core.js";
 import { ols, stars, fmtP } from "./stats.js";
-import { tex } from "./views2.js";
+
 
 export const rerender = () => window.dispatchEvent(new Event("lca:render"));
 const set = (patch, push = false) => { Object.assign(S, patch); writeHash(push); rerender(); };
@@ -48,6 +48,7 @@ export async function overview(root) {
   const f1 = figure({ title: M.label, span: 7,
     sub: `${M.unit}${isSector(S.metric) ? " · " + sectorLabel(S.nace) : ""}`,
     note: `Source: ${M.source}. Grey: no data for the selected year. Click a country to open its profile.`,
+    method: [M.desc],
     csv: () => snapshot(S.metric, S.year).map(d => ({ country: d.name, year: S.year, value: d.v })) });
   const f2 = figure({ title: "Ranking", span: 5, sub: `Highest to lowest, ${"year shown on the map"}. Dashed line: EU27.`,
     csv: () => snapshot(S.metric, S.year).sort((a, b) => b.v - a.v).map((d, i) => ({ rank: i + 1, country: d.name, value: d.v })) });
@@ -211,7 +212,7 @@ export function ulc(root) {
     `Its change over time is decomposed exactly in logarithms, as shown below. ` +
     `ULC levels are not comparable across countries because output is measured in national price levels; comparisons are therefore made in growth rates and indices.`));
 
-  root.append(h("div", { class: "eq-block" }, tex(String.raw`\mathit{ULC}_{it} = \frac{W_{it}}{P_{it}} = \frac{D1_{it}/L_{it}}{\mathit{GVA}^{\,real}_{it}/E_{it}} \qquad\Longrightarrow\qquad \Delta\ln \mathit{ULC}_{i} = \underbrace{\Delta\ln W_{i}}_{\text{compensation}} \;-\; \underbrace{\Delta\ln P_{i}}_{\text{productivity}}`)));
+  root.append(disclosure("Definition and decomposition", tex(String.raw`\mathit{ULC}_{it} = \frac{W_{it}}{P_{it}} = \frac{D1_{it}/L_{it}}{\mathit{GVA}^{\,real}_{it}/E_{it}} \qquad\Longrightarrow\qquad \Delta\ln \mathit{ULC}_{i} = \underbrace{\Delta\ln W_{i}}_{\text{compensation}} \;-\; \underbrace{\Delta\ln P_{i}}_{\text{productivity}}`)));
   root.append(h("div", { class: "view-controls" },
     seg("Basis", [{ value: "per", label: "Per person" }, { value: "hour", label: "Per hour worked" }], basis, v => set({ ulcBasis: v }))));
 
@@ -236,7 +237,8 @@ export function ulc(root) {
   });
   const f1 = figure({ title: `Unit labor cost index, ${sectorLabel(S.nace).toLowerCase()}`, span: 7,
     sub: `Index, ${base} = 100. Nominal compensation ${basis === "hour" ? "per hour worked by employees" : "per employee"} divided by real value added ${basis === "hour" ? "per hour worked" : "per person employed"}.`,
-    note: "Source: Eurostat nama_10_a64, nama_10_a64_e; author's calculation. Dashed: EU27 aggregate. Grey: context economies (hover to identify). Dotted with shaded band: group median and range.",
+    note: "Source: Eurostat nama_10_a64, nama_10_a64_e; author's calculation. Dashed: EU27 aggregate (weighted). Grey: context economies (hover to identify). Dotted with shaded band: unweighted group median and range.",
+    method: [String.raw`$I_{it} = 100 \cdot \frac{\mathit{ULC}_{it}}{\mathit{ULC}_{i,t_0}}, \qquad \mathit{ULC}_{it} = \frac{D1_{it}/L_{it}}{\mathit{GVA}^{\,real}_{it}/E_{it}}`, "Each line is divided by its own value in the base year, so all lines start at 100. A value of 150 means that unit labor cost is 50% higher than in the base year."],
     csv: () => idxList.flatMap(s => s.data.map(d => ({ country: s.label, year: d.year, index: d.v }))) });
 
   // Figure: annual decomposition for focus
@@ -246,7 +248,8 @@ export function ulc(root) {
   }).filter(Boolean);
   const f2 = figure({ title: `Annual change in unit labor cost, ${cname(S.focus)}`, span: 5,
     sub: "Log points. Bars: contribution of compensation growth and of productivity growth (shown with negative sign). Dot: ULC change.",
-    note: "A negative productivity bar means productivity rose and lowered unit labor cost.",
+    note: "A negative productivity bar means productivity rose and lowered unit labor cost. Source: Eurostat national accounts; author's calculation.",
+    method: [String.raw`$\Delta \ln \mathit{ULC}_{it} = \underbrace{\Delta \ln W_{it}}_{\text{blue bar}} \; - \; \underbrace{\Delta \ln P_{it}}_{\text{teal bar}}`, "Changes are year-on-year log changes multiplied by 100. The two bars add up exactly to the dot."],
     csv: () => dec.map(d => ({ year: d.year, compensation_contribution: d.comp, productivity_contribution: d.prod, ulc_change: d.ulc })) });
   root.append(grid(f1.el, f2.el));
   lineChart(f1.body, idxList, { height: 380, yFormat: d3.format(".0f"), indexLine: true });
@@ -261,6 +264,7 @@ export function ulc(root) {
   const f3 = figure({ title: `Compensation and productivity growth, ${base}–${end}`, span: 7,
     sub: "Cumulative change in log points. The horizontal distance between the two markers equals the change in unit labor cost. Sorted by ULC change.",
     note: "Source: Eurostat national accounts; author's calculation.",
+    method: [String.raw`$\Delta \ln \mathit{ULC}_{i} = \Delta \ln W_{i} - \Delta \ln P_{i}`, "The teal marker is the cumulative change in real productivity, the blue marker the cumulative change in compensation per employee, both in log points over the selected period. The number on the right is their difference: the change in unit labor cost."],
     csv: () => rows.map(r => ({ country: r.name, compensation_growth: r.comp, productivity_growth: r.prod, ulc_change: r.ulc })) });
 
   // Figure: ULC growth vs productivity growth with OLS fit
@@ -268,6 +272,7 @@ export function ulc(root) {
   const fit = pts.length > 5 ? ols(pts.map(p => ({ y: p.y, x: [p.x] })), ["Productivity growth"]) : null;
   const f4 = figure({ title: "ULC growth and productivity growth", span: 5,
     sub: `Average annual log change, ${base}–${end}, in percent. Line: OLS fit with 95% confidence band (HC1).`,
+    method: [String.raw`$g^{\mathit{ULC}}_{i} = \alpha + \beta\, g^{P}_{i} + \varepsilon_i`, "Ordinary least squares across economies with heteroskedasticity-robust (HC1) standard errors; g denotes average annual log growth in percent. Since ULC growth equals compensation growth minus productivity growth, β = −1 would mean compensation growth is unrelated to productivity growth and β = 0 that it moves one for one."],
     note: fit ? `Slope ${fit.coefs[1].b.toFixed(2)} (SE ${fit.coefs[1].se.toFixed(2)}, p ${fmtP(fit.coefs[1].p)}), n = ${fit.n}, R² = ${fit.r2.toFixed(2)}. A slope of −1 would mean that productivity gains are not passed on to compensation at all; a slope of 0 means they are passed on one for one.` : "" });
   root.append(grid(f3.el, f4.el));
   drawDumbbell(f3.body, rows);
@@ -509,9 +514,11 @@ export function hour(root) {
     { key: "employeeTax", label: "Income tax and employee contributions", color: cssVar("--s2") },
     { key: "employer", label: "Employer contributions and other costs", color: cssVar("--s3") },
   ];
-  const f1 = figure({ title: "Hourly labor cost by component", span: 7, sub: "EUR per hour actually worked, latest available year.",
+  const f1 = figure({ title: "Hourly labor cost by component", span: 7, sub: "EUR per hour actually worked, latest available year.", note: " ",
+    method: [String.raw`$\begin{aligned} \text{employer costs} &= \mathit{LC}^{h} s^{nw} \\ \text{taxes and employee contributions} &= \mathit{LC}^{h}\max(0,\ \tau - s^{nw}) \\ \text{net earnings} &= \mathit{LC}^{h} - \text{employer costs} - \text{taxes and employee contributions} \end{aligned}`],
     csv: () => [S.focus, other].map(g => ({ country: cname(g), ...computeHour(hourData(g), g === S.focus ? S.wageChange : 0) })) });
-  const f2 = figure({ title: "Labor cost per EUR 100 of value added", span: 5, sub: "Hourly labor cost divided by nominal gross value added per hour worked, multiplied by 100." });
+  const f2 = figure({ title: "Labor cost per EUR 100 of value added", span: 5, sub: "Hourly labor cost divided by nominal gross value added per hour worked, multiplied by 100.", note: " ",
+    method: [String.raw`$\kappa_{i} = 100 \cdot \frac{\mathit{LC}^{h}_{i}}{\mathit{GVA}^{\,nom}_{i} / H_{i}}`] });
   root.append(grid(f1.el, f2.el));
   const summary = h("div", { class: "summary" });
   root.append(summary);

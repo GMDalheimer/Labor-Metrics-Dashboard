@@ -3,9 +3,11 @@ import { S, D, EU, load, readHash, writeHash, h, select, countryOptions, sectorO
 import { overview, ulc, country, compare, hour, stopPlay } from "./views1.js";
 import { industries, structure, analysis, methods } from "./views2.js";
 import { casestudy } from "./views3.js";
+import { home } from "./views4.js";
 
 const VIEWS = {
-  overview:   { label: "Overview",          fn: overview,   ctx: ["focus", "sector"] },
+  home:       { label: "Home",              fn: home,       ctx: [] },
+  overview:   { label: "Map",               fn: overview,   ctx: ["focus", "sector"] },
   ulc:        { label: "Unit labor costs",  fn: ulc,        ctx: ["focus", "comps", "period", "sector"] },
   country:    { label: "Country profile",   fn: country,    ctx: ["focus", "period"] },
   compare:    { label: "Comparison",        fn: compare,    ctx: ["focus", "comps", "period"] },
@@ -76,7 +78,7 @@ function buildContext() {
 let rendering = 0;
 async function render() {
   stopPlay(); hideTip(); resetFigures();
-  if (!VIEWS[S.view]) S.view = "overview";
+  if (!VIEWS[S.view]) S.view = "home";
   if (!D.name.has(S.focus)) S.focus = D.countries[0].geo;
   S.comps = S.comps.filter(c => D.name.has(c) && c !== S.focus);
   S.context = S.context.filter(c => D.name.has(c) && c !== S.focus && !S.comps.includes(c));

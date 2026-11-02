@@ -10,7 +10,7 @@ const rerender = () => window.dispatchEvent(new Event("lca:render"));
 
 const TOPICS = [
   { key: "cost", q: "Is it a cost-competitive place to produce?", d: "How much labor costs per unit of output, and how that has changed compared with other countries" },
-  { key: "catchup", q: "Is it catching up with the EU?", d: "Output and pay per worker relative to the EU average over time" },
+  { key: "catchup", q: "Is it catching up with the EU?", d: "Output and pay per worker relative to the EU as a whole over time" },
   { key: "pay", q: "How well are workers paid?", d: "Pay per employee, the minimum wage and the share of income that goes to workers" },
   { key: "breakdown", q: "What does an hour of work cost an employer, and where does the money go?", d: "Take-home pay, taxes and contributions in one hour of labor cost" },
   { key: "industries", q: "Which industries drive the economy?", d: "Where people work and how productive those activities are" },
@@ -32,7 +32,7 @@ function presets(geo) {
     { value: "neighbours", label: `Its neighbours (${region})`, comps: D.countries.filter(c => c.region === region && has(c.geo)).map(c => c.geo).slice(0, 3) },
     { value: "investors", label: "Countries competing for the same investors", comps: ["PL", "HU", "RO", "BG", "SK", "CZ"].filter(has).slice(0, 3) },
     { value: "large", label: "Large EU economies", comps: ["DE", "FR", "IT"].filter(has) },
-    { value: "eu", label: "Only the EU average", comps: [] },
+    { value: "eu", label: "Only the EU as a whole", comps: [] },
     { value: "custom", label: "I will choose", comps: null },
   ];
 }
@@ -66,10 +66,10 @@ export async function casestudy(root) {
     })));
 
   const custom = CS.preset === "custom";
-  step(3, "Who should it be compared with?", "The EU average is always included.",
+  step(3, "Who should it be compared with?", "The EU as a whole (EU27 aggregate) is always included.",
     h("div", { class: "choice-row" }, ps.map(p => h("button", { class: `choice ${CS.preset === p.value ? "on" : ""}`,
       onclick: () => { CS.preset = p.value; if (p.comps) CS.comps = p.comps; rerender(); } }, p.label))),
-    h("p", { class: "step-help" }, CS.comps.length ? `Selected: ${CS.comps.map(cname).join(", ")} and the EU average.` : "Selected: the EU average."),
+    h("p", { class: "step-help" }, CS.comps.length ? `Selected: ${CS.comps.map(cname).join(", ")} and the EU27.` : "Selected: the EU27."),
     custom ? h("div", { class: "tags" }, CS.comps.map(g => h("button", { class: "tag", onclick: () => { CS.comps = CS.comps.filter(x => x !== g); rerender(); } }, cname(g), h("span", { class: "x" }, "×"))),
       CS.comps.length < 3 ? h("select", { class: "select add", "aria-label": "Add a country", onchange: e => { if (e.target.value) { CS.comps.push(e.target.value); rerender(); } } },
         h("option", { value: "" }, "Add a country"), ...countryOptions().filter(o => o.value !== CS.geo && !CS.comps.includes(o.value)).map(o => h("option", { value: o.value }, o.label))) : null) : null);
@@ -188,7 +188,7 @@ async function brief(root) {
   cover.append(
     h("p", { class: "kicker" }, "Country brief"),
     h("h1", { class: "cover-title" }, name),
-    h("p", { class: "cover-sub" }, `Labor costs and productivity, ${base}–${end}, compared with ${CS.comps.length ? CS.comps.map(cname).join(", ") + " and " : ""}the EU average`),
+    h("p", { class: "cover-sub" }, `Labor costs and productivity, ${base}–${end}, compared with ${CS.comps.length ? CS.comps.map(cname).join(", ") + " and " : ""}the EU27`),
     kpiRow([
       ph ? { label: "Value added per hour worked", value: fmt("prod_hour", ph.v), foot: `${ph.year}; EU ${fmt("prod_hour", val("prod_hour", EU, ph.year, "TOTAL"))}` } : null,
       lc ? { label: "Hourly labor cost", value: fmt("lc_hour", lc.v), foot: `${lc.year}; EU ${fmt("lc_hour", val("lc_hour", EU, lc.year))}` } : null,
@@ -224,7 +224,7 @@ async function brief(root) {
     if (F.catchup) {
       const b = page(TOPICS[1].q, F.catchup.text);
       twoCol(b, [
-        "The lines show output per hour worked as a percentage of the EU average in the same year. A rising line means the gap to the EU is narrowing.",
+        "The lines show output per hour worked as a percentage of the EU27 aggregate in the same year. A rising line means the gap to the EU is narrowing.",
         "Output is measured in constant euros at national prices, so the comparison does not adjust for differences in price levels between countries.",
       ], host => {
         lineChart(fig(host, "Output per hour worked relative to the EU", "Percent of the EU27 value", "Source: Eurostat national accounts."), lines("prod_hour", relEU("prod_hour")).filter(s => s.key !== EU), { height: 300, yFormat: v => v.toFixed(0) + "%", refLine: 100 });
@@ -232,7 +232,7 @@ async function brief(root) {
       });
       if (detailed) {
         const b2 = page(TOPICS[1].q, "Pay per employee relative to the EU");
-        twoCol(b2, ["Pay per employee in euros as a percentage of the EU average. It includes employer social contributions."],
+        twoCol(b2, ["Pay per employee in euros as a percentage of the EU27 aggregate. It includes employer social contributions."],
           host => { lineChart(fig(host, "Pay per employee relative to the EU", "Percent of the EU27 value, nominal euros", "Source: Eurostat national accounts."), lines("comp_pe", relEU("comp_pe")).filter(s => s.key !== EU), { height: 300, yFormat: v => v.toFixed(0) + "%", refLine: 100 }); host.append(lgd()); });
       }
     }

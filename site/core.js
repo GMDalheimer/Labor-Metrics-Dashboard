@@ -10,7 +10,7 @@ const tip = document.getElementById("tooltip");
 // by every view and mirrored in the URL so a view can be shared as a link.
 // ---------------------------------------------------------------------------
 export const S = {
-  view: "overview",
+  view: "home",
   focus: "RS",
   comps: ["HU", "PL", "RO"],
   context: [],          // any number of grey context economies
@@ -201,7 +201,7 @@ export function comparisonSeries(dataFn, { includeEU = true } = {}) {
     for (const g of members) for (const d of dataFn(g)) { if (!per.has(d.year)) per.set(d.year, []); per.get(d.year).push(d.v); }
     const data = [...per].filter(([, vs]) => vs.length >= Math.max(2, Math.ceil(members.length / 2))).sort((a, b) => a[0] - b[0])
       .map(([year, vs]) => ({ year, v: d3.median(vs), lo: d3.min(vs), hi: d3.max(vs), n: vs.length }));
-    out.push({ key: "grp:" + grp, label: `${grp} (median)`, color: cssVar("--text-2"), width: 1.8, dash: "2 3", band: true, data });
+    out.push({ key: "grp:" + grp, label: `${grp} (median, unweighted)`, color: cssVar("--text-2"), width: 1.8, dash: "2 3", band: true, data });
   }
   return out.filter(s => s.data.length);
 }
@@ -251,22 +251,40 @@ export function pageHeader(kicker, title, desc) {
 // A figure: numbered title, subtitle, chart body, note. No box.
 let figNo = 0;
 export const resetFigures = () => { figNo = 0; };
-export function figure({ title, sub, note, csv, png = true, span = 12, controls }) {
+// Typeset LaTeX with KaTeX (plain source if KaTeX is unavailable)
+export function tex(src, display = true) {
+  const el = h("span", { class: display ? "tex tex-display" : "tex" });
+  try { window.katex.render(src, el, { displayMode: display, throwOnError: false }); }
+  catch (e) { el.textContent = src; }
+  return el;
+}
+
+// A figure: title, one-line description, chart, and a collapsed "Source and method" section
+export function figure({ title, sub, note, method, csv, png = true, span = 12, controls }) {
   figNo += 1;
   const body = h("div", { class: "fig-body" });
   const tools = h("div", { class: "fig-tools" });
   if (png) tools.append(h("button", { class: "link-btn", onclick: () => exportPNG(body.querySelector("svg"), title) }, "PNG"));
   if (csv) tools.append(h("button", { class: "link-btn", onclick: () => exportCSV(csv(), title) }, "CSV"));
-  const noteEl = h("p", { class: "fig-note", html: note || "" });
+  const noteEl = h("div", { class: "fig-note", html: note || "" });
+  const methodEl = h("div", { class: "fig-method" });
+  if (method) {
+    for (const m of [].concat(method)) methodEl.append(typeof m === "string" && m.startsWith("$") ? tex(m.slice(1)) : h("p", { html: m }));
+  }
+  const more = note || method ? h("details", { class: "more" }, h("summary", {}, "Source and method"), methodEl, noteEl) : noteEl;
   const el = h("figure", { class: `fig span-${span}` },
     h("div", { class: "fig-head" },
       h("div", {},
-        h("h2", { class: "fig-title" }, h("span", { class: "fig-no" }, `Figure ${figNo}`), title),
+        h("h2", { class: "fig-title" }, h("span", { class: "fig-no" }, `Figure ${figNo}. `), title),
         sub ? h("p", { class: "fig-sub" }, sub) : null),
       tools),
     controls ? h("div", { class: "fig-controls" }, controls) : null,
-    body, noteEl);
+    body, more);
   return { el, body, note: noteEl };
+}
+// Collapsible block for definitions and formulas
+export function disclosure(label, ...kids) {
+  return h("details", { class: "more block" }, h("summary", {}, label), h("div", { class: "more-body" }, ...kids));
 }
 export const grid = (...kids) => h("div", { class: "grid" }, ...kids);
 
