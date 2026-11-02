@@ -1,59 +1,87 @@
-name: Build and deploy dashboard
+name: Data and site
 
 on:
   push:
-    branches: [main]
-  pull_request:
+    branches: ["**"]
   workflow_dispatch:
   schedule:
-    - cron: "17 4 3 * *"   # monthly, 3rd at 04:17 UTC, picks up Eurostat revisions
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+    - cron: "17 4 3 * *"   # monthly: picks up Eurostat and ILOSTAT revisions
 
 concurrency:
-  group: pages-${{ github.ref }}
-  cancel-in-progress: true
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  build:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      data: ${{ steps.filter.outputs.data }}
     steps:
       - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            data:
+              - 'R/**'
+              - 'config/**'
 
+  data:
+    needs: changes
+    if: github.event_name != 'push' || needs.changes.outputs.data == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
       - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
-
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           packages: |
             any::eurostat
+            any::Rilostat
             any::dplyr
             any::tidyr
             any::readr
-
-      - name: Build panel from Eurostat
+            any::jsonlite
+      - name: Build data
         run: Rscript R/build_data.R
-
-      - uses: quarto-dev/quarto-actions/setup@v2
-
-      - name: Render dashboard
-        run: quarto render
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
+      - name: Commit data snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then echo "No data changes"; exit 0; fi
+          git commit -m "Data refresh $(date -u +%Y-%m-%d)"
+          git pull --rebase origin ${{ github.ref_name }}
+          git push origin HEAD:${{ github.ref_name }}
 
   deploy:
-    if: github.event_name != 'pull_request'
-    needs: build
+    needs: [changes, data]
+    if: always() && github.ref == 'refs/heads/main' && needs.data.result != 'failure' && needs.data.result != 'cancelled'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp -r site/. _site/
+          cp -r data _site/data
+          cp config/*.csv _site/data/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

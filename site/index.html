@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Labour Cost Atlas</title>
+  <meta name="description" content="Productivity, labour costs, wages and working time across Europe, the Western Balkans and North Africa.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Fallbacks for the TBI typefaces (Aeonik, PP Editorial New), used when those are not installed locally -->
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#/atlas">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">Labour Cost <em>Atlas</em></span>
+    </a>
+    <nav class="nav" id="nav">
+      <a href="#/atlas" data-view="atlas">Atlas</a>
+      <a href="#/country" data-view="country">Country</a>
+      <a href="#/compare" data-view="compare">Compare</a>
+      <a href="#/hour" data-view="hour">True cost of an hour</a>
+      <a href="#/sectors" data-view="sectors">Sectors</a>
+      <a href="#/industries" data-view="industries">FDI industries</a>
+      <a href="#/convergence" data-view="convergence">Convergence</a>
+      <a href="#/data" data-view="data">Data</a>
+    </nav>
+    <div class="topbar-tools">
+      <button class="icon-btn" id="theme-toggle" title="Toggle light and dark" aria-label="Toggle light and dark mode">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9c0-.5 0-1-.1-1.4A5.5 5.5 0 0 1 12.4 3.1L12 3z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="app" aria-live="polite">
+    <div class="loading">
+      <div class="loading-ring"></div>
+      <p>Loading the atlas</p>
+    </div>
+  </main>
+
+  <div id="tooltip" class="tooltip" role="tooltip"></div>
+
+  <footer class="footer">
+    <span>Sources: Eurostat, ILOSTAT. <span id="build-date"></span></span>
+    <span>Tony Blair Institute for Global Change · Serbia team</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,51 +1,55 @@
-# Labor Metrics Dashboard
+# Labour Cost Atlas
 
-An interactive dashboard on Serbia's labour-market competitiveness (TBI). It compares productivity, compensation and unit labour costs against CEE, Western Balkan and EU comparators.
+Productivity, labour costs, wages and working time across Europe, the Western Balkans and North Africa. Built by TBI's Serbia team.
 
-**Live site:** https://gmdalheimer.github.io/labor-metrics-dashboard/
+**Live site:** https://gmdalheimer.github.io/Labor-Metrics-Dashboard/
+
+## Views
+
+| View | What it does |
+|---|---|
+| Atlas | Animated map and ranking for any indicator; press play to watch 2000 to today |
+| Country | Profile for any country: indicator tiles with ranks, a "fingerprint" of its position among all countries, trends vs region and EU27 |
+| Compare | Up to four countries across every indicator, as levels or indexed |
+| True cost of an hour | Take-home pay → taxes → employer costs → sick-leave scenario, against value added per hour |
+| Sectors | Unit labour cost decomposition (pay vs productivity) and a sector × country productivity heatmap |
+| FDI industries | Automotive parts, apparel, footwear, electrical equipment: value added per worker vs wage share |
+| Convergence | β-convergence (bubble chart) and σ-convergence |
+| Data | Coverage matrix, source status, definitions, CSV downloads |
+
+The URL always reflects the current view, so any view can be shared as a link.
 
 ## How it works
 
 ```
-Eurostat (bulk) ──> R/build_data.R ──> data/panel.csv ──> index.qmd (Quarto + Observable JS) ──> GitHub Pages
+Eurostat + ILOSTAT ──> R/build_data.R ──> data/*.csv (committed) ──> site/ (HTML + D3) ──> GitHub Pages
 ```
 
-- `R/build_data.R` downloads `nama_10_a64` and `nama_10_a64_e`, derives the indicators, runs the build checks and writes `data/panel.csv` and `data/checks.csv`. The build fails if the manufacturing branches do not tile C.
-- `index.qmd` is a Quarto dashboard. Charts are drawn in the browser with Observable Plot, so every filter works on the static site and no server is needed.
-- GitHub Actions rebuilds the site on every push to `main`, monthly to pick up Eurostat revisions, and on demand (Actions → *Build and deploy dashboard* → *Run workflow*). Pull requests are built but not deployed.
+- `R/build_data.R` downloads every source independently. A failing source is recorded in `data/meta.json` and shown on the Data page; it does not break the build. The build stops only if the core national accounts are missing or the manufacturing branches do not tile C.
+- GitHub Actions rebuilds the data whenever `R/` or `config/` changes, and on the 3rd of every month. The data is committed back to the repo, so every number shown can be traced to a commit.
+- `site/` is plain HTML, CSS and JavaScript with D3, with no build step. Pushing to `main` deploys.
 
-## Pages
+## Sources
 
-| Page | What it shows |
+| Source | Used for |
 |---|---|
-| Overview | Serbia vs its 2016 position: productivity, pay and ULC, plus productivity relative to EU27 |
-| Explorer | Any indicator × sector × comparator set, as levels or indexed, with a table view |
-| ULC decomposition | ULC change split into compensation and productivity effects, by sector |
-| Convergence | β-convergence (starting level vs growth) and σ-convergence (dispersion over time) |
-| Coverage & methods | Data availability by country × sector, build checks, and definitions |
+| Eurostat `nama_10_a64`, `nama_10_a64_e` | Productivity, compensation, ULC, labour and profit shares, hours |
+| Eurostat `lc_lci_lev` | Hourly labour cost and its non-wage share |
+| Eurostat `earn_mw_cur`, `earn_mw_avgr2` | Minimum wages |
+| Eurostat `earn_nt_taxwedge` | Tax wedge (low-wage single earner) |
+| Eurostat SBS (`sbs_na_ind_r2`, `sbs_ovw_act`) | FDI-intensive industries |
+| ILOSTAT | Weekly hours, output per worker, earnings and minimum wages (covers North Africa, Kenya, Ghana) |
+
+## Typography
+
+The CSS asks for Aeonik and PP Editorial New first, so the site shows TBI's typefaces on any machine where they are installed. Everyone else sees the open fallbacks Manrope and Instrument Serif. No font files are hosted here.
 
 ## Changing the scope
 
-- **Countries:** `config/countries.csv` (the `group` column drives the convergence filters).
-- **Sectors and tiers:** `config/sectors.csv`. Uses Eurostat `nace_r2` codes. `manuf14` must tile C, because the build checks this.
+- **Countries:** `config/countries.csv`. Use the Eurostat `geo` code, ISO3 code for ILOSTAT, and ISO numeric code for the map.
+- **Sectors:** `config/sectors.csv`. `manuf14` must tile C.
+- **Indicators shown:** `site/metrics.js`.
 
-## Run locally
+## Not yet included
 
-```r
-install.packages(c("eurostat", "dplyr", "tidyr", "readr"))
-source("R/build_data.R")
-```
-
-Then run `quarto preview` from the repo root.
-
-## Indicator definitions
-
-| Indicator | Definition |
-|---|---|
-| Real productivity | B1G (CLV20_MEUR) / EMP_DC, EUR per person |
-| Compensation per employee | D1 (CP_MEUR) / SAL_DC, EUR |
-| Unit labour cost | compensation per employee / real productivity |
-| Labour share | D1 / B1G (CP_MEUR), unadjusted |
-| Employer contribution rate | (D1 − D11) / D11 |
-
-Rest of manufacturing is C − C26 − C29. It is exact for nominal values and headcounts and approximate for chain-linked GVA.
+Statutory sick-leave rules and legal working time from the Project 2 research. These will be added as a hand-maintained CSV in `config/`.

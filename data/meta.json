@@ -1,0 +1,67 @@
+{
+  "built": "2026-11-02T10:43:48Z",
+  "sources": {
+    "eurostat:nama_10_a64": {
+      "ok": true,
+      "rows": 114195,
+      "note": ""
+    },
+    "eurostat:nama_10_a64_e": {
+      "ok": true,
+      "rows": 88878,
+      "note": ""
+    },
+    "eurostat:earn_mw_cur": {
+      "ok": true,
+      "rows": 1355,
+      "note": ""
+    },
+    "eurostat:earn_mw_avgr2": {
+      "ok": true,
+      "rows": 400,
+      "note": ""
+    },
+    "eurostat:earn_nt_taxwedge": {
+      "ok": true,
+      "rows": 789,
+      "note": ""
+    },
+    "eurostat:lc_lci_lev": {
+      "ok": true,
+      "rows": 1179,
+      "note": ""
+    },
+    "ilostat:weekly_hours": {
+      "ok": true,
+      "rows": 93823,
+      "note": ""
+    },
+    "ilostat:output_per_worker_GDP_211P_NOC_NB_A": {
+      "ok": true,
+      "rows": 1118,
+      "note": ""
+    },
+    "ilostat:monthly_earnings": {
+      "ok": true,
+      "rows": 190785,
+      "note": ""
+    },
+    "ilostat:minimum_wage": {
+      "ok": true,
+      "rows": 2523,
+      "note": ""
+    },
+    "eurostat:sbs": {
+      "ok": true,
+      "rows": 2785,
+      "note": ""
+    }
+  },
+  "tiling_worst_gap": 0.0005,
+  "coverage": {
+    "sector_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE", "EL", "ES", "EU27_2020", "FI", "FR", "HR", "HU", "IE", "IS", "IT", "LT", "LU", "LV", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TR"],
+    "country_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "DZ", "EE", "EG", "EL", "ES", "EU27_2020", "FI", "FR", "GH", "HR", "HU", "IE", "IS", "IT", "KE", "LT", "LU", "LV", "MA", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TN", "TR", "UK"],
+    "country_metrics": ["hours_week", "hours_week_c", "ilo_earnings_c_ppp", "ilo_earnings_c_usd", "ilo_earnings_ppp", "ilo_earnings_usd", "ilo_min_wage_ppp", "ilo_min_wage_usd", "ilo_output_worker_ppp", "lc_hour", "lc_hour_c", "min_wage_eur", "min_wage_pps", "min_wage_ratio", "nonwage_share", "nonwage_share_c", "tax_wedge"],
+    "industry_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE", "EL", "ES", "EU27_2020", "FI", "FR", "HR", "HU", "IE", "IS", "IT", "LT", "LU", "LV", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TR", "UK"]
+  }
+}

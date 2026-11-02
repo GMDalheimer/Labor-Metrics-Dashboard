@@ -1,32 +1,46 @@
-geo,name,group
-RS,Serbia,Serbia
-MK,North Macedonia,Western Balkans
-AL,Albania,Western Balkans
-ME,Montenegro,Western Balkans
-BA,Bosnia and Herzegovina,Western Balkans
-TR,Türkiye,Other
-BG,Bulgaria,CEE
-CZ,Czechia,CEE
-EE,Estonia,CEE
-HR,Croatia,CEE
-HU,Hungary,CEE
-LT,Lithuania,CEE
-LV,Latvia,CEE
-PL,Poland,CEE
-RO,Romania,CEE
-SI,Slovenia,CEE
-SK,Slovakia,CEE
-AT,Austria,EU West
-BE,Belgium,EU West
-DE,Germany,EU West
-DK,Denmark,EU West
-ES,Spain,EU West
-FI,Finland,EU West
-FR,France,EU West
-GR,Greece,EU West
-IE,Ireland,EU West
-IT,Italy,EU West
-NL,Netherlands,EU West
-PT,Portugal,EU West
-SE,Sweden,EU West
-EU27_2020,EU27 average,Aggregate
+geo,iso3,isonum,name,region
+AT,AUT,040,Austria,Western Europe
+BE,BEL,056,Belgium,Western Europe
+BG,BGR,100,Bulgaria,Central & Eastern Europe
+CY,CYP,196,Cyprus,Southern Europe
+CZ,CZE,203,Czechia,Central & Eastern Europe
+DE,DEU,276,Germany,Western Europe
+DK,DNK,208,Denmark,Northern Europe
+EE,EST,233,Estonia,Central & Eastern Europe
+EL,GRC,300,Greece,Southern Europe
+ES,ESP,724,Spain,Southern Europe
+FI,FIN,246,Finland,Northern Europe
+FR,FRA,250,France,Western Europe
+HR,HRV,191,Croatia,Central & Eastern Europe
+HU,HUN,348,Hungary,Central & Eastern Europe
+IE,IRL,372,Ireland,Western Europe
+IT,ITA,380,Italy,Southern Europe
+LT,LTU,440,Lithuania,Central & Eastern Europe
+LU,LUX,442,Luxembourg,Western Europe
+LV,LVA,428,Latvia,Central & Eastern Europe
+MT,MLT,470,Malta,Southern Europe
+NL,NLD,528,Netherlands,Western Europe
+PL,POL,616,Poland,Central & Eastern Europe
+PT,PRT,620,Portugal,Southern Europe
+RO,ROU,642,Romania,Central & Eastern Europe
+SE,SWE,752,Sweden,Northern Europe
+SI,SVN,705,Slovenia,Central & Eastern Europe
+SK,SVK,703,Slovakia,Central & Eastern Europe
+NO,NOR,578,Norway,Northern Europe
+CH,CHE,756,Switzerland,Western Europe
+IS,ISL,352,Iceland,Northern Europe
+UK,GBR,826,United Kingdom,Western Europe
+RS,SRB,688,Serbia,Western Balkans
+MK,MKD,807,North Macedonia,Western Balkans
+AL,ALB,008,Albania,Western Balkans
+ME,MNE,499,Montenegro,Western Balkans
+BA,BIH,070,Bosnia and Herzegovina,Western Balkans
+XK,XKX,,Kosovo,Western Balkans
+TR,TUR,792,Türkiye,Other Europe
+MA,MAR,504,Morocco,North Africa
+DZ,DZA,012,Algeria,North Africa
+TN,TUN,788,Tunisia,North Africa
+EG,EGY,818,Egypt,North Africa
+KE,KEN,404,Kenya,Sub-Saharan Africa
+GH,GHA,288,Ghana,Sub-Saharan Africa
+EU27_2020,EU27,,EU27 average,Aggregate
