@@ -60,7 +60,7 @@ show_codes <- function(x, col) {
 src_codes <- union(setdiff(unique(sectors$nace), "C_RESID"), c("C", "C26", "C29"))
 
 a64 <- safely_fetch("eurostat:nama_10_a64", {
-  x <- estat("nama_10_a64") %>% filter(nace_r2 %in% src_codes)
+  x <- estat("nama_10_a64")   # all NACE levels are kept for the economy tree
   show_codes(x, "na_item")
   x %>%
     filter((na_item == "B1G" & unit %in% c("CLV20_MEUR", "CP_MEUR")) |
@@ -74,7 +74,7 @@ a64 <- safely_fetch("eurostat:nama_10_a64", {
 })
 
 a64e <- safely_fetch("eurostat:nama_10_a64_e", {
-  x <- estat("nama_10_a64_e") %>% filter(nace_r2 %in% src_codes)
+  x <- estat("nama_10_a64_e")
   x %>%
     filter(na_item %in% c("EMP_DC", "SAL_DC"), unit %in% c("THS_PER", "THS_HW")) %>%
     mutate(var = paste0(ifelse(na_item == "EMP_DC", "emp", "sal"),
@@ -126,8 +126,35 @@ sector <- bind_rows(raw, resid) %>%
   mutate(across(where(is.double), ~ ifelse(is.finite(.x), signif(.x, 5), NA_real_))) %>%
   arrange(geo, nace, year)
 
+# Every NACE code in the national accounts (sections, divisions and their aggregates),
+# with a reduced set of columns; used for the economy tree and the industry explorer
+sector_full <- raw %>%
+  mutate(emp_hours = col_or_na(., "emp_hours")) %>%
+  transmute(geo, nace, year, emp,
+            va_nom    = gva_nom,
+            prod      = gva_real / emp * 1000,
+            prod_hour = gva_real / emp_hours * 1000,
+            comp_pe   = comp / sal * 1000,
+            ulc       = comp_pe / prod,
+            labour_share = comp / gva_nom) %>%
+  mutate(across(where(is.double), ~ ifelse(is.finite(.x), signif(.x, 4), NA_real_))) %>%
+  filter(!(is.na(emp) & is.na(prod) & is.na(comp_pe))) %>%
+  arrange(geo, nace, year)
+
 # ---- 2. Country-level Eurostat metrics ----------------------------------------
 country_long <- list()
+
+# Official Eurostat unit labor cost and productivity indices (cross-check for the derived series)
+ulc_off <- safely_fetch("eurostat:nama_10_lp_ulc", {
+  x <- estat("nama_10_lp_ulc")
+  show_codes(x, "na_item"); show_codes(x, "unit")
+  idx <- intersect(c("I15", "I20", "I10", "I21", "I05"), unique(x$unit))[1]
+  map <- c(NULC_PER = "ulc_index_per", NULC_HW = "ulc_index_hw",
+           RLPR_PER = "rlp_index_per", RLPR_HW = "rlp_index_hw", D1_SAL_PER = "comp_index_per")
+  x %>% filter(unit == idx, na_item %in% names(map), !is.na(values)) %>%
+    transmute(geo, year, metric = unname(map[na_item]), value = values)
+})
+country_long$ulc_off <- ulc_off
 
 # Statutory monthly minimum wage (EUR and PPS), semi-annual -> latest semester per year
 mw <- safely_fetch("eurostat:earn_mw_cur", {
@@ -276,16 +303,14 @@ country <- bind_rows(country_long) %>%
   arrange(metric, geo, year)
 
 # ---- 4. FDI-intensive industries (structural business statistics) -----------------
-industries <- c(C293 = "Automotive parts", C29 = "Motor vehicles (all)",
-                C14 = "Apparel", C15 = "Leather & footwear", C27 = "Electrical equipment")
 
 sbs_one <- function(id) {
   x <- estat(id)
   icol <- intersect(c("indic_sb", "indic_sbs"), names(x))[1]
   show_codes(x, icol)
   if ("size_emp" %in% names(x)) x <- x %>% filter(size_emp == "TOTAL")
-  show_codes(x %>% filter(substr(nace_r2, 1, 3) %in% c("C29", "C14", "C15", "C27")), "nace_r2")
-  x %>% filter(nace_r2 %in% names(industries), !is.na(values)) %>%
+  keep <- grepl("^C[0-9]{2,3}$", x$nace_r2) | grepl("^[B-N][0-9]{2}$", x$nace_r2) | x$nace_r2 %in% c(LETTERS[2:14], "B-N", "B-S_X_O", "C")
+  x %>% filter(keep, !is.na(values)) %>%
     mutate(ind = .data[[icol]],
            var = case_when(
              ind %in% c("V12150", "AV_MEUR") ~ "va",
@@ -306,12 +331,11 @@ industry <- safely_fetch("eurostat:sbs", {
     distinct(geo, nace, year, var, .keep_all = TRUE) %>%
     pivot_wider(names_from = var, values_from = values) %>%
     mutate(va = col_or_na(., "va"), emp = col_or_na(., "emp"), wages = col_or_na(., "wages"),
-           industry = industries[nace],
            va_worker  = va / emp * 1e6,      # EUR per person employed (va in MEUR)
            wage_share = wages / va) %>%
     filter(!is.na(va_worker) | !is.na(wage_share)) %>%
     mutate(across(c(va_worker, wage_share, emp), ~ ifelse(is.finite(.x), signif(.x, 5), NA_real_))) %>%
-    select(geo, nace, industry, year, emp, va_worker, wage_share) %>%
+    select(geo, nace, year, emp, va_worker, wage_share) %>%
     arrange(nace, geo, year)
 })
 
@@ -328,11 +352,20 @@ worst_gap <- max(tiling$gap, na.rm = TRUE)
 message(sprintf("Tiling check: worst gap %.3f%%", 100 * worst_gap))
 if (worst_gap > 0.01) stop("Manufacturing branches do not tile C (worst gap > 1%).")
 
+# NACE Rev. 2 labels for every code used on the site
+nace_lab <- tryCatch({
+  dic <- get_eurostat_dic("nace_r2")
+  codes <- unique(c(sector_full$nace, if (!is.null(industry)) industry$nace))
+  dic %>% filter(code_name %in% codes) %>% transmute(code = code_name, label = full_name)
+}, error = function(e) { message("  NACE dictionary failed: ", conditionMessage(e)); tibble(code = character(), label = character()) })
+
 dir.create("data", showWarnings = FALSE)
 write_csv(sector, "data/sector.csv", na = "")
+write_csv(sector_full, "data/sector_full.csv", na = "")
+write_csv(nace_lab, "data/nace.csv", na = "")
 write_csv(country, "data/country.csv", na = "")
 if (!is.null(industry)) write_csv(industry, "data/industry.csv", na = "") else
-  write_csv(tibble(geo = character(), nace = character(), industry = character(), year = integer(),
+  write_csv(tibble(geo = character(), nace = character(), year = integer(),
                    emp = double(), va_worker = double(), wage_share = double()), "data/industry.csv")
 
 meta <- list(
