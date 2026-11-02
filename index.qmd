@@ -1,0 +1,483 @@
+---
+title: "Serbia labour-market competitiveness"
+format:
+  dashboard:
+    nav-buttons:
+      - icon: github
+        href: https://github.com/GMDalheimer/labor-metrics-dashboard
+    css: styles.css
+---
+
+
+# Overview
+
+## {.sidebar}
+
+```{ojs}
+viewof ovSector = Inputs.select(sectorOptions, {label: "Sector", value: "C"})
+```
+
+::: {.ojs-setup style="display:none"}
+```{ojs}
+panel0    = FileAttachment("data/panel.csv").csv({typed: true})
+```
+
+```{ojs}
+countries = FileAttachment("config/countries.csv").csv()
+```
+
+```{ojs}
+sectors   = FileAttachment("config/sectors.csv").csv({typed: true})
+```
+
+```{ojs}
+checks    = FileAttachment("data/checks.csv").csv({typed: true})
+```
+
+```{ojs}
+cname  = new Map(countries.map(d => [d.geo, d.name]))
+```
+
+```{ojs}
+cgroup = new Map(countries.map(d => [d.geo, d.group]))
+```
+
+```{ojs}
+slabel = new Map(sectors.map(d => [d.nace, d.label]))
+```
+
+```{ojs}
+EU = "EU27_2020"
+```
+
+```{ojs}
+panel = panel0
+  .filter(d => cname.has(d.geo))
+  .map(d => ({...d, name: cname.get(d.geo), group: cgroup.get(d.geo)}))
+```
+
+```{ojs}
+latestYear = d3.max(panel, d => d.year)
+```
+
+```{ojs}
+years = d3.range(d3.min(panel, d => d.year), latestYear + 1)
+```
+
+```{ojs}
+indicators = [
+  {key: "prod",          label: "Real productivity",            unit: "EUR per person employed, 2020 prices", fmt: ",.0f"},
+  {key: "comp_pe",       label: "Compensation per employee",    unit: "EUR, nominal",                         fmt: ",.0f"},
+  {key: "ulc",           label: "Unit labour cost",             unit: "comp. per employee / real productivity", fmt: ".3f"},
+  {key: "labour_share",  label: "Labour share",                 unit: "compensation / nominal GVA",            fmt: ".1%"},
+  {key: "employer_rate", label: "Employer contribution rate",   unit: "(D1 - D11) / D11",                      fmt: ".1%"},
+  {key: "emp",           label: "Employment",                   unit: "thousand persons",                      fmt: ",.1f"}
+]
+```
+
+```{ojs}
+indMap = new Map(indicators.map(d => [d.key, d]))
+```
+
+```{ojs}
+tierNames = {
+  return {total: "Total", a10: "Section", manuf14: "Manufacturing", manuf3: "Rollup"}
+}
+```
+
+```{ojs}
+sectorOptions = new Map(sectors.map(d => [`${tierNames[d.tier]}: ${d.label} (${d.nace})`, d.nace]))
+```
+
+```{ojs}
+countryOptions = countries.filter(d => d.geo !== "RS")
+
+// Colours: categorical slots 1-2 of the reference palette; context in neutral grey
+```
+
+```{ojs}
+C = {
+  return {serbia: "#2a78d6", eu: "#eb6834", context: "#c3c2b7", ink: "#0b0b0b", muted: "#52514e"}
+}
+```
+
+```{ojs}
+pct = d3.format("+.1%")
+// Index a long table to base year = 100, per country
+```
+
+```{ojs}
+indexTo = (rows, key, base) => {
+  const b = new Map(rows.filter(d => d.year === base && d[key] != null).map(d => [d.geo, d[key]]))
+  return rows.filter(d => b.has(d.geo) && d[key] != null)
+             .map(d => ({...d, v: 100 * d[key] / b.get(d.geo)}))
+}
+```
+
+```{ojs}
+rowIndex = new Map(panel.map(d => [`${d.geo}|${d.nace}|${d.year}`, d]))
+```
+
+```{ojs}
+get = (geo, nace, year) => rowIndex.get(`${geo}|${nace}|${year}`)
+```
+
+```{ojs}
+ov = {
+  const rs = panel.filter(d => d.geo === "RS" && d.nace === ovSector && d.ulc != null)
+  const last = d3.max(rs, d => d.year)
+  const r0 = rs.find(d => d.year === 2016), r1 = rs.find(d => d.year === last)
+  const eu1 = get(EU, ovSector, last)
+  if (!r0 || !r1) return {last, ok: false}
+  return {
+    last, ok: true,
+    dprod: r1.prod / r0.prod - 1,
+    dcomp: r1.comp_pe / r0.comp_pe - 1,
+    dulc:  r1.ulc / r0.ulc - 1,
+    rel:   eu1?.prod ? r1.prod / eu1.prod : null
+  }
+}
+```
+:::
+
+The headline view tracks Serbia against its own 2016 position. When unit labour costs rise faster than compensation would suggest, the gap comes from productivity.
+
+All values come from Eurostat national accounts (`nama_10_a64`, `nama_10_a64_e`). See **Coverage & methods**.
+
+## Column
+
+### Row {height=22%}
+
+
+```{ojs}
+//| content: valuebox
+//| title: "Real productivity, 2016 to latest"
+//| icon: speedometer2
+//| color: "#e8f1fc"
+html`${ov.ok ? pct(ov.dprod) : "n/a"}`
+```
+
+```{ojs}
+//| content: valuebox
+//| title: "Compensation per employee, 2016 to latest"
+//| icon: cash-stack
+//| color: "#e8f1fc"
+html`${ov.ok ? pct(ov.dcomp) : "n/a"}`
+```
+
+```{ojs}
+//| content: valuebox
+//| title: "Unit labour cost, 2016 to latest"
+//| icon: graph-up-arrow
+//| color: "#e8f1fc"
+html`${ov.ok ? pct(ov.dulc) : "n/a"}`
+```
+
+```{ojs}
+//| content: valuebox
+//| title: "Productivity level, % of EU27 (latest)"
+//| icon: bar-chart
+//| color: "#e8f1fc"
+html`${ov.rel != null ? d3.format(".0%")(ov.rel) : "n/a"}`
+```
+
+### Row
+
+```{ojs}
+//| title: "Serbia: productivity, pay and unit labour cost (2016 = 100)"
+{
+  const rows = panel.filter(d => d.geo === "RS" && d.nace === ovSector)
+  const series = [
+    {key: "comp_pe", name: "Compensation per employee", color: C.serbia},
+    {key: "prod",    name: "Real productivity",         color: C.eu},
+    {key: "ulc",     name: "Unit labour cost",          color: "#1baf7a"}
+  ]
+  const long = series.flatMap(s => indexTo(rows, s.key, 2016).map(d => ({...d, series: s.name})))
+  const ends = series.map(s => {
+    const r = long.filter(d => d.series === s.name)
+    return r[r.length - 1]
+  }).filter(Boolean)
+  return Plot.plot({
+    height: 340, marginRight: 170,
+    x: {label: null, tickFormat: "d"},
+    y: {label: "Index, 2016 = 100", grid: true},
+    color: {domain: series.map(s => s.name), range: series.map(s => s.color), legend: true},
+    marks: [
+      Plot.ruleY([100], {stroke: C.muted, strokeOpacity: 0.5}),
+      Plot.lineY(long, {x: "year", y: "v", stroke: "series", strokeWidth: 2}),
+      Plot.text(ends, {x: "year", y: "v", text: "series", dx: 8, textAnchor: "start", fill: C.ink}),
+      Plot.tip(long, Plot.pointer({x: "year", y: "v",
+        title: d => `${d.series}\n${d.year}: ${d.v.toFixed(1)}`}))
+    ]
+  })
+}
+```
+
+```{ojs}
+//| title: "Real productivity relative to EU27, latest year"
+{
+  const y = ov.last
+  const eu = get(EU, ovSector, y)
+  const rows = panel
+    .filter(d => d.nace === ovSector && d.year === y && d.prod != null && d.geo !== EU)
+    .map(d => ({...d, rel: eu?.prod ? 100 * d.prod / eu.prod : null}))
+    .filter(d => d.rel != null)
+  return Plot.plot({
+    height: Math.max(340, rows.length * 16), marginLeft: 150,
+    x: {label: "% of EU27 (" + y + ")", grid: true},
+    y: {label: null},
+    marks: [
+      Plot.barX(rows, {y: "name", x: "rel", sort: {y: "-x"},
+        fill: d => d.geo === "RS" ? C.serbia : C.context, rx2: 4, insetTop: 1, insetBottom: 1,
+        tip: true, title: d => `${d.name}: ${d.rel.toFixed(0)}% of EU27`}),
+      Plot.ruleX([100], {stroke: C.ink, strokeDasharray: "3,3"}),
+      Plot.ruleX([0])
+    ]
+  })
+}
+```
+
+# Explorer
+
+## {.sidebar}
+
+```{ojs}
+viewof exInd = Inputs.select(new Map(indicators.map(d => [d.label, d.key])), {label: "Indicator", value: "ulc"})
+viewof exSector = Inputs.select(sectorOptions, {label: "Sector", value: "C"})
+viewof exMode = Inputs.radio(["Index", "Level"], {label: "Show as", value: "Index"})
+viewof exBase = Inputs.range([years[0], latestYear - 1], {label: "Index base year", step: 1, value: 2016})
+viewof exCountries = Inputs.checkbox(
+  new Map(countryOptions.map(d => [d.name, d.geo])),
+  {label: "Comparators", value: ["HU", "PL", "RO", "BG", "SK", "CZ", "MK", EU]})
+```
+
+## Column {.tabset}
+
+```{ojs}
+//| title: Chart
+{
+  const meta = indMap.get(exInd)
+  const keep = new Set(["RS", ...exCountries])
+  let rows = panel.filter(d => d.nace === exSector && keep.has(d.geo) && d[exInd] != null)
+  rows = exMode === "Index" ? indexTo(rows, exInd, exBase)
+                            : rows.map(d => ({...d, v: d[exInd]}))
+  const role = d => d.geo === "RS" ? "rs" : d.geo === EU ? "eu" : "ctx"
+  const byGeo = d3.groups(rows, d => d.geo).map(([g, r]) => r[r.length - 1])
+  const fmt = exMode === "Index" ? ".1f" : meta.fmt
+  return Plot.plot({
+    height: 520, marginRight: 130,
+    x: {label: null, tickFormat: "d"},
+    y: {label: exMode === "Index" ? `Index, ${exBase} = 100` : `${meta.label} (${meta.unit})`,
+        grid: true, tickFormat: exMode === "Index" ? null : meta.fmt},
+    marks: [
+      exMode === "Index" ? Plot.ruleY([100], {stroke: C.muted, strokeOpacity: 0.5}) : null,
+      Plot.lineY(rows.filter(d => role(d) === "ctx"), {x: "year", y: "v", z: "geo", stroke: C.context, strokeWidth: 1.25}),
+      Plot.lineY(rows.filter(d => role(d) === "eu"),  {x: "year", y: "v", stroke: C.eu, strokeWidth: 2}),
+      Plot.lineY(rows.filter(d => role(d) === "rs"),  {x: "year", y: "v", stroke: C.serbia, strokeWidth: 2.5}),
+      Plot.text(byGeo, {x: "year", y: "v", text: "name", dx: 6, textAnchor: "start",
+        fill: d => role(d) === "ctx" ? C.muted : C.ink, fontWeight: d => role(d) === "ctx" ? 400 : 600}),
+      Plot.tip(rows, Plot.pointer({x: "year", y: "v",
+        title: d => `${d.name}\n${d.year}: ${d3.format(fmt)(d.v)}`}))
+    ]
+  })
+}
+```
+
+```{ojs}
+//| title: Table
+{
+  const keep = new Set(["RS", ...exCountries])
+  const rows = panel.filter(d => d.nace === exSector && keep.has(d.geo) && d[exInd] != null)
+  const wide = d3.rollups(rows, r => Object.fromEntries(r.map(d => [d.year, d[exInd]])), d => d.name)
+    .map(([name, v]) => ({Country: name, ...v}))
+  const fmt = d3.format(indMap.get(exInd).fmt)
+  return Inputs.table(wide, {
+    format: Object.fromEntries(years.map(y => [y, v => v == null ? "" : fmt(v)])),
+    layout: "auto", rows: 30})
+}
+```
+
+# ULC decomposition
+
+## {.sidebar}
+
+```{ojs}
+viewof dcGeo = Inputs.select(new Map(countries.map(d => [d.name, d.geo])), {label: "Country", value: "RS"})
+viewof dcTier = Inputs.radio(new Map([["Economy sections", "a10"], ["Manufacturing branches", "manuf14"], ["Auto / electronics / rest", "manuf3"]]),
+  {label: "Breakdown", value: "manuf14"})
+viewof dcStart = Inputs.range([years[0], latestYear - 1], {label: "From", step: 1, value: 2016})
+viewof dcEnd = Inputs.range([years[1], latestYear], {label: "To", step: 1, value: latestYear})
+```
+
+The change in unit labour cost is split into two parts, in log points (approximately % change):
+
+- **Compensation per employee:** higher pay raises ULC.
+- **Real productivity:** higher output per worker lowers ULC, so it shows as a negative bar.
+
+The dot is the net ULC change.
+
+## Column
+
+```{ojs}
+//| title: "What drove the change in unit labour cost?"
+{
+  const tier = sectors.filter(d => d.tier === dcTier)
+  const out = []
+  for (const s of tier) {
+    const a = get(dcGeo, s.nace, dcStart), b = get(dcGeo, s.nace, dcEnd)
+    if (!a?.comp_pe || !b?.comp_pe || !a?.prod || !b?.prod) continue
+    const comp = 100 * Math.log(b.comp_pe / a.comp_pe)
+    const prod = -100 * Math.log(b.prod / a.prod)
+    out.push({label: s.label, comp, prod, net: comp + prod})
+  }
+  const long = out.flatMap(d => [
+    {label: d.label, component: "Compensation per employee", value: d.comp},
+    {label: d.label, component: "Real productivity (inverted)", value: d.prod}])
+  if (!out.length) return html`<p>No data for this selection.</p>`
+  return Plot.plot({
+    height: Math.max(300, out.length * 34), marginLeft: 240,
+    x: {label: `Log points, ${dcStart} to ${dcEnd}`, grid: true},
+    y: {label: null, domain: d3.sort(out, d => -d.net).map(d => d.label)},
+    color: {domain: ["Compensation per employee", "Real productivity (inverted)"], range: [C.serbia, C.eu], legend: true},
+    marks: [
+      Plot.barX(long, {y: "label", x: "value", fill: "component", insetTop: 4, insetBottom: 4,
+        tip: true, title: d => `${d.label}\n${d.component}: ${d.value.toFixed(1)}`}),
+      Plot.ruleX([0], {stroke: C.ink}),
+      Plot.dot(out, {y: "label", x: "net", r: 5, fill: C.ink, stroke: "white", strokeWidth: 2,
+        tip: true, title: d => `${d.label}\nNet ULC change: ${d.net.toFixed(1)}`})
+    ]
+  })
+}
+```
+
+# Convergence
+
+## {.sidebar}
+
+```{ojs}
+viewof cvSector = Inputs.select(sectorOptions, {label: "Sector", value: "C"})
+viewof cvStart = Inputs.range([years[0], latestYear - 2], {label: "Base year", step: 1, value: 2016})
+viewof cvEnd = Inputs.range([years[2], latestYear], {label: "End year", step: 1, value: latestYear})
+viewof cvGroups = Inputs.checkbox(["Western Balkans", "CEE", "EU West", "Other"],
+  {label: "Include", value: ["Western Balkans", "CEE"]})
+```
+
+**β-convergence** asks whether countries that started further behind grow faster. That shows as a downward-sloping regression line.
+
+**σ-convergence** asks whether the spread across countries narrows over time.
+
+Neither implies the other.
+
+## Column
+
+### Row
+
+```{ojs}
+//| title: "β-convergence: starting productivity vs growth"
+{
+  const n = cvEnd - cvStart
+  const eu0 = get(EU, cvSector, cvStart)
+  const pts = panel
+    .filter(d => d.nace === cvSector && d.year === cvStart && d.prod != null &&
+                 (d.geo === "RS" || cvGroups.includes(d.group)))
+    .map(a => {
+      const b = get(a.geo, cvSector, cvEnd)
+      if (!b?.prod || !eu0?.prod) return null
+      return {...a, rel: 100 * a.prod / eu0.prod, g: 100 * (Math.pow(b.prod / a.prod, 1 / n) - 1)}
+    }).filter(Boolean)
+  return Plot.plot({
+    height: 420, grid: true,
+    x: {label: `Productivity ${cvStart}, % of EU27`},
+    y: {label: `Avg. annual real productivity growth ${cvStart}-${cvEnd}, %`},
+    marks: [
+      Plot.ruleY([0], {stroke: C.muted}),
+      Plot.linearRegressionY(pts, {x: "rel", y: "g", stroke: C.muted, strokeDasharray: "4,3", ci: 0}),
+      Plot.dot(pts, {x: "rel", y: "g", r: 6, fill: d => d.geo === "RS" ? C.serbia : C.context,
+        stroke: "white", strokeWidth: 2, tip: true,
+        title: d => `${d.name}\nLevel ${cvStart}: ${d.rel.toFixed(0)}% of EU27\nGrowth: ${d.g.toFixed(2)}% p.a.`}),
+      Plot.text(pts, {x: "rel", y: "g", text: "geo", dy: -12,
+        fill: d => d.geo === "RS" ? C.ink : C.muted, fontWeight: d => d.geo === "RS" ? 700 : 400})
+    ]
+  })
+}
+```
+
+```{ojs}
+//| title: "σ-convergence: dispersion of log productivity"
+{
+  const rows = panel.filter(d => d.nace === cvSector && d.prod > 0 && d.geo !== EU &&
+                                 (d.geo === "RS" || cvGroups.includes(d.group)))
+  // Balanced panel only: countries observed in every year of the window
+  const win = rows.filter(d => d.year >= cvStart && d.year <= cvEnd)
+  const counts = d3.rollup(win, r => r.length, d => d.geo)
+  const bal = win.filter(d => counts.get(d.geo) === cvEnd - cvStart + 1)
+  const sd = d3.rollups(bal, r => d3.deviation(r, d => Math.log(d.prod)), d => d.year)
+    .map(([year, s]) => ({year, s})).sort((a, b) => a.year - b.year)
+  return Plot.plot({
+    height: 420,
+    x: {label: null, tickFormat: "d"},
+    y: {label: "Std. dev. of log productivity", grid: true, zero: true},
+    caption: `Balanced panel: ${new Set(bal.map(d => d.geo)).size} countries`,
+    marks: [
+      Plot.lineY(sd, {x: "year", y: "s", stroke: C.serbia, strokeWidth: 2}),
+      Plot.dot(sd, {x: "year", y: "s", fill: C.serbia, r: 3}),
+      Plot.tip(sd, Plot.pointerX({x: "year", y: "s", title: d => `${d.year}: ${d.s.toFixed(3)}`}))
+    ]
+  })
+}
+```
+
+# Coverage & methods
+
+## {.sidebar}
+
+```{ojs}
+viewof cvInd = Inputs.select(new Map(indicators.map(d => [d.label, d.key])), {label: "Indicator", value: "prod"})
+viewof cvTier = Inputs.radio(new Map([["Economy sections", "a10"], ["Manufacturing branches", "manuf14"]]),
+  {label: "Sectors", value: "manuf14"})
+```
+
+## Column
+
+### Row {height=72%}
+
+```{ojs}
+//| title: "Data coverage: share of years with data, 2000 to latest"
+{
+  const sec = sectors.filter(d => d.tier === cvTier)
+  const n = years.length
+  const cells = []
+  for (const c of countries) for (const s of sec) {
+    const k = panel.filter(d => d.geo === c.geo && d.nace === s.nace && d[cvInd] != null).length
+    cells.push({geo: c.geo, name: c.name, nace: s.nace, label: s.label, share: k / n})
+  }
+  return Plot.plot({
+    height: sec.length * 26 + 110, marginLeft: 230, marginBottom: 40,
+    x: {label: null, domain: countries.map(d => d.geo), axis: "top", tickFormat: d => d === EU ? "EU27" : d},
+    y: {label: null, domain: sec.map(d => d.label)},
+    color: {type: "linear", domain: [0, 1], range: ["#f4f3f0", "#104281"], legend: true,
+            label: "Share of years covered", tickFormat: ".0%"},
+    marks: [
+      Plot.cell(cells, {x: "geo", y: "label", fill: "share", inset: 1, rx: 2,
+        tip: true, title: d => `${d.name}, ${d.label}\n${d3.format(".0%")(d.share)} of years`})
+    ]
+  })
+}
+```
+
+### Row {.tabset height=28%}
+
+```{ojs}
+//| title: "Build checks"
+Inputs.table(checks, {layout: "auto"})
+```
+
+::: {.card title="Methods"}
+**Sources.** Eurostat `nama_10_a64` (GVA in chain-linked volumes, CLV20_MEUR, and current prices, CP_MEUR; compensation of employees D1; wages and salaries D11) and `nama_10_a64_e` (employment EMP_DC and employees SAL_DC, thousand persons). The site is rebuilt from bulk downloads by GitHub Actions.
+
+**Definitions.** Real productivity is GVA in 2020 prices per person employed. Compensation per employee is D1 divided by the number of employees. Unit labour cost is compensation per employee divided by real productivity. Labour share is D1 divided by nominal GVA (unadjusted). The employer contribution rate is (D1 − D11) / D11.
+
+**Rest of manufacturing** is C minus C26 and C29. It is exact for nominal values and headcounts and approximate for chain-linked GVA, because chain-linked volumes are not additive.
+
+**Sector tiers** are defined in `config/sectors.csv` and countries in `config/countries.csv`. Edit these files to change the scope.
+:::
