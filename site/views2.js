@@ -25,9 +25,8 @@ export async function industries(root) {
   await loadFull();
   const rows = D.industry.rows;
   if (!rows.length) { root.append(pageHeader("Industries", "Industries", "Structural business statistics are not available in this build.")); return; }
-  const lvlCode = { section: 1, division: 2, group: 3 };
-  const codes = [...new Set(rows.map(r => r.nace))].filter(c => level(c) === lvlCode[S.indLevel]).sort();
-  if (!codes.includes(S.industry)) S.industry = codes.includes("C29") ? "C29" : codes.includes("C293") ? "C293" : codes[0];
+  const allCodes = [...new Set(rows.map(r => r.nace))].filter(c => level(c) >= 1 && level(c) <= 3).sort();
+  if (!allCodes.includes(S.industry)) S.industry = allCodes.includes("C29") ? "C29" : allCodes[0];
   const code = S.industry, M = IND_METRICS[S.indMetric];
   const sub = rows.filter(r => r.nace === code);
   const years = [...new Set(sub.map(r => r.year))].sort();
@@ -41,15 +40,10 @@ export async function industries(root) {
     `Structural business statistics report value added, employment and personnel costs for enterprises in the business economy, classified by NACE Rev. 2 at section (letter), division (two digits) and group (three digits) level. ` +
     `Value added is measured at factor cost and differs from gross value added in the national accounts. The four FDI-intensive industries studied in the project are automotive parts (C293), wearing apparel (C14), leather and footwear (C15) and electrical equipment (C27).`));
 
-  const indOpts = codes.map(c => ({ value: c, label: `${c} ${naceName(c)}`.slice(0, 90) }));
+  root.append(industryBrowser(allCodes, code));
   root.append(h("div", { class: "view-controls" },
-    seg("NACE level", [{ value: "section", label: "Section" }, { value: "division", label: "Division" }, { value: "group", label: "Group" }], S.indLevel, v => set({ indLevel: v, indYear: null })),
-    select("Industry", indOpts, code, v => set({ industry: v, indYear: null })),
     seg("Indicator", Object.entries(IND_METRICS).map(([value, m]) => ({ value, label: m.label })), S.indMetric, v => set({ indMetric: v })),
-    select("Year", yearOptions(years), yr, v => set({ indYear: +v }), { compact: true }),
-    h("div", { class: "quick" }, h("span", { class: "field-label" }, "Project industries"),
-      h("div", { class: "quick-links" }, [["C293", "group"], ["C14", "division"], ["C15", "division"], ["C27", "division"]].map(([c, l]) =>
-        h("button", { class: `link-btn ${c === code ? "on" : ""}`, onclick: () => set({ industry: c, indLevel: l, indYear: null }) }, c))))));
+    select("Year", yearOptions(years), yr, v => set({ indYear: +v }), { compact: true })));
 
   // Ranking
   const snap = D.countries.map(c => ({ geo: c.geo, name: c.name, r: get(c.geo, yr) })).filter(d => d.r && d.r[S.indMetric] != null)
@@ -88,8 +82,41 @@ export async function industries(root) {
   root.append(grid(f3.el, f4.el));
   lineChart(f3.body, list, { height: 320, yFormat: M.f, xDomain: d3.extent(years) });
   if (kidRows.length) drawBars(f4.body, kidRows.map(d => ({ geo: d.code, name: `${d.code} ${d.name}`.slice(0, 48), v: d.v })).sort((a, b) => b.v - a.v), M.f, null,
-    d => set({ industry: d.geo, indLevel: level(d.geo) === 2 ? "division" : "group", indYear: null }));
+    d => set({ industry: d.geo, indYear: null }));
   else if (kids.length) f4.body.append(h("p", { class: "empty" }, `No ${level(code) === 1 ? "division" : "group"} data for ${cname(S.focus)} in ${yr}.`));
+}
+
+// Browsable, searchable list of every industry in the data, grouped by NACE section
+function industryBrowser(codes, current) {
+  const sections = codes.filter(c => level(c) === 1);
+  const project = ["C293", "C14", "C15", "C27"].filter(c => codes.includes(c));
+  const list = h("div", { class: "ind-list" });
+  const search = h("input", { class: "ind-search", type: "search", placeholder: "Search by name or code, e.g. “motor” or “C27”", "aria-label": "Search industries", value: S.indSearch || "" });
+  const levelSel = S.indLevelFilter || "all";
+  const fill = () => {
+    const q = (search.value || "").toLowerCase().trim();
+    list.innerHTML = "";
+    for (const sec of sections) {
+      const kids = codes.filter(c => c !== sec && c[0] === sec && (levelSel === "all" || level(c) === (levelSel === "division" ? 2 : 3)));
+      const match = c => !q || c.toLowerCase().includes(q) || naceName(c).toLowerCase().includes(q);
+      const shown = kids.filter(match);
+      if (!match(sec) && !shown.length) continue;
+      const grp = h("div", { class: "ind-group" },
+        h("button", { class: `ind-item sec ${sec === current ? "on" : ""}`, onclick: () => set({ industry: sec, indYear: null }) }, h("b", {}, sec), " ", naceName(sec)));
+      for (const c of shown) grp.append(h("button", { class: `ind-item l${level(c)} ${c === current ? "on" : ""}`, onclick: () => set({ industry: c, indYear: null }) }, h("b", {}, c), " ", naceName(c)));
+      list.append(grp);
+    }
+    if (!list.children.length) list.append(h("p", { class: "empty" }, "No industry matches the search."));
+  };
+  search.addEventListener("input", () => { S.indSearch = search.value; fill(); });
+  fill();
+  return h("div", { class: "picker" },
+    h("p", { class: "picker-title" }, `Industry `, h("span", {}, `· ${codes.length} industries available at section, division and group level; select one to update the charts`)),
+    h("div", { class: "ind-tools" }, search,
+      seg(null, [{ value: "all", label: "All levels" }, { value: "division", label: "Divisions" }, { value: "group", label: "Groups" }], levelSel, v => set({ indLevelFilter: v })),
+      h("div", { class: "quick-links" }, h("span", { class: "field-label" }, "Project industries:"), project.map(c =>
+        h("button", { class: `picker-opt ${c === current ? "on" : ""}`, onclick: () => set({ industry: c, indYear: null }) }, `${c} ${naceName(c).split(/[;,]/)[0].replace("Manufacture of ", "")}`)))),
+    list);
 }
 
 function drawBars(host, data, f, euV, onClick) {
@@ -438,6 +465,10 @@ export function analysis(root) {
   }
 }
 
+function formulaTable(rows) {
+  return h("table", { class: "data formulas" }, h("tbody", {}, rows.map(([k, f]) => h("tr", {}, h("td", {}, k), h("td", { class: "formula", html: f })))));
+}
+
 function regTable(coefs, stats) {
   return h("table", { class: "reg" },
     h("thead", {}, h("tr", {}, h("th", {}, ""), h("th", {}, "Coefficient"), h("th", {}, "Std. error"), h("th", {}, "t"), h("th", {}, "p"), h("th", {}, "95% CI"))),
@@ -477,13 +508,46 @@ export function methods(root) {
     h("h2", {}, "Indicators"), defs,
     h("h2", {}, "Sources"), src,
     h("p", { html: `Tables: <a href="data/sector.csv">sector.csv</a>, <a href="data/sector_full.csv">sector_full.csv</a>, <a href="data/country.csv">country.csv</a>, <a href="data/industry.csv">industry.csv</a>, <a href="data/nace.csv">nace.csv</a>.` }),
+    h("h2", {}, "Formulas"),
+    h("p", {}, "Notation: GVA is gross value added (real: chain-linked volumes in 2020 euros; nominal: current prices), D1 compensation of employees, D11 wages and salaries, D29X39 other taxes less subsidies on production, E persons employed, L employees, H hours worked by persons employed, H_L hours worked by employees. Subscripts 0 and 1 denote the start and end year of a period of T years."),
+    formulaTable([
+      ["Real productivity per person", "P = GVA<sub>real</sub> / E"],
+      ["Real productivity per hour", "P<sub>h</sub> = GVA<sub>real</sub> / H"],
+      ["Compensation per employee", "W = D1 / L"],
+      ["Compensation per employee hour", "W<sub>h</sub> = D1 / H<sub>L</sub>"],
+      ["Unit labor cost (per person; per hour)", "ULC = W / P; &nbsp; ULC<sub>h</sub> = W<sub>h</sub> / P<sub>h</sub>"],
+      ["Index", "I<sub>t</sub> = 100 × X<sub>t</sub> / X<sub>base</sub>"],
+      ["Log change and annual average", "Δln X = 100 × (ln X<sub>1</sub> − ln X<sub>0</sub>); &nbsp; g = Δln X / T"],
+      ["ULC decomposition (exact in logs)", "Δln ULC = Δln W − Δln P"],
+      ["Labor share (unadjusted; adjusted)", "LS = D1 / GVA<sub>nom</sub>; &nbsp; LS<sub>adj</sub> = (D1 / L) × E / GVA<sub>nom</sub>"],
+      ["Profit share", "(GVA<sub>nom</sub> − D1 − D29X39) / GVA<sub>nom</sub>"],
+      ["Employer contribution rate", "(D1 − D11) / D11"],
+      ["Annual hours per worker", "H / E"],
+      ["Value added per hour (nominal)", "VA<sub>h</sub> = GVA<sub>nom</sub> / H"],
+      ["Labor cost per EUR 100 of value added", "100 × LC<sub>h</sub> / VA<sub>h</sub>, with LC<sub>h</sub> the hourly labor cost from the labor cost survey"],
+      ["Components of hourly labor cost", "employer = LC<sub>h</sub> × s<sub>nw</sub>; &nbsp; employee taxes = LC<sub>h</sub> × max(0, τ − s<sub>nw</sub>); &nbsp; net = LC<sub>h</sub> − employer − employee taxes; s<sub>nw</sub> non-wage share, τ tax wedge"],
+      ["Break-even change in hourly labor cost", "c* = (LC<sub>h,B</sub> / VA<sub>h,B</sub>) / (LC<sub>h,A</sub> / VA<sub>h,A</sub>) − 1"],
+      ["Relative productivity (economy tree)", "P<sub>s</sub> / P<sub>total</sub> (national average) or P<sub>s</sub> / P<sub>s,EU27</sub>"],
+      ["σ-convergence", "σ<sub>t</sub> = standard deviation over economies i of ln X<sub>i,t</sub>, balanced panel"],
+      ["β-convergence", "g<sub>i</sub> = α + β ln X<sub>i,0</sub> + ε<sub>i</sub>; β &lt; 0 indicates convergence"],
+      ["OLS and robust variance (HC1)", "β̂ = (X′X)<sup>−1</sup>X′y; &nbsp; V̂ = n/(n−k) · (X′X)<sup>−1</sup>(Σ<sub>i</sub> e<sub>i</sub><sup>2</sup> x<sub>i</sub>x<sub>i</sub>′)(X′X)<sup>−1</sup>"],
+      ["Panel with economy fixed effects", "Δln W<sub>it</sub> = α<sub>i</sub> + β Δln P<sub>it</sub> + ε<sub>it</sub>, estimated on within-transformed data; V̂ = G/(G−1) · (N−1)/(N−K) · Σ<sub>g</sub>(Σ<sub>t</sub> x̃<sub>gt</sub>e<sub>gt</sub>)<sup>2</sup> / (Σ x̃<sup>2</sup>)<sup>2</sup>, K = G + 1"],
+      ["Inference", "t = β̂ / se; two-sided p-values from the t distribution with n − k (OLS) or G − 1 (clustered) degrees of freedom"],
+    ]),
+    h("h2", {}, "Limitations"),
+    h("ul", {},
+      h("li", {}, "Price levels. Real productivity is measured in chain-linked euros at national prices, not at purchasing power parity. Cross-country comparisons of productivity levels therefore combine differences in output with differences in price levels, and unit labor cost levels are not comparable across economies; only their changes are."),
+      h("li", {}, "Different sources. Hourly labor cost (labor cost survey), value added and hours (national accounts), business statistics and ILOSTAT differ in coverage, definitions and reference years. Indicators that combine sources, such as labor cost per EUR 100 of value added, are indicative."),
+      h("li", {}, "Self-employment. Compensation per employee excludes the self-employed. Where self-employment is large (for example in agriculture), the unadjusted labor share understates the income share of labor."),
+      h("li", {}, "Aggregation. Chain-linked volumes are not additive. Aggregates computed as differences are approximate in real terms."),
+      h("li", {}, "Breaks and revisions. Series are revised by the statistical offices and contain breaks, for example in the early 2000s for some candidate countries and in 2021 for structural business statistics. Published values can change between builds."),
+      h("li", {}, "Coverage. Years and indicators available differ by economy. Rankings include only economies that report the indicator, and the latest year can differ between economies."),
+      h("li", {}, "Tax wedge. The split of hourly labor cost applies the tax wedge of a single low-wage earner without children to the average hourly cost, which does not represent the full wage distribution."),
+      h("li", {}, "ILOSTAT. Output per worker is a modelled estimate in international dollars at purchasing power parity; earnings are converted to US dollars at market exchange rates and are sensitive to exchange-rate movements."),
+      h("li", {}, "Regressions. Models are bivariate, estimated on small cross-sections, and sensitive to outliers such as Ireland and Luxembourg. In the compensation–productivity models, compensation is nominal and productivity real, so inflation differences enter the estimates. Coefficients describe associations and do not identify causal effects."),
+      h("li", {}, "Scope. Statutory sick-leave rules and legal working time from the project research are not yet included.")),
     h("h2", {}, "Notes"),
     h("ul", {},
-      h("li", {}, "Real values are chain-linked volumes in 2020 euros. Chain-linked volumes are not additive; aggregates computed as differences (other manufacturing: C minus C26 and C29) are exact in nominal terms and approximate in real terms."),
-      h("li", {}, "Unit labor cost levels depend on national price levels and are compared across economies only in growth rates or indices."),
       h("li", {}, "Log changes are reported in log points (100 × Δln). For small changes they approximate percentage changes."),
-      h("li", {}, "ILOSTAT series cover economies outside the Eurostat system (North Africa, Kenya, Ghana). ILO output per worker is a modelled estimate in constant international dollars at purchasing power parity."),
-      h("li", {}, "Structural business statistics measure value added at factor cost for the business economy and are not directly comparable with gross value added in the national accounts. The source changes from sbs_na_ind_r2 to sbs_ovw_act in 2021."),
-      h("li", {}, "Regressions are bivariate and descriptive. Coefficients are estimated by ordinary least squares with HC1 standard errors, or with economy fixed effects and standard errors clustered by economy."),
-      h("li", {}, "Statutory sick-leave rules and legal working time from the project research are not yet included."))));
+      h("li", {}, "Structural business statistics measure value added at factor cost for the business economy. The source changes from sbs_na_ind_r2 to sbs_ovw_act in 2021."))));
 }

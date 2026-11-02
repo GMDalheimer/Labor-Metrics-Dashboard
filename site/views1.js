@@ -83,19 +83,25 @@ export async function overview(root) {
 
 function drawMap(host, world, color) {
   const wrap = h("div", { class: "map-wrap" }); host.append(wrap);
-  const width = widthOf(host), height = Math.round(width * .74);
+  const coverageHas = (m, g) => D.allYears.some(y => val(m, g, y) != null);
+  const tall = D.countries.some(c => /Sub-Saharan/.test(c.region) && (c.geo === S.focus || coverageHas(S.metric, c.geo)));
+  const width = widthOf(host), height = Math.round(width * (tall ? 1.05 : .74));
   const svg = svgEl(wrap, width, height);
   if (!world) { svg.append("text").attr("class", "annot").attr("x", 8).attr("y", 18).text("Map geometry could not be loaded."); return { update() {} }; }
   const feats = window.topojson.feature(world, world.objects.countries).features;
   const byNum = new Map(D.countries.filter(c => c.isonum).map(c => [c.isonum, c.geo]));
   for (const f of feats) f.geo = byNum.get(String(f.id)) || (f.properties?.name === "Kosovo" && D.name.has("XK") ? "XK" : null);
-  const box = { type: "Feature", geometry: { type: "MultiPoint", coordinates: [[-17, 30], [33, 71], [42, 37], [-14, 22], [34, 22], [25, 71]] } };
-  const proj = d3.geoAzimuthalEqualArea().rotate([-12, -50]).fitExtent([[4, 4], [width - 4, height - 4]], box);
+  // Frame Europe and North Africa; extend south when Sub-Saharan economies are shown or selected
+  const africa = D.countries.some(c => /Sub-Saharan/.test(c.region) && (c.geo === S.focus || coverageHas(S.metric, c.geo)));
+  const box = { type: "Feature", geometry: { type: "MultiPoint", coordinates: africa
+    ? [[-20, 2], [33, 71], [45, 37], [42, -6], [-5, -6], [25, 71], [-17, 30]]
+    : [[-17, 30], [33, 71], [42, 37], [-14, 22], [34, 22], [25, 71]] } };
+  const proj = d3.geoAzimuthalEqualArea().rotate(africa ? [-12, -35] : [-12, -50]).fitExtent([[4, 4], [width - 4, height - 4]], box);
   const path = d3.geoPath(proj);
   const clip = "clip" + Math.random().toString(36).slice(2);
   svg.append("clipPath").attr("id", clip).append("rect").attr("width", width).attr("height", height);
   const g = svg.append("g").attr("clip-path", `url(#${clip})`).append("g");
-  const near = f => { const [[x0, y0], [x1, y1]] = d3.geoBounds(f); return x1 > -40 && x0 < 75 && y1 > 5 && y0 < 85 && (x1 - x0) < 200; };
+  const near = f => { const [[x0, y0], [x1, y1]] = d3.geoBounds(f); return x1 > -40 && x0 < 75 && y1 > (africa ? -40 : 5) && y0 < 85 && (x1 - x0) < 200; };
   const paths = g.selectAll("path").data(feats.filter(near)).join("path")
     .attr("class", f => `country-path ${f.geo === S.focus ? "focus" : ""}`).attr("d", path)
     .attr("fill", cssVar("--map-empty")).attr("stroke", cssVar("--bg")).attr("stroke-width", .7)
@@ -499,8 +505,8 @@ export function hour(root) {
 
   const parts = [
     { key: "net", label: "Net earnings", color: cssVar("--s1") },
-    { key: "employeeTax", label: "Income tax and employee contributions", color: cssVar("--s3") },
-    { key: "employer", label: "Employer contributions and other costs", color: cssVar("--s4") },
+    { key: "employeeTax", label: "Income tax and employee contributions", color: cssVar("--s2") },
+    { key: "employer", label: "Employer contributions and other costs", color: cssVar("--s3") },
   ];
   const f1 = figure({ title: "Hourly labor cost by component", span: 7, sub: "EUR per hour actually worked, latest available year.",
     csv: () => [S.focus, other].map(g => ({ country: cname(g), ...computeHour(hourData(g), g === S.focus ? S.wageChange : 0) })) });

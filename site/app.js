@@ -13,7 +13,7 @@ const VIEWS = {
   industries: { label: "Industries",        fn: industries, ctx: ["focus", "comps"] },
   structure:  { label: "Economy structure", fn: structure,  ctx: ["focus", "period"] },
   analysis:   { label: "Analysis",          fn: analysis,   ctx: ["focus", "comps", "period", "sector"] },
-  casestudy:  { label: "Country case study", fn: casestudy, ctx: [] },
+  casestudy:  { label: "Country brief",      fn: casestudy, ctx: [] },
   methods:    { label: "Methods",           fn: methods,    ctx: [] },
 };
 
