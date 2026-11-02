@@ -1,9 +1,9 @@
 {
-  "built": "2026-11-02T10:12:57Z",
+  "built": "2026-11-02T10:17:16Z",
   "sources": {
     "eurostat:nama_10_a64": {
       "ok": true,
-      "rows": 91873,
+      "rows": 114195,
       "note": ""
     },
     "eurostat:nama_10_a64_e": {
@@ -24,7 +24,7 @@
     "eurostat:earn_nt_taxwedge": {
       "ok": false,
       "rows": 0,
-      "note": "ℹ In argument: `ecase %in% ec[1]`.\nCaused by error:\n! object 'ecase' not found"
+      "note": "Can't extract column with `ecol`.\n✖ Subscript `ecol` must be a location, not a character `NA`."
     },
     "eurostat:lc_lci_lev": {
       "ok": true,
@@ -38,7 +38,7 @@
     },
     "ilostat:output_per_worker_GDP_211P_NOC_NB_A": {
       "ok": true,
-      "rows": 1204,
+      "rows": 1118,
       "note": ""
     },
     "ilostat:monthly_earnings": {
@@ -53,7 +53,7 @@
     },
     "eurostat:sbs": {
       "ok": true,
-      "rows": 2188,
+      "rows": 2782,
       "note": ""
     }
   },

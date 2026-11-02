@@ -1922,8 +1922,6 @@ AL,2022,ilo_output_worker_ppp,36620
 AL,2023,ilo_output_worker_ppp,37146
 AL,2024,ilo_output_worker_ppp,38763
 AL,2025,ilo_output_worker_ppp,40189
-AL,2026,ilo_output_worker_ppp,41777
-AL,2027,ilo_output_worker_ppp,43394
 AT,2000,ilo_output_worker_ppp,116000
 AT,2001,ilo_output_worker_ppp,117030
 AT,2002,ilo_output_worker_ppp,117320
@@ -1950,8 +1948,6 @@ AT,2022,ilo_output_worker_ppp,132200
 AT,2023,ilo_output_worker_ppp,130360
 AT,2024,ilo_output_worker_ppp,129740
 AT,2025,ilo_output_worker_ppp,131440
-AT,2026,ilo_output_worker_ppp,133510
-AT,2027,ilo_output_worker_ppp,136340
 BA,2000,ilo_output_worker_ppp,24812
 BA,2001,ilo_output_worker_ppp,25500
 BA,2002,ilo_output_worker_ppp,26952
@@ -1978,8 +1974,6 @@ BA,2022,ilo_output_worker_ppp,52228
 BA,2023,ilo_output_worker_ppp,51687
 BA,2024,ilo_output_worker_ppp,53678
 BA,2025,ilo_output_worker_ppp,55767
-BA,2026,ilo_output_worker_ppp,58275
-BA,2027,ilo_output_worker_ppp,61078
 BE,2000,ilo_output_worker_ppp,125530
 BE,2001,ilo_output_worker_ppp,129430
 BE,2002,ilo_output_worker_ppp,131140
@@ -2006,8 +2000,6 @@ BE,2022,ilo_output_worker_ppp,146340
 BE,2023,ilo_output_worker_ppp,147200
 BE,2024,ilo_output_worker_ppp,147740
 BE,2025,ilo_output_worker_ppp,149590
-BE,2026,ilo_output_worker_ppp,150900
-BE,2027,ilo_output_worker_ppp,152820
 BG,2000,ilo_output_worker_ppp,36344
 BG,2001,ilo_output_worker_ppp,38455
 BG,2002,ilo_output_worker_ppp,40336
@@ -2034,8 +2026,6 @@ BG,2022,ilo_output_worker_ppp,66101
 BG,2023,ilo_output_worker_ppp,67576
 BG,2024,ilo_output_worker_ppp,70498
 BG,2025,ilo_output_worker_ppp,72754
-BG,2026,ilo_output_worker_ppp,75488
-BG,2027,ilo_output_worker_ppp,78357
 CH,2000,ilo_output_worker_ppp,124490
 CH,2001,ilo_output_worker_ppp,124210
 CH,2002,ilo_output_worker_ppp,123370
@@ -2062,8 +2052,6 @@ CH,2022,ilo_output_worker_ppp,151190
 CH,2023,ilo_output_worker_ppp,149890
 CH,2024,ilo_output_worker_ppp,152220
 CH,2025,ilo_output_worker_ppp,154430
-CH,2026,ilo_output_worker_ppp,157240
-CH,2027,ilo_output_worker_ppp,159160
 CY,2000,ilo_output_worker_ppp,59217
 CY,2001,ilo_output_worker_ppp,58140
 CY,2002,ilo_output_worker_ppp,58579
@@ -2090,8 +2078,6 @@ CY,2022,ilo_output_worker_ppp,66836
 CY,2023,ilo_output_worker_ppp,66985
 CY,2024,ilo_output_worker_ppp,68721
 CY,2025,ilo_output_worker_ppp,70366
-CY,2026,ilo_output_worker_ppp,72141
-CY,2027,ilo_output_worker_ppp,73899
 CZ,2000,ilo_output_worker_ppp,64022
 CZ,2001,ilo_output_worker_ppp,65592
 CZ,2002,ilo_output_worker_ppp,65856
@@ -2118,8 +2104,6 @@ CZ,2022,ilo_output_worker_ppp,98348
 CZ,2023,ilo_output_worker_ppp,96274
 CZ,2024,ilo_output_worker_ppp,97525
 CZ,2025,ilo_output_worker_ppp,101290
-CZ,2026,ilo_output_worker_ppp,104280
-CZ,2027,ilo_output_worker_ppp,106720
 DE,2000,ilo_output_worker_ppp,111530
 DE,2001,ilo_output_worker_ppp,112930
 DE,2002,ilo_output_worker_ppp,113280
@@ -2146,8 +2130,6 @@ DE,2022,ilo_output_worker_ppp,124410
 DE,2023,ilo_output_worker_ppp,122150
 DE,2024,ilo_output_worker_ppp,122200
 DE,2025,ilo_output_worker_ppp,124200
-DE,2026,ilo_output_worker_ppp,126960
-DE,2027,ilo_output_worker_ppp,129950
 DK,2000,ilo_output_worker_ppp,112180
 DK,2001,ilo_output_worker_ppp,113280
 DK,2002,ilo_output_worker_ppp,112750
@@ -2174,8 +2156,6 @@ DK,2022,ilo_output_worker_ppp,135220
 DK,2023,ilo_output_worker_ppp,135150
 DK,2024,ilo_output_worker_ppp,136500
 DK,2025,ilo_output_worker_ppp,138700
-DK,2026,ilo_output_worker_ppp,141270
-DK,2027,ilo_output_worker_ppp,143510
 DZ,2000,ilo_output_worker_ppp,56070
 DZ,2001,ilo_output_worker_ppp,54368
 DZ,2002,ilo_output_worker_ppp,54885
@@ -2202,8 +2182,6 @@ DZ,2022,ilo_output_worker_ppp,58368
 DZ,2023,ilo_output_worker_ppp,59596
 DZ,2024,ilo_output_worker_ppp,61189
 DZ,2025,ilo_output_worker_ppp,62613
-DZ,2026,ilo_output_worker_ppp,63871
-DZ,2027,ilo_output_worker_ppp,65047
 EE,2000,ilo_output_worker_ppp,49335
 EE,2001,ilo_output_worker_ppp,52951
 EE,2002,ilo_output_worker_ppp,55669
@@ -2230,8 +2208,6 @@ EE,2022,ilo_output_worker_ppp,84519
 EE,2023,ilo_output_worker_ppp,81003
 EE,2024,ilo_output_worker_ppp,82272
 EE,2025,ilo_output_worker_ppp,84348
-EE,2026,ilo_output_worker_ppp,86692
-EE,2027,ilo_output_worker_ppp,88813
 EG,2000,ilo_output_worker_ppp,37623
 EG,2001,ilo_output_worker_ppp,39033
 EG,2002,ilo_output_worker_ppp,40733
@@ -2258,8 +2234,6 @@ EG,2022,ilo_output_worker_ppp,60889
 EG,2023,ilo_output_worker_ppp,59338
 EG,2024,ilo_output_worker_ppp,59469
 EG,2025,ilo_output_worker_ppp,60674
-EG,2026,ilo_output_worker_ppp,62115
-EG,2027,ilo_output_worker_ppp,63648
 EL,2000,ilo_output_worker_ppp,81934
 EL,2001,ilo_output_worker_ppp,85828
 EL,2002,ilo_output_worker_ppp,88408
@@ -2286,8 +2260,6 @@ EL,2022,ilo_output_worker_ppp,92046
 EL,2023,ilo_output_worker_ppp,94003
 EL,2024,ilo_output_worker_ppp,95521
 EL,2025,ilo_output_worker_ppp,97159
-EL,2026,ilo_output_worker_ppp,98788
-EL,2027,ilo_output_worker_ppp,100570
 ES,2000,ilo_output_worker_ppp,101710
 ES,2001,ilo_output_worker_ppp,102440
 ES,2002,ilo_output_worker_ppp,101750
@@ -2314,8 +2286,6 @@ ES,2022,ilo_output_worker_ppp,107930
 ES,2023,ilo_output_worker_ppp,108870
 ES,2024,ilo_output_worker_ppp,110720
 ES,2025,ilo_output_worker_ppp,113140
-ES,2026,ilo_output_worker_ppp,115310
-ES,2027,ilo_output_worker_ppp,117830
 FI,2000,ilo_output_worker_ppp,105160
 FI,2001,ilo_output_worker_ppp,105600
 FI,2002,ilo_output_worker_ppp,106730
@@ -2342,8 +2312,6 @@ FI,2022,ilo_output_worker_ppp,119150
 FI,2023,ilo_output_worker_ppp,117790
 FI,2024,ilo_output_worker_ppp,119960
 FI,2025,ilo_output_worker_ppp,121770
-FI,2026,ilo_output_worker_ppp,123590
-FI,2027,ilo_output_worker_ppp,125190
 FR,2000,ilo_output_worker_ppp,113760
 FR,2001,ilo_output_worker_ppp,113370
 FR,2002,ilo_output_worker_ppp,113210
@@ -2370,8 +2338,6 @@ FR,2022,ilo_output_worker_ppp,124940
 FR,2023,ilo_output_worker_ppp,126110
 FR,2024,ilo_output_worker_ppp,127570
 FR,2025,ilo_output_worker_ppp,128730
-FR,2026,ilo_output_worker_ppp,130170
-FR,2027,ilo_output_worker_ppp,131700
 GH,2000,ilo_output_worker_ppp,8879.6
 GH,2001,ilo_output_worker_ppp,8855.6
 GH,2002,ilo_output_worker_ppp,8859.2
@@ -2398,8 +2364,6 @@ GH,2022,ilo_output_worker_ppp,18469
 GH,2023,ilo_output_worker_ppp,18587
 GH,2024,ilo_output_worker_ppp,19172
 GH,2025,ilo_output_worker_ppp,19673
-GH,2026,ilo_output_worker_ppp,20293
-GH,2027,ilo_output_worker_ppp,20924
 HR,2000,ilo_output_worker_ppp,59950
 HR,2001,ilo_output_worker_ppp,62335
 HR,2002,ilo_output_worker_ppp,65700
@@ -2426,8 +2390,6 @@ HR,2022,ilo_output_worker_ppp,93814
 HR,2023,ilo_output_worker_ppp,96766
 HR,2024,ilo_output_worker_ppp,99473
 HR,2025,ilo_output_worker_ppp,103440
-HR,2026,ilo_output_worker_ppp,106910
-HR,2027,ilo_output_worker_ppp,110460
 HU,2000,ilo_output_worker_ppp,55753
 HU,2001,ilo_output_worker_ppp,57022
 HU,2002,ilo_output_worker_ppp,59322
@@ -2454,8 +2416,6 @@ HU,2022,ilo_output_worker_ppp,81769
 HU,2023,ilo_output_worker_ppp,80422
 HU,2024,ilo_output_worker_ppp,81114
 HU,2025,ilo_output_worker_ppp,82051
-HU,2026,ilo_output_worker_ppp,84319
-HU,2027,ilo_output_worker_ppp,86611
 IE,2000,ilo_output_worker_ppp,111660
 IE,2001,ilo_output_worker_ppp,114270
 IE,2002,ilo_output_worker_ppp,119280
@@ -2482,8 +2442,6 @@ IE,2022,ilo_output_worker_ppp,253480
 IE,2023,ilo_output_worker_ppp,234720
 IE,2024,ilo_output_worker_ppp,241200
 IE,2025,ilo_output_worker_ppp,260670
-IE,2026,ilo_output_worker_ppp,261590
-IE,2027,ilo_output_worker_ppp,265380
 IS,2000,ilo_output_worker_ppp,81534
 IS,2001,ilo_output_worker_ppp,83608
 IS,2002,ilo_output_worker_ppp,85276
@@ -2510,8 +2468,6 @@ IS,2022,ilo_output_worker_ppp,112800
 IS,2023,ilo_output_worker_ppp,115230
 IS,2024,ilo_output_worker_ppp,111510
 IS,2025,ilo_output_worker_ppp,111750
-IS,2026,ilo_output_worker_ppp,113070
-IS,2027,ilo_output_worker_ppp,114880
 IT,2000,ilo_output_worker_ppp,136970
 IT,2001,ilo_output_worker_ppp,137490
 IT,2002,ilo_output_worker_ppp,135970
@@ -2538,8 +2494,6 @@ IT,2022,ilo_output_worker_ppp,131170
 IT,2023,ilo_output_worker_ppp,129350
 IT,2024,ilo_output_worker_ppp,129240
 IT,2025,ilo_output_worker_ppp,130630
-IT,2026,ilo_output_worker_ppp,132390
-IT,2027,ilo_output_worker_ppp,134120
 KE,2000,ilo_output_worker_ppp,9893.1
 KE,2001,ilo_output_worker_ppp,9859.5
 KE,2002,ilo_output_worker_ppp,9527.8
@@ -2566,8 +2520,6 @@ KE,2022,ilo_output_worker_ppp,13911
 KE,2023,ilo_output_worker_ppp,14259
 KE,2024,ilo_output_worker_ppp,14523
 KE,2025,ilo_output_worker_ppp,14797
-KE,2026,ilo_output_worker_ppp,15095
-KE,2027,ilo_output_worker_ppp,15444
 LT,2000,ilo_output_worker_ppp,38932
 LT,2001,ilo_output_worker_ppp,42909
 LT,2002,ilo_output_worker_ppp,44322
@@ -2594,8 +2546,6 @@ LT,2022,ilo_output_worker_ppp,93514
 LT,2023,ilo_output_worker_ppp,93189
 LT,2024,ilo_output_worker_ppp,95041
 LT,2025,ilo_output_worker_ppp,98569
-LT,2026,ilo_output_worker_ppp,102800
-LT,2027,ilo_output_worker_ppp,106110
 LU,2000,ilo_output_worker_ppp,270050
 LU,2001,ilo_output_worker_ppp,274480
 LU,2002,ilo_output_worker_ppp,277000
@@ -2622,8 +2572,6 @@ LU,2022,ilo_output_worker_ppp,270950
 LU,2023,ilo_output_worker_ppp,265310
 LU,2024,ilo_output_worker_ppp,265420
 LU,2025,ilo_output_worker_ppp,266490
-LU,2026,ilo_output_worker_ppp,270880
-LU,2027,ilo_output_worker_ppp,276230
 LV,2000,ilo_output_worker_ppp,36685
 LV,2001,ilo_output_worker_ppp,38894
 LV,2002,ilo_output_worker_ppp,41057
@@ -2650,8 +2598,6 @@ LV,2022,ilo_output_worker_ppp,78861
 LV,2023,ilo_output_worker_ppp,80462
 LV,2024,ilo_output_worker_ppp,80860
 LV,2025,ilo_output_worker_ppp,82418
-LV,2026,ilo_output_worker_ppp,84984
-LV,2027,ilo_output_worker_ppp,87704
 MA,2000,ilo_output_worker_ppp,17599
 MA,2001,ilo_output_worker_ppp,18330
 MA,2002,ilo_output_worker_ppp,18638
@@ -2678,8 +2624,6 @@ MA,2022,ilo_output_worker_ppp,29874
 MA,2023,ilo_output_worker_ppp,30377
 MA,2024,ilo_output_worker_ppp,31193
 MA,2025,ilo_output_worker_ppp,32181
-MA,2026,ilo_output_worker_ppp,33148
-MA,2027,ilo_output_worker_ppp,34097
 ME,2000,ilo_output_worker_ppp,51415
 ME,2001,ilo_output_worker_ppp,51936
 ME,2002,ilo_output_worker_ppp,52782
@@ -2706,8 +2650,6 @@ ME,2022,ilo_output_worker_ppp,68076
 ME,2023,ilo_output_worker_ppp,65206
 ME,2024,ilo_output_worker_ppp,67006
 ME,2025,ilo_output_worker_ppp,70187
-ME,2026,ilo_output_worker_ppp,73526
-ME,2027,ilo_output_worker_ppp,76454
 MK,2000,ilo_output_worker_ppp,43119
 MK,2001,ilo_output_worker_ppp,40215
 MK,2002,ilo_output_worker_ppp,41181
@@ -2734,8 +2676,6 @@ MK,2022,ilo_output_worker_ppp,60612
 MK,2023,ilo_output_worker_ppp,62511
 MK,2024,ilo_output_worker_ppp,63137
 MK,2025,ilo_output_worker_ppp,65714
-MK,2026,ilo_output_worker_ppp,68378
-MK,2027,ilo_output_worker_ppp,71255
 MT,2000,ilo_output_worker_ppp,81105
 MT,2001,ilo_output_worker_ppp,79310
 MT,2002,ilo_output_worker_ppp,80607
@@ -2762,8 +2702,6 @@ MT,2022,ilo_output_worker_ppp,106510
 MT,2023,ilo_output_worker_ppp,116180
 MT,2024,ilo_output_worker_ppp,122130
 MT,2025,ilo_output_worker_ppp,125450
-MT,2026,ilo_output_worker_ppp,129530
-MT,2027,ilo_output_worker_ppp,134520
 NL,2000,ilo_output_worker_ppp,103690
 NL,2001,ilo_output_worker_ppp,104430
 NL,2002,ilo_output_worker_ppp,104560
@@ -2790,8 +2728,6 @@ NL,2022,ilo_output_worker_ppp,128420
 NL,2023,ilo_output_worker_ppp,125150
 NL,2024,ilo_output_worker_ppp,126040
 NL,2025,ilo_output_worker_ppp,127520
-NL,2026,ilo_output_worker_ppp,128980
-NL,2027,ilo_output_worker_ppp,130580
 NO,2000,ilo_output_worker_ppp,150440
 NO,2001,ilo_output_worker_ppp,152560
 NO,2002,ilo_output_worker_ppp,153780
@@ -2818,8 +2754,6 @@ NO,2022,ilo_output_worker_ppp,171420
 NO,2023,ilo_output_worker_ppp,169690
 NO,2024,ilo_output_worker_ppp,171860
 NO,2025,ilo_output_worker_ppp,173660
-NO,2026,ilo_output_worker_ppp,175960
-NO,2027,ilo_output_worker_ppp,178630
 PL,2000,ilo_output_worker_ppp,48827
 PL,2001,ilo_output_worker_ppp,50440
 PL,2002,ilo_output_worker_ppp,52970
@@ -2846,8 +2780,6 @@ PL,2022,ilo_output_worker_ppp,85830
 PL,2023,ilo_output_worker_ppp,84513
 PL,2024,ilo_output_worker_ppp,88100
 PL,2025,ilo_output_worker_ppp,92236
-PL,2026,ilo_output_worker_ppp,96282
-PL,2027,ilo_output_worker_ppp,99813
 PT,2000,ilo_output_worker_ppp,71764
 PT,2001,ilo_output_worker_ppp,71757
 PT,2002,ilo_output_worker_ppp,71682
@@ -2874,8 +2806,6 @@ PT,2022,ilo_output_worker_ppp,87185
 PT,2023,ilo_output_worker_ppp,88400
 PT,2024,ilo_output_worker_ppp,90227
 PT,2025,ilo_output_worker_ppp,92056
-PT,2026,ilo_output_worker_ppp,94518
-PT,2027,ilo_output_worker_ppp,96648
 RO,2000,ilo_output_worker_ppp,39111
 RO,2001,ilo_output_worker_ppp,41078
 RO,2002,ilo_output_worker_ppp,44279
@@ -2902,8 +2832,6 @@ RO,2022,ilo_output_worker_ppp,93799
 RO,2023,ilo_output_worker_ppp,97780
 RO,2024,ilo_output_worker_ppp,99257
 RO,2025,ilo_output_worker_ppp,101470
-RO,2026,ilo_output_worker_ppp,103560
-RO,2027,ilo_output_worker_ppp,107020
 RS,2000,ilo_output_worker_ppp,26635
 RS,2001,ilo_output_worker_ppp,28800
 RS,2002,ilo_output_worker_ppp,31321
@@ -2930,8 +2858,6 @@ RS,2022,ilo_output_worker_ppp,54022
 RS,2023,ilo_output_worker_ppp,55147
 RS,2024,ilo_output_worker_ppp,55909
 RS,2025,ilo_output_worker_ppp,57553
-RS,2026,ilo_output_worker_ppp,59738
-RS,2027,ilo_output_worker_ppp,62530
 SE,2000,ilo_output_worker_ppp,100150
 SE,2001,ilo_output_worker_ppp,99152
 SE,2002,ilo_output_worker_ppp,101190
@@ -2958,8 +2884,6 @@ SE,2022,ilo_output_worker_ppp,127150
 SE,2023,ilo_output_worker_ppp,125300
 SE,2024,ilo_output_worker_ppp,126730
 SE,2025,ilo_output_worker_ppp,127340
-SE,2026,ilo_output_worker_ppp,128960
-SE,2027,ilo_output_worker_ppp,130550
 SI,2000,ilo_output_worker_ppp,66832
 SI,2001,ilo_output_worker_ppp,67160
 SI,2002,ilo_output_worker_ppp,68474
@@ -2986,8 +2910,6 @@ SI,2022,ilo_output_worker_ppp,97641
 SI,2023,ilo_output_worker_ppp,100950
 SI,2024,ilo_output_worker_ppp,102660
 SI,2025,ilo_output_worker_ppp,103720
-SI,2026,ilo_output_worker_ppp,106510
-SI,2027,ilo_output_worker_ppp,109920
 SK,2000,ilo_output_worker_ppp,47058
 SK,2001,ilo_output_worker_ppp,47979
 SK,2002,ilo_output_worker_ppp,49589
@@ -3014,8 +2936,6 @@ SK,2022,ilo_output_worker_ppp,79469
 SK,2023,ilo_output_worker_ppp,80197
 SK,2024,ilo_output_worker_ppp,81907
 SK,2025,ilo_output_worker_ppp,83514
-SK,2026,ilo_output_worker_ppp,85746
-SK,2027,ilo_output_worker_ppp,88249
 TN,2000,ilo_output_worker_ppp,32067
 TN,2001,ilo_output_worker_ppp,32578
 TN,2002,ilo_output_worker_ppp,32599
@@ -3042,8 +2962,6 @@ TN,2022,ilo_output_worker_ppp,42959
 TN,2023,ilo_output_worker_ppp,43065
 TN,2024,ilo_output_worker_ppp,43671
 TN,2025,ilo_output_worker_ppp,44349
-TN,2026,ilo_output_worker_ppp,44935
-TN,2027,ilo_output_worker_ppp,45404
 TR,2000,ilo_output_worker_ppp,45218
 TR,2001,ilo_output_worker_ppp,42741
 TR,2002,ilo_output_worker_ppp,45847
@@ -3070,8 +2988,6 @@ TR,2022,ilo_output_worker_ppp,86649
 TR,2023,ilo_output_worker_ppp,88885
 TR,2024,ilo_output_worker_ppp,89104
 TR,2025,ilo_output_worker_ppp,90918
-TR,2026,ilo_output_worker_ppp,93335
-TR,2027,ilo_output_worker_ppp,95928
 UK,2000,ilo_output_worker_ppp,91838
 UK,2001,ilo_output_worker_ppp,93260
 UK,2002,ilo_output_worker_ppp,94208
@@ -3098,8 +3014,6 @@ UK,2022,ilo_output_worker_ppp,107060
 UK,2023,ilo_output_worker_ppp,106860
 UK,2024,ilo_output_worker_ppp,107860
 UK,2025,ilo_output_worker_ppp,109100
-UK,2026,ilo_output_worker_ppp,110130
-UK,2027,ilo_output_worker_ppp,111360
 MT,2016,lc_hour,14.2
 MT,2020,lc_hour,17
 MT,2021,lc_hour,17.5
