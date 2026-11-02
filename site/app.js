@@ -2,6 +2,7 @@
 import { S, D, EU, load, readHash, writeHash, h, select, countryOptions, sectorOptions, yearOptions, cname, coverage, endYear, countryColor, hideTip, resetFigures } from "./core.js";
 import { overview, ulc, country, compare, hour, stopPlay } from "./views1.js";
 import { industries, structure, analysis, methods } from "./views2.js";
+import { casestudy } from "./views3.js";
 
 const VIEWS = {
   overview:   { label: "Overview",          fn: overview,   ctx: ["focus", "sector"] },
@@ -12,6 +13,7 @@ const VIEWS = {
   industries: { label: "Industries",        fn: industries, ctx: ["focus", "comps"] },
   structure:  { label: "Economy structure", fn: structure,  ctx: ["focus", "period"] },
   analysis:   { label: "Analysis",          fn: analysis,   ctx: ["focus", "comps", "period", "sector"] },
+  casestudy:  { label: "Country case study", fn: casestudy, ctx: [] },
   methods:    { label: "Methods",           fn: methods,    ctx: [] },
 };
 

@@ -55,3 +55,7 @@ The CSS asks for Aeonik and PP Editorial New first, so the site shows TBI's type
 ## Not yet included
 
 Statutory sick-leave rules and legal working time from the Project 2 research. These will be added as a hand-maintained CSV in `config/`.
+
+## Authors
+
+Gregor Dalheimer (gregor.dalheimer@institute.global) and Abaigeal Heneghan (abaigeal.heneghan@institute.global), Tony Blair Institute for Global Change.

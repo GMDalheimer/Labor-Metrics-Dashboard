@@ -19,7 +19,7 @@ export const S = {
   metric: "prod_hour",
   // view-specific
   year: null, ulcBasis: "per", tier: "manuf14", trend: "prod_hour", index: false,
-  hourNace: "C", sick: 0, paidShare: 100, wageChange: 0,
+  hourNace: "C", wageChange: 0,
   indLevel: "division", industry: "C29", indMetric: "va_worker", indYear: null,
   treeColor: "prod_nat", treeRoot: "TOTAL",
   model: "passthrough", regions: null, customY: "comp_pe", customX: "prod", customTY: "growth", customTX: "growth",
@@ -169,8 +169,11 @@ export const pct = d3.format("+.1%");
 export const pp = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1);
 export const cname = g => D.name.get(g) || g;
 export const sectorLabel = n => (D.sectors.find(s => s.nace === n) || {}).label || (D.nace?.get(n)) || n;
-export const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-export const isDark = () => document.documentElement.dataset.theme === "dark";
+// Colors are read from the document, or from a scoped element (the case-study slides are always light)
+let colorScope = null;
+export const setColorScope = el => { colorScope = el; };
+export const cssVar = n => getComputedStyle(colorScope || document.documentElement).getPropertyValue(n).trim();
+export const isDark = () => (colorScope || document.documentElement).dataset.theme === "dark";
 
 // Fixed categorical slots: focus, then comparison countries in the order chosen, EU27 neutral
 export function countryColor(geo) {
