@@ -74,8 +74,8 @@ export async function industries(root) {
   const title = code === "TOTAL" ? "Total economy" : `${code} ${naceName(code)}`;
 
   root.append(pageHeader("Industries", title,
-    `Every activity in the economy can be selected in the browser below, from sections (letters) to divisions (two digits) and groups (three digits) of NACE Rev. 2. ` +
-    `For the business economy (sections B to N) the figures come from structural business statistics; agriculture and public and social services (A, O to S) are covered by the national accounts at section and division level.`));
+    `Pick an activity below. Activities follow the EU classification NACE Rev. 2: sections have a letter, divisions two digits and groups three. ` +
+    `Figures for sections B to N come from Eurostat's business statistics. Agriculture (A) and public and social services (O to S) are not covered there, so they come from the national accounts.`));
 
   root.append(industryBrowser(IX, code));
   root.append(h("div", { class: "view-controls" },
@@ -158,7 +158,7 @@ function industryBrowser(IX, current) {
     h("div", { class: "browser-top" },
       h("p", { class: "picker-title" }, "Activity ", h("span", {}, `· ${IX.codes.length} activities across the whole economy`)),
       search),
-    h("div", { class: "shortcuts" }, h("span", { class: "field-label" }, "Quick access"),
+    h("div", { class: "shortcuts" }, h("span", { class: "field-label" }, "Shortcuts"),
       shortcuts.map(([c, l]) => h("button", { class: `picker-opt ${c === current ? "on" : ""}`, onclick: () => pick(c) }, l))),
     crumbs, columns, results);
 }
@@ -252,9 +252,8 @@ export async function structure(root) {
   const years = [...new Set(D.full.rows.filter(r => r.geo === S.focus && r.nace === "TOTAL" && r.emp).map(r => r.year))].sort();
   const year = years.includes(end) ? end : years[years.length - 1];
   root.append(pageHeader("Economy structure", `Structure of employment by activity, ${cname(S.focus)}`,
-    `Economic activities are classified by NACE Rev. 2 in four levels: 21 sections (letters A to U), 88 divisions (two digits), 272 groups (three digits) and 615 classes (four digits). ` +
-    `The national accounts (nama_10_a64) report sections and about 64 divisions or combinations of divisions; structural business statistics report the business economy down to groups. ` +
-    `In the chart, the width of each bar is proportional to employment. Clicking a bar zooms into it; clicking the left-most bar zooms out.`));
+    `How a country's jobs are spread across activities. The EU classification has 21 sections, 88 divisions, 272 groups and 615 classes; the national accounts publish sections and about 64 divisions, and the business statistics go down to groups. ` +
+    `The taller a bar, the more people work in that activity. Click a bar to zoom in and the left-most bar to zoom out.`));
 
   const colorModes = [
     { value: "prod_nat", label: "Productivity relative to national average" },
@@ -433,8 +432,8 @@ export function analysis(root) {
   const regions = [...new Set(D.countries.map(c => c.region))];
   S.regions = S.regions || regions;
   root.append(pageHeader("Analysis", "Regression analysis",
-    `Bivariate OLS regressions across economies, estimated in the browser on the data shown elsewhere in the atlas. Standard errors are heteroskedasticity-robust (HC1); the panel model uses country fixed effects with standard errors clustered by country. ` +
-    `Estimates describe associations in the sample and do not identify causal effects. The period (${base}–${end}) and the sector (${sectorLabel(nace).toLowerCase()}) are set in the bar above.`));
+    `Simple regressions of one indicator on another across countries, run on the same data as the rest of the site. Standard errors are robust (HC1); the panel model adds country fixed effects and clusters standard errors by country. ` +
+    `The results show associations, not causes. The period (${base}–${end}) and the sector (${sectorLabel(nace).toLowerCase()}) come from the bar above.`));
 
   const modelOpts = Object.entries(MODELS).map(([value, m]) => ({ value, label: m.label }));
   const ctr = h("div", { class: "view-controls" },
@@ -540,7 +539,7 @@ const FORMULAS = [
     { t: "Compensation per employee hour", f: String.raw`W^{h}_{it} = \frac{D1_{it}}{H^{L}_{it}}`,
       x: "Compensation of employees divided by the hours worked by employees. It is the national-accounts counterpart of hourly labor cost." },
     { t: "Unit labor cost", f: String.raw`\mathit{ULC}_{it} = \frac{W_{it}}{P_{it}} = \frac{D1_{it}/L_{it}}{\mathit{GVA}^{\,real}_{it}/E_{it}}, \qquad \mathit{ULC}^{h}_{it} = \frac{W^{h}_{it}}{P^{h}_{it}}`,
-      x: "The labor cost incurred to produce one unit of real output. It combines the two forces that determine cost competitiveness: what each worker costs (W) and how much each worker produces (P). The hourly version uses compensation and output per hour.",
+      x: "The labor cost of producing one unit of real output: what a worker costs (W) divided by what a worker produces (P). The hourly version uses compensation and output per hour.",
       read: "ULC rises when compensation grows faster than productivity, and falls when productivity grows faster. Because the denominator is measured at national prices, ULC levels are not comparable across countries; the atlas therefore compares ULC through indices and growth rates." },
     { t: "Decomposition of the change in unit labor cost", f: String.raw`\Delta \ln \mathit{ULC}_{i} = \Delta \ln W_{i} - \Delta \ln P_{i}`,
       x: "Taking logarithms turns the ratio into a difference, so the change in ULC splits exactly into the change in compensation per employee and the change in productivity. No interaction term is left over.",
@@ -606,8 +605,8 @@ const FORMULAS = [
 export function methods(root) {
   const tab = S.methodsTab || "data";
   root.append(pageHeader("Methods", tab === "formulas" ? "Formulas and definitions" : tab === "limits" ? "Limitations" : "Sources, definitions and coverage",
-    tab === "formulas" ? "How every derived indicator, decomposition and regression in the atlas is computed, with an explanation of what each formula measures and how to read it."
-    : `All series are retrieved from public sources by an automated build and committed to the repository with each refresh. Last build: ${D.meta.built ? new Date(D.meta.built).toUTCString() : "unknown"}.`));
+    tab === "formulas" ? "How each indicator, decomposition and regression on the site is calculated, and what the result means."
+    : `All data come from Eurostat and ILOSTAT. They are downloaded automatically once a month, and each download is saved, so earlier versions can be traced. Last update: ${D.meta.built ? new Date(D.meta.built).toUTCString() : "unknown"}.`));
   root.append(h("div", { class: "view-controls" },
     seg(null, [{ value: "data", label: "Data and coverage" }, { value: "formulas", label: "Formulas" }, { value: "limits", label: "Limitations" }], tab, v => set({ methodsTab: v }))));
   if (tab === "formulas") return formulasTab(root);

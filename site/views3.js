@@ -46,7 +46,7 @@ export async function casestudy(root) {
   root.append(h("header", { class: "page-head" },
     h("p", { class: "kicker" }, "Country brief"),
     h("h1", { class: "page-title" }, "Create a short country brief"),
-    h("p", { class: "page-desc" }, "The atlas contains many indicators. Answer five questions and it selects the figures that matter for what you want to know, adds a short explanation of each, and lays them out as a brief that can be saved as a PDF.")));
+    h("p", { class: "page-desc" }, "The rest of the site has a lot of detail. If you need a short summary for one country, answer the five questions below. You get a few pages with the relevant charts and a short explanation of each, which you can save as a PDF.")));
 
   const form = h("ol", { class: "wizard" });
   root.append(form);
@@ -99,7 +99,7 @@ async function brief(root) {
   root.append(h("div", { class: "deck-bar no-print" },
     h("button", { class: "link-btn", onclick: () => { CS.built = false; rerender(); } }, "← Change the answers"),
     h("button", { class: "primary", onclick: () => window.print() }, "Save as PDF"),
-    h("span", { class: "field-label" }, "Choose “Save as PDF” in the print dialog. Each page prints on one A4 landscape sheet.")));
+    h("span", { class: "field-label" }, "In the print window, choose \"Save as PDF\". Each page fits one landscape A4 sheet.")));
   const doc = h("div", { class: "brief", "data-theme": "light" });
   root.append(doc);
   setColorScope(doc);
