@@ -309,7 +309,7 @@ sbs_one <- function(id) {
   icol <- intersect(c("indic_sb", "indic_sbs"), names(x))[1]
   show_codes(x, icol)
   if ("size_emp" %in% names(x)) x <- x %>% filter(size_emp == "TOTAL")
-  keep <- grepl("^C[0-9]{2,3}$", x$nace_r2) | grepl("^[B-N][0-9]{2}$", x$nace_r2) | x$nace_r2 %in% c(LETTERS[2:14], "B-N", "B-S_X_O", "C")
+  keep <- grepl("^[B-N][0-9]{2,3}$", x$nace_r2) | x$nace_r2 %in% c(LETTERS[2:14], "B-N", "B-S_X_O", "C")
   x %>% filter(keep, !is.na(values)) %>%
     mutate(ind = .data[[icol]],
            var = case_when(

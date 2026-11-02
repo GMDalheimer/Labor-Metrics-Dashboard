@@ -4,7 +4,7 @@ import {
   d3, EU, S, D, writeHash, loadWorld, isSector, val, series, latest, snapshot, coverage, rankOf, endYear, growth,
   fmt, pct, pp, cname, sectorLabel, cssVar, countryColor, seqRamp, divRamp, h, showTip, hideTip, ttRow,
   pageHeader, figure, grid, select, seg, sectorOptions, kpiRow, svgEl, widthOf, axisLeft, axisBottom,
-  sparkline, lineChart, legend, scatter, yearOptions,
+  sparkline, lineChart, legend, scatter, yearOptions, comparisonSeries,
 } from "./core.js";
 import { ols, stars, fmtP } from "./stats.js";
 import { tex } from "./views2.js";
@@ -230,14 +230,13 @@ export function ulc(root) {
   ]));
 
   // Figure: ULC index
-  const idxList = [...new Set([S.focus, ...S.comps, EU])].map(geo => {
+  const idxList = comparisonSeries(geo => {
     const b = ulcOf(geo, base);
-    const data = b ? D.allYears.map(y => ({ year: y, v: ulcOf(geo, y) })).filter(d => d.v != null).map(d => ({ year: d.year, v: 100 * d.v / b })) : [];
-    return { key: geo, label: cname(geo), color: countryColor(geo), width: geo === S.focus ? 2.6 : 1.8, dash: geo === EU ? "5 4" : null, data };
-  }).filter(s => s.data.length);
+    return b ? D.allYears.map(y => ({ year: y, v: ulcOf(geo, y) })).filter(d => d.v != null).map(d => ({ year: d.year, v: 100 * d.v / b })) : [];
+  });
   const f1 = figure({ title: `Unit labor cost index, ${sectorLabel(S.nace).toLowerCase()}`, span: 7,
     sub: `Index, ${base} = 100. Nominal compensation ${basis === "hour" ? "per hour worked by employees" : "per employee"} divided by real value added ${basis === "hour" ? "per hour worked" : "per person employed"}.`,
-    note: "Source: Eurostat nama_10_a64, nama_10_a64_e; author's calculation. Dashed: EU27 aggregate.",
+    note: "Source: Eurostat nama_10_a64, nama_10_a64_e; author's calculation. Dashed: EU27 aggregate. Grey: context economies (hover to identify). Dotted with shaded band: group median and range.",
     csv: () => idxList.flatMap(s => s.data.map(d => ({ country: s.label, year: d.year, index: d.v }))) });
 
   // Figure: annual decomposition for focus
@@ -454,11 +453,11 @@ export function compare(root) {
   const wrap = h("div", { class: "grid" });
   root.append(wrap);
   for (const M of METRICS) {
-    const list = [...geos, EU].map(g => {
+    const list = comparisonSeries(g => {
       let data = series(M.key, g, "TOTAL");
       if (S.index) { const b = data.find(d => d.year === S.base); data = b ? data.map(d => ({ year: d.year, v: 100 * d.v / b.v })) : []; }
-      return { key: g, label: cname(g), color: countryColor(g), width: g === S.focus ? 2.4 : 1.8, dash: g === EU ? "5 4" : null, data };
-    }).filter(s => s.data.length);
+      return data;
+    });
     if (!list.some(s => s.key !== EU)) continue;
     const f = figure({ title: M.label, span: 4, sub: S.index ? `Index, ${S.base} = 100` : M.unit, png: true,
       note: `Source: ${M.source}.`, csv: () => list.flatMap(s => s.data.map(d => ({ country: s.label, year: d.year, value: d.v }))) });
