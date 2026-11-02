@@ -70,10 +70,13 @@ export const METRICS = [
     source: "Eurostat earn_mw_avgr2", desc: "How binding the minimum wage is relative to average pay." },
   { key: "ilo_min_wage_usd", table: "country", cat: "Wages", label: "Minimum wage (ILO, USD)",
     unit: "USD per month (gross, statutory)", fmt: ",.0f", prefix: "$",
-    source: "ILOSTAT EAR_4MMN_CUR_NB_A", desc: "Statutory minimum wage in US dollars; covers non-European comparators." },
+    source: "ILOSTAT EAR_INEE_CUR_NB_A", desc: "Statutory minimum wage in US dollars; covers non-European comparators." },
   { key: "ilo_earnings_usd", table: "country", cat: "Wages", label: "Average monthly earnings (ILO, USD)",
     unit: "USD per month", fmt: ",.0f", prefix: "$",
-    source: "ILOSTAT EAR_4MTH_SEX_ECO_CUR_NB_A", desc: "Mean nominal monthly earnings of employees." },
+    source: "ILOSTAT EAR_EMTA_SEX_ECO_CUR_NB_A", desc: "Mean nominal monthly earnings of employees." },
+  { key: "ilo_earnings_c_usd", table: "country", cat: "Wages", label: "Average monthly earnings, manufacturing (ILO, USD)",
+    unit: "USD per month, manufacturing", fmt: ",.0f", prefix: "$",
+    source: "ILOSTAT EAR_EMTA_SEX_ECO_CUR_NB_A", desc: "Mean nominal monthly earnings of manufacturing employees." },
 
   // Distribution
   { key: "labour_share", table: "sector", cat: "Distribution", label: "Labour share",

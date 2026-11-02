@@ -444,7 +444,7 @@ function drawMap(host, color) {
   for (const f of feats) f.geo = byNum.get(String(f.id)) || (kosovo && f.properties?.name === "Kosovo" ? "XK" : null);
 
   // Frame Europe, the Western Balkans and North Africa (fixed box, so overseas territories do not distort it)
-  const box = { type: "Feature", geometry: { type: "MultiPoint", coordinates: [[-11, 34], [33, 71], [42, 37], [-8, 26], [32, 25], [25, 71]] } };
+  const box = { type: "Feature", geometry: { type: "MultiPoint", coordinates: [[-17, 30], [33, 71], [42, 37], [-14, 22], [34, 22], [25, 71]] } };
   const proj = d3.geoAzimuthalEqualArea().rotate([-12, -50]).fitExtent([[10, 10], [width - 10, height - 10]], box);
   const path = d3.geoPath(proj);
   const clipId = "clip" + Math.random().toString(36).slice(2);
@@ -502,7 +502,7 @@ function drawLegend(host, color, M) {
 function drawRanking(host) {
   const list = h("div", { class: "rank-list" });
   host.append(list);
-  const width = widthOf(host) - 8, rowH = 20, m = { l: 140, r: 74 };
+  const width = widthOf(host) - 8, rowH = 20, m = { l: 170, r: 74 };
   const svg = d3.select(list).append("svg").attr("width", width);
   const gEU = svg.append("g");
   const gRows = svg.append("g");
