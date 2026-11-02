@@ -27,7 +27,8 @@ export function home(root) {
   const feat = h("section", { class: "home-section" }, h("h2", {}, "Labor cost and output per hour"));
   root.append(feat);
   const f = figure({ title: `Hourly labor cost and value added per hour worked, ${yr}`, span: 12,
-    sub: "Each point is one country. Countries above the line have a higher labor cost per hour than the line predicts from their output per hour, and countries below it have a lower one.",
+    sub: "Each point is one country.",
+    text: "Countries above the line have a higher labor cost per hour than the line predicts from their output per hour, and countries below it have a lower one.",
     note: "Hourly labor cost for the business economy is from Eurostat lc_lci_lev, and value added and hours for the total economy are from nama_10_a64 and nama_10_a64_e. The line is an OLS fit with a 95% confidence band.",
     method: fit ? [`Slope ${fit.coefs[1].b.toFixed(2)} (robust SE ${fit.coefs[1].se.toFixed(2)}, p ${fmtP(fit.coefs[1].p)}), n = ${fit.n}, R² = ${fit.r2.toFixed(2)}. On average, a country that produces one euro more per hour has a labor cost that is ${fit.coefs[1].b.toFixed(2)} euros higher per hour.`] : [] });
   feat.append(h("div", { class: "grid" }, f.el));
@@ -52,7 +53,12 @@ export function home(root) {
       h("div", {}, "EU27 is Eurostat's figure for the EU as a whole, so large countries count for more than small ones. Lines for regional groups are different: they show the middle country of the group, and each country counts the same."),
       h("div", {}, "Under each chart, \"Source and method\" shows where the data come from and how the numbers are calculated. The Methods page has the full list, including the limitations of the data."))));
 
-  root.append(h("section", { class: "home-section" }, h("h2", {}, "About"),
-    h("p", { class: "home-cite" }, "Gregor Dalheimer and Abaigeal Heneghan, Tony Blair Institute for Global Change. All data are public; the full tables can be downloaded from the Methods page."),
-    h("p", { class: "home-cite" }, "Suggested citation: Dalheimer, G. and Heneghan, A. (2026). Labor Cost Atlas. Tony Blair Institute for Global Change.")));
+  const mail = a => h("a", { href: `mailto:${a}` }, a);
+  root.append(h("section", { class: "home-section" }, h("h2", {}, "Authors and contact"),
+    h("dl", { class: "imprint home-imprint" },
+      h("div", {}, h("dt", {}, "Authors"), h("dd", {}, "Gregor Dalheimer and Abaigeal Heneghan")),
+      h("div", {}, h("dt", {}, "Contact"), h("dd", {}, mail("gregor.dalheimer@institute.global"), h("br"), mail("abaigeal.heneghan@institute.global"))),
+      h("div", {}, h("dt", {}, "Publisher"), h("dd", {}, "Tony Blair Institute for Global Change")),
+      h("div", {}, h("dt", {}, "Suggested citation"), h("dd", {}, "Dalheimer, G. and Heneghan, A. (2026). Labor Cost Atlas. Tony Blair Institute for Global Change."))),
+    h("p", { class: "home-cite" }, "All data are public, and the full tables can be downloaded from the Methods page. Questions, corrections and requests for additional indicators are welcome at either address.")));
 }

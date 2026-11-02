@@ -209,8 +209,7 @@ code { font-size: var(--t-s); font-family: ui-monospace, "SF Mono", Menlo, monos
   padding: 16px 40px 26px; color: var(--text-3); font-size: var(--t-s); border-top: 1px solid var(--line); }
 
 @media (max-width: 760px) {
-  .masthead, main, .ctx-inner, .footer a { color: var(--text-2); }
-.footer { padding-left: 18px; padding-right: 18px; }
+  .masthead, main, .ctx-inner, .footer { padding-left: 18px; padding-right: 18px; }
   .picker-row { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
@@ -415,3 +414,86 @@ details.more.block { margin: 0 0 30px; max-width: 980px; }
 .home-steps b { color: var(--text); }
 .home-cite { font-size: var(--t-m); color: var(--text-2); max-width: 90ch; }
 @media (max-width: 1000px) { .home-hero, .home-paths, .home-steps { grid-template-columns: 1fr; } }
+
+
+/* ===== Methodology-note register ===========================================
+   White page, navy sans headings, numbered sections, thin rules, captions
+   below figures. The logo gradient marks anything that can be clicked. */
+[data-theme="light"] {
+  --bg: #ffffff; --bg-2: #f3f5f8;
+  --text: #16181b; --text-2: #43474e; --text-3: #7a7f88;
+  --line: #e3e6eb; --line-2: #c8cdd5;
+  --context: #d5d9df; --context-hi: #9da3ad; --map-empty: #e6e9ee;
+  --navy: #1f4e79;
+}
+[data-theme="dark"] { --navy: #8db4e2; }
+:root {
+  --grad: linear-gradient(90deg, var(--s1), var(--s2) 55%, var(--s3));
+  --grad-soft: linear-gradient(90deg, color-mix(in srgb, var(--s1) 16%, transparent), color-mix(in srgb, var(--s2) 16%, transparent), color-mix(in srgb, var(--s3) 16%, transparent));
+}
+
+/* Headings */
+.page-title, .home-hero h1 { font-family: var(--sans); font-weight: 700; color: var(--navy); letter-spacing: -.02em; line-height: 1.1; }
+.home-section > h2, .prose h2, .f-body h2, .pg-title { font-family: var(--sans); font-weight: 700; color: var(--navy); font-size: var(--t-l); letter-spacing: -.01em; }
+.masthead-row { border-bottom: 2px solid var(--navy); }
+main { counter-reset: sec; }
+.home-section > h2::before, .prose h2::before, .f-body h2::before { counter-increment: sec; content: counter(sec); display: inline-block; min-width: 1.6em; }
+
+/* Figures: bold label, short line above, explanation below */
+.fig-no { font-weight: 700; color: var(--navy); }
+.fig-title { font-weight: 700; }
+.fig-text { font-size: var(--t-m); color: var(--text-2); margin: 12px 0 0; max-width: 90ch; }
+.fig-text[hidden] { display: none; }
+
+/* Imprint (footer) */
+.footer { display: grid; grid-template-columns: auto 1fr; gap: 24px 64px; align-items: start; padding-top: 28px; padding-bottom: 36px; border-top: 2px solid var(--navy); margin-top: 40px; font-size: var(--t-m); color: var(--text-2); }
+.footer-brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: var(--t-l); color: var(--text); line-height: 1; }
+.footer-brand .brand-mark { width: 20px; height: 20px; }
+.imprint { display: grid; grid-template-columns: repeat(4, minmax(0, max-content)); gap: 8px 48px; margin: 0; }
+.imprint div { display: grid; grid-template-columns: auto; gap: 2px; }
+.imprint dt { font-weight: 700; color: var(--text); }
+.imprint dd { margin: 0; }
+.footer a { color: var(--text-2); text-decoration: none; }
+@media (max-width: 1000px) { .footer { grid-template-columns: 1fr; } .imprint { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .imprint { grid-template-columns: 1fr; } }
+
+/* Neutral disclosure: a small chevron after the label */
+details.more > summary::before { content: none; }
+details.more > summary::after { content: ""; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg); transition: transform .15s; margin-left: 4px; }
+details.more[open] > summary::after { transform: translateY(1px) rotate(-135deg); }
+
+/* Hover: the logo gradient on text links ... */
+.nav a:hover, .link-btn:hover, .seg-opt:hover, .tag:hover, .theme button:hover, .footer a:hover,
+details.more > summary:hover, .home-path:hover b, .wordmark:hover, .crumbs .link-btn:hover {
+  background-image: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; text-decoration: none; }
+details.more > summary:hover::after, .home-path:hover b::after { color: var(--s3); border-color: var(--s3); }
+.nav a.active { border-image: var(--grad) 1; }
+.select:hover, .seg-opt:hover { border-bottom-color: var(--s2); }
+/* ... and a soft gradient wash on filled controls; the selected state takes the full gradient */
+.picker-opt:hover, .choice:hover, .ind-item:hover, .col-item:hover { background: var(--grad-soft); color: var(--text); }
+.picker-opt.on, .choice.on, .ind-item.on, .col-item.on, .primary { background: var(--grad); color: #fff; }
+.primary:hover { filter: saturate(1.15) brightness(1.06); }
+.home-imprint { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 18px; }
+.home-imprint a { color: var(--text-2); text-decoration: none; }
+.home-imprint a:hover { background-image: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+@media (max-width: 1000px) { .home-imprint { grid-template-columns: 1fr 1fr; } }
+.footer { border-top: none; background: linear-gradient(var(--navy), var(--navy)) no-repeat 40px 0 / calc(100% - 80px) 2px; }
+.imprint { grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }
+.imprint dd { overflow-wrap: anywhere; }
+.home-steps div::before { font-family: var(--sans); font-weight: 700; color: var(--navy); }
+@media (max-width: 760px) { .footer { background-position: 18px 0; background-size: calc(100% - 36px) 2px; } }
+.imprint { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.imprint div { align-content: start; }
+.imprint dd { overflow-wrap: normal; }
+.footer .imprint dd { white-space: normal; }
+.home-imprint { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.2fr); }
+@media (max-width: 1000px) { .imprint, .home-imprint { grid-template-columns: 1fr 1fr; } .imprint dd { overflow-wrap: anywhere; } }
+/* Selected options: a stronger wash and a gradient edge; the full gradient is kept for the main action */
+.picker-opt.on, .choice.on, .ind-item.on, .col-item.on {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--s1) 26%, transparent), color-mix(in srgb, var(--s2) 22%, transparent), color-mix(in srgb, var(--s3) 26%, transparent));
+  color: var(--text); box-shadow: inset 3px 0 0 var(--s1); }
+.ind-item.on b, .col-item.on b { color: var(--text); } .col-item.on i { color: var(--text-2); }
+.choice.on small { opacity: .85; }
+.step-no { background: var(--navy); }
+[data-theme="dark"] .step-no { color: #111213; }

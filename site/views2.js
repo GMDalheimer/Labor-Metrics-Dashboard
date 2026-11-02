@@ -74,7 +74,7 @@ export async function industries(root) {
   const title = code === "TOTAL" ? "Total economy" : `${code} ${naceName(code)}`;
 
   root.append(pageHeader("Industries", title,
-    `Pick an activity below. Activities follow the EU classification NACE Rev. 2: sections have a letter, divisions two digits and groups three. ` +
+    `An activity can be selected below. Activities follow the EU classification NACE Rev. 2: sections have a letter, divisions two digits and groups three. ` +
     `Figures for sections B to N come from Eurostat's business statistics. Agriculture (A) and public and social services (O to S) are not covered there, so they come from the national accounts.`));
 
   root.append(industryBrowser(IX, code));
@@ -94,7 +94,8 @@ export async function industries(root) {
     .map(d => ({ geo: d.geo, name: d.name, x: Math.log10(d.r.va_worker), y: 100 * d.r.wage_share, emp: d.r.emp || 0 }));
   const fit = pts.length > 5 ? ols(pts.map(p => ({ y: p.y, x: [p.x] })), ["log10 VA per person"]) : null;
   const f2 = figure({ title: "Productivity and wage share", span: 7,
-    sub: `The horizontal axis shows value added per person employed on a log scale, and the vertical axis ${src === "na" ? "compensation" : "wages and salaries"} as a percentage of value added, both for ${yr}. Marker size reflects employment, and the line is an OLS fit with a 95% confidence band.`,
+    sub: `Each marker is one economy in ${yr}.`,
+    text: `The horizontal axis shows value added per person employed on a log scale, and the vertical axis ${src === "na" ? "compensation" : "wages and salaries"} as a percentage of value added. Marker size reflects employment, and the line is an OLS fit with a 95% confidence band.`,
     note: fit ? `The slope is ${fit.coefs[1].b.toFixed(1)} percentage points per tenfold increase in value added per person (SE ${fit.coefs[1].se.toFixed(1)}, p ${fmtP(fit.coefs[1].p)}, n = ${fit.n}, R² = ${fit.r2.toFixed(2)}).` : "",
     csv: () => pts.map(p => ({ country: p.name, va_per_person: 10 ** p.x, wage_share_pct: p.y, employed: p.emp })) });
   root.append(grid(f1.el, f2.el));
@@ -105,13 +106,13 @@ export async function industries(root) {
     highlight: p => p.geo === S.focus, colorOf: p => p.geo === S.focus || S.comps.includes(p.geo) ? countryColor(p.geo) : cssVar("--context-hi"), height: 440 });
 
   const list = comparisonSeries(g => years.map(y => ({ year: y, v: get(g, y)?.[S.indMetric] })).filter(d => d.v != null));
-  const f3 = figure({ title: `${M.label} over time`, span: 6, sub: `${unit} The chart shows the selected economies, the EU27 and any additional countries or groups chosen above.`,
+  const f3 = figure({ title: `${M.label} over time`, span: 6, sub: unit, text: "The chart shows the selected economies, the EU27 and any additional countries or groups chosen above.",
     note: src === "sbs" ? "A break in 2021 can occur where the source changes from sbs_na_ind_r2 to sbs_ovw_act." : "",
     csv: () => list.flatMap(s => s.data.map(d => ({ series: s.label, year: d.year, value: d.v }))) });
   const kids = code === "TOTAL" ? IX.codes.filter(c => IX.lev(c) === 1) : IX.children(code);
   const kidRows = kids.map(c => ({ code: c, name: naceName(c), r: get(S.focus, yr, c) })).filter(d => d.r && d.r[S.indMetric] != null).map(d => ({ ...d, v: d.r[S.indMetric] }));
   const f4 = figure({ title: kids.length ? `Components of ${code === "TOTAL" ? "the total economy" : code} in ${cname(S.focus)}, ${yr}` : `${code} is not broken down further in the data`, span: 6,
-    sub: kids.length ? `${M.label} is shown by ${code === "TOTAL" ? "section" : IX.lev(code) === 1 ? "division" : "group"}. Clicking a bar opens that activity.` : "",
+    sub: kids.length ? `${M.label} is shown by ${code === "TOTAL" ? "section" : IX.lev(code) === 1 ? "division" : "group"}.` : "", text: kids.length ? "Clicking a bar opens that activity." : "",
     csv: () => kidRows.map(d => ({ nace: d.code, label: d.name, value: d.v })) });
   root.append(grid(f3.el, f4.el));
   lineChart(f3.body, list, { height: 320, yFormat: M.f, xDomain: d3.extent(years) });
@@ -137,8 +138,8 @@ function industryBrowser(IX, current) {
   const grps = sel.div ? IX.children(sel.div) : [];
   const columns = h("div", { class: "cols" },
     col("Sections", sections, ""),
-    col(sel.sec ? `Divisions of ${sel.sec}` : "Divisions", divs, sel.sec ? "No divisions in the data." : "Select a section."),
-    col(sel.div ? `Groups of ${sel.div}` : "Groups", grps, sel.div ? "No groups in the data for this division." : "Select a division."));
+    col(sel.sec ? `Divisions of ${sel.sec}` : "Divisions", divs, sel.sec ? "No divisions in the data." : "No section is selected."),
+    col(sel.div ? `Groups of ${sel.div}` : "Groups", grps, sel.div ? "No groups in the data for this division." : "No division is selected."));
 
   const results = h("div", { class: "search-results", hidden: true });
   const search = h("input", { class: "ind-search", type: "search", placeholder: "Search all activities by name or code", "aria-label": "Search activities" });
@@ -253,7 +254,7 @@ export async function structure(root) {
   const year = years.includes(end) ? end : years[years.length - 1];
   root.append(pageHeader("Economy structure", `Structure of employment by activity, ${cname(S.focus)}`,
     `How a country's jobs are spread across activities. The EU classification has 21 sections, 88 divisions, 272 groups and 615 classes; the national accounts publish sections and about 64 divisions, and the business statistics go down to groups. ` +
-    `The taller a bar, the more people work in that activity. Click a bar to zoom in and the left-most bar to zoom out.`));
+    `The taller a bar, the more people work in that activity. Clicking a bar zooms in, and clicking the left-most bar zooms out.`));
 
   const colorModes = [
     { value: "prod_nat", label: "Productivity relative to national average" },
@@ -266,12 +267,13 @@ export async function structure(root) {
   if (!year) { root.append(h("p", { class: "empty" }, "No sector data are available for this economy.")); return; }
   const tree = buildTree(S.focus, year);
   const f1 = figure({ title: `Employment by NACE activity, ${year}`, span: 12,
-    sub: `Bar height is proportional to persons employed in the national accounts. Groups below the manufacturing divisions are allocated in proportion to their employment in the business statistics. "Not further split" marks employment that the source does not break down.`,
+    sub: "Bar height is proportional to persons employed.",
+    text: `Employment is taken from the national accounts. Groups below the manufacturing divisions are allocated in proportion to their employment in the business statistics. "Not further split" marks employment that the source does not break down.`,
     note: "Employment is from Eurostat nama_10_a64_e, value added from nama_10_a64 and groups from sbs_ovw_act." });
   root.append(f1.el);
 
   const fRow = h("div", { class: "grid" });
-  const f2 = figure({ title: "Data availability by NACE section", span: 12, sub: "Each cell shows the share of economies that report data for a NACE section at a given level of detail. National accounts refer to the selected year and business statistics to the last four years.", png: true});
+  const f2 = figure({ title: "Data availability by NACE section", span: 12, sub: "Each cell shows the share of economies that report data.", text: "Shares are shown for each NACE section and level of detail. National accounts refer to the selected year and business statistics to the last four years.", png: true});
   fRow.append(f2.el);
   root.append(fRow);
 
@@ -460,9 +462,9 @@ export function analysis(root) {
       if (gc != null && gp != null) rows.push({ g: c.geo, name: c.name, year: y, y: gc, x: gp });
     }
     const fit = feOLS(rows);
-    const f1 = figure({ title: M.label, span: 5, sub: `The dependent variable is the annual log change of compensation per employee and the regressor the annual log change of real productivity, both in percent, for ${base + 1} to ${end}.`, png: false,
+    const f1 = figure({ title: M.label, span: 5, sub: `Pay growth is regressed on productivity growth, ${base + 1}–${end}.`, text: "The dependent variable is the annual log change of compensation per employee, and the regressor is the annual log change of real productivity, both in percent.", png: false,
       csv: () => rows.map(r => ({ country: r.name, year: r.year, comp_growth: r.y, prod_growth: r.x })) });
-    const f2 = figure({ title: "Observations", span: 7, sub: "Each marker is one economy-year after subtracting the economy's own mean. The line is the within estimate." });
+    const f2 = figure({ title: "Observations", span: 7, sub: "Each marker is one economy-year.", text: "Each economy's own mean is subtracted before plotting. The line is the within estimate." });
     root.append(grid(f1.el, f2.el));
     if (!fit) { f1.body.append(h("p", { class: "empty" }, "Too few observations.")); return; }
     f1.body.append(regTable([{ name: "Productivity growth", ...fit.coefs[0] }], [["Observations", fit.n], ["Economies", fit.groups], ["R² (within)", fit.r2Within.toFixed(3)], ["Fixed effects", "Economy"], ["Standard errors", "Clustered by economy"]]),
@@ -484,7 +486,7 @@ export function analysis(root) {
   const fit = pts.length > 4 ? ols(pts.map(p => ({ y: p.y, x: [p.x] })), [varLabel(xm, xt)]) : null;
   const f1 = figure({ title: M.label, span: 5, png: false, sub: `The dependent variable is ${varLabel(ym, yt).replace(/^./, c => c.toLowerCase())} and the explanatory variable is ${varLabel(xm, xt).replace(/^./, c => c.toLowerCase())}.`,
     csv: () => pts.map(p => ({ country: p.name, y: p.y, x: p.x })) });
-  const f2 = figure({ title: "Observations and fitted line", span: 7, sub: "Each marker is one economy. The line is an OLS fit with a 95% confidence band." });
+  const f2 = figure({ title: "Observations and fitted line", span: 7, sub: "Each marker is one economy.", text: "The line is an OLS fit with a 95% confidence band." });
   root.append(grid(f1.el, f2.el));
   if (!fit) { f1.body.append(h("p", { class: "empty" }, "Too few observations for this sample.")); }
   else {
@@ -502,7 +504,7 @@ export function analysis(root) {
     const bal = inSample.map(c => c.geo).filter(g => yrs.every(y => val(m, g, y, nace) > 0));
     const sd = yrs.map(y => ({ year: y, v: d3.deviation(bal.map(g => Math.log(val(m, g, y, nace)))) })).filter(d => d.v != null);
     const f3 = figure({ title: `σ-convergence: dispersion of ${METRIC[m].label.toLowerCase()}`, span: 12,
-      sub: `The line shows the standard deviation of the log level across the ${bal.length} economies observed in every year. A declining line indicates σ-convergence.` });
+      sub: "A declining line indicates σ-convergence.", text: `The line shows the standard deviation of the log level across the ${bal.length} economies observed in every year.` });
     root.append(grid(f3.el));
     lineChart(f3.body, [{ key: "sd", label: "Standard deviation", color: cssVar("--s1"), width: 2.2, data: sd }], { height: 260, yFormat: d3.format(".3f"), labelEnds: false });
   }
@@ -606,17 +608,17 @@ export function methods(root) {
   const tab = S.methodsTab || "data";
   root.append(pageHeader("Methods", tab === "formulas" ? "Formulas and definitions" : tab === "limits" ? "Limitations" : "Sources, definitions and coverage",
     tab === "formulas" ? "How each indicator, decomposition and regression on the site is calculated, and what the result means."
-    : `All data come from Eurostat and ILOSTAT. They are downloaded automatically once a month, and each download is saved, so earlier versions can be traced. Last update: ${D.meta.built ? new Date(D.meta.built).toUTCString() : "unknown"}.`));
+    : `All data come from Eurostat and ILOSTAT. They are downloaded automatically once a month, and each download is saved, so earlier versions can be traced. ${D.meta.built ? `The last update was on ${new Date(D.meta.built).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}.` : ""}`));
   root.append(h("div", { class: "view-controls" },
     seg(null, [{ value: "data", label: "Data and coverage" }, { value: "formulas", label: "Formulas" }, { value: "limits", label: "Limitations" }], tab, v => set({ methodsTab: v }))));
   if (tab === "formulas") return formulasTab(root);
   if (tab === "limits") return limitsTab(root);
   const cov = [];
   for (const c of D.countries) for (const M of METRICS) { const l = latest(M.key, c.geo, "TOTAL"); if (l) cov.push({ geo: c.geo, name: c.name, key: M.key, label: M.label, y: l.year }); }
-  const f1 = figure({ title: "Coverage by economy and indicator", span: 12, sub: "Each cell shows the latest year with data for the whole economy. Darker cells are more recent, and empty cells are not reported.",
+  const f1 = figure({ title: "Coverage by economy and indicator", span: 12, sub: "Each cell shows the latest year with data.", text: "Data refer to the whole economy. Darker cells are more recent, and empty cells are not reported.",
     csv: () => cov.map(d => ({ country: d.name, indicator: d.label, latest_year: d.y })) });
   root.append(grid(f1.el));
-  const width = widthOf(f1.body), m = { l: 250, t: 46, r: 6 }, chh = 19;
+  const width = widthOf(f1.body), m = { l: 340, t: 46, r: 6 }, chh = 21;
   const height = m.t + METRICS.length * chh + 6;
   const svg = svgEl(f1.body, width, height);
   const x = d3.scaleBand(D.countries.map(c => c.geo), [m.l, width - m.r]).padding(.08);
