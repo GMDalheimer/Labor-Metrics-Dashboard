@@ -1,5 +1,5 @@
 // Labor Cost Atlas: router, context bar, theme
-import { S, D, EU, load, readHash, writeHash, h, select, countryOptions, sectorOptions, yearOptions, cname, coverage, endYear, countryColor, hideTip, resetFigures } from "./core.js";
+import { S, D, EU, load, readHash, writeHash, h, select, countryOptions, sectorOptions, yearOptions, cname, coverage, latest, endYear, countryColor, hideTip, resetFigures } from "./core.js";
 import { overview, ulc, country, compare, hour, stopPlay } from "./views1.js";
 import { industries, structure, analysis, methods } from "./views2.js";
 import { casestudy } from "./views3.js";
@@ -105,11 +105,26 @@ function initTheme() {
   mark();
 }
 
+// Without a country in the link, the atlas opens on a random European economy with full
+// national-accounts data, compared with up to three random economies from the same region.
+function pickStart() {
+  const ok = c => latest("ulc", c.geo, "TOTAL") && latest("prod_hour", c.geo, "TOTAL");
+  const pool = D.countries.filter(ok);
+  const rnd = a => a[Math.floor(Math.random() * a.length)];
+  if (!S.focus || !D.name.has(S.focus)) S.focus = rnd(pool).geo;
+  if (!S.comps) {
+    const same = d3.shuffle(pool.filter(c => c.geo !== S.focus && c.region === D.region.get(S.focus)).map(c => c.geo));
+    const rest = d3.shuffle(pool.filter(c => c.geo !== S.focus && !same.includes(c.geo)).map(c => c.geo));
+    S.comps = [...same, ...rest].slice(0, 3);
+  }
+}
+
 (async function main() {
   initTheme();
   readHash();
   try { await load(); }
   catch (e) { app.innerHTML = `<p class="empty">The data could not be loaded: ${e.message}</p>`; return; }
+  pickStart();
   document.getElementById("build-date").textContent = D.meta.built ? `The data were retrieved on ${new Date(D.meta.built).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}.` : "";
   writeHash();
   render();

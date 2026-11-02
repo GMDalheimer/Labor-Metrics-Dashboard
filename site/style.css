@@ -505,3 +505,10 @@ details.more > summary:hover::after, .home-path:hover b::after { color: var(--s3
 /* Selected options take the plain chart blue; the gradient is kept for hover */
 .picker-opt.on, .choice.on, .ind-item.on, .col-item.on { background: var(--s1); color: #fff; box-shadow: none; }
 .ind-item.on b, .col-item.on b, .col-item.on i { color: #fff; }
+
+/* Numbers set in bold Aeonik */
+.kpi-value, .home-facts div b, .year-display, .home-steps div::before { font-weight: 700; }
+/* Flags */
+img.flag { display: inline-block; vertical-align: baseline; border-radius: 2px; box-shadow: 0 0 0 1px var(--line); }
+.page-title img.flag { width: .8em; height: .6em; margin-right: .3em; vertical-align: .02em; }
+svg image.flag { outline: 1px solid var(--line); }

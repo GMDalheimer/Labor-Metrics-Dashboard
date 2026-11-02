@@ -4,7 +4,7 @@ import {
   d3, EU, S, D, writeHash, loadWorld, isSector, val, series, latest, snapshot, coverage, rankOf, endYear, growth,
   fmt, pct, pp, cname, sectorLabel, cssVar, countryColor, seqRamp, divRamp, h, showTip, hideTip, ttRow,
   pageHeader, figure, grid, select, seg, sectorOptions, kpiRow, svgEl, widthOf, axisLeft, axisBottom,
-  sparkline, lineChart, legend, scatter, yearOptions, comparisonSeries, tex, disclosure,
+  sparkline, lineChart, legend, scatter, yearOptions, comparisonSeries, tex, disclosure, svgFlag, htmlFlag,
 } from "./core.js";
 import { ols, stars, fmtP } from "./stats.js";
 
@@ -140,7 +140,7 @@ function drawRamp(host, color, M) {
 
 function drawRanking(host) {
   const list = h("div", { class: "rank-list" }); host.append(list);
-  const width = widthOf(host) - 8, rowH = 19, m = { l: 168, r: 70 };
+  const width = widthOf(host) - 8, rowH = 19, m = { l: 190, r: 70 };
   const svg = d3.select(list).append("svg").attr("width", width);
   const gEU = svg.append("g"), gRows = svg.append("g");
   return {
@@ -156,7 +156,8 @@ function drawRanking(host) {
         enter => {
           const g = enter.append("g").attr("class", "row").attr("transform", (d, i) => `translate(0,${i * rowH + 18})`).attr("opacity", 0).style("cursor", "pointer");
           g.append("rect").attr("class", "bar").attr("height", rowH - 7).attr("x", x(0)).attr("width", 0);
-          g.append("text").attr("class", "name").attr("x", m.l - 8).attr("y", (rowH - 7) / 2).attr("text-anchor", "end").attr("dominant-baseline", "middle");
+          g.append("text").attr("class", "name").attr("x", m.l - 30).attr("y", (rowH - 7) / 2).attr("text-anchor", "end").attr("dominant-baseline", "middle");
+          g.each(function (d) { svgFlag(d3.select(this), d.geo, m.l - 24, (rowH - 7) / 2, 12); });
           g.append("text").attr("class", "value label").attr("y", (rowH - 7) / 2).attr("dominant-baseline", "middle");
           return g;
         }, u => u, exit => exit.transition(t).attr("opacity", 0).remove());
@@ -337,7 +338,7 @@ function drawAnnualDecomp(host, dec) {
 
 function drawDumbbell(host, rows) {
   if (!rows.length) { host.append(h("p", { class: "empty" }, "No data are available for this selection.")); return; }
-  const width = widthOf(host), rowH = 17, m = { t: 8, r: 56, b: 28, l: 150 };
+  const width = widthOf(host), rowH = 17, m = { t: 8, r: 56, b: 28, l: 172 };
   const height = rows.length * rowH + m.t + m.b;
   const svg = svgEl(host, width, height);
   const x = d3.scaleLinear(d3.extent(rows.flatMap(r => [r.comp, r.prod, 0])), [m.l, width - m.r]).nice();
@@ -348,7 +349,8 @@ function drawDumbbell(host, rows) {
   const g = svg.selectAll("g.r").data(rows).join("g").attr("class", "r").attr("transform", r => `translate(0,${y(r.geo) + y.bandwidth() / 2})`)
     .on("mousemove", (ev, r) => showTip(ev, `<div class="tt-title">${r.name}</div>${ttRow("Compensation", pp(r.comp))}${ttRow("Productivity", pp(r.prod))}${ttRow("ULC", pp(r.ulc))}`))
     .on("mouseleave", hideTip);
-  g.append("text").attr("class", r => r.geo === S.focus ? "label-strong" : "label").attr("x", m.l - 8).attr("text-anchor", "end").attr("dominant-baseline", "middle").text(r => r.name);
+  g.append("text").attr("class", r => r.geo === S.focus ? "label-strong" : "label").attr("x", m.l - 30).attr("text-anchor", "end").attr("dominant-baseline", "middle").text(r => r.name);
+  g.each(function (r) { svgFlag(d3.select(this), r.geo, m.l - 24, 0, 12); });
   g.append("line").attr("x1", r => x(r.prod)).attr("x2", r => x(r.prod)).attr("stroke", r => r.ulc > 0 ? cssVar("--s1") : cssVar("--s2")).attr("stroke-width", 2).attr("stroke-opacity", .45)
     .transition().duration(800).attr("x2", r => x(r.comp));
   g.append("circle").attr("cx", r => x(r.prod)).attr("r", 4).attr("fill", cssVar("--s2"));
@@ -394,7 +396,7 @@ export function country(root) {
     lc ? `Hourly labor cost was ${fmt("lc_hour", lc.v)} in ${lc.year}.` : null,
     u0 && u1 ? `Unit labor cost changed by ${pct(u1.v / u0 - 1)} between ${S.base} and ${u1.year}.` : null,
   ].filter(Boolean);
-  root.append(pageHeader(region, cname(geo), lines.join(" ") || "Few indicators are available for this economy."));
+  root.append(pageHeader(region, [htmlFlag(geo), cname(geo)], lines.join(" ") || "Few indicators are available for this economy."));
 
   const tiles = h("dl", { class: "kpis kpis-spark" });
   for (const m of avail) {

@@ -3,7 +3,7 @@ import { METRICS, METRIC } from "./metrics.js";
 import {
   d3, EU, S, D, writeHash, loadFull, val, series, latest, snapshot, coverage, endYear, growth,
   fmt, pp, cname, sectorLabel, cssVar, countryColor, seqRamp, divRamp, h, showTip, hideTip, ttRow,
-  pageHeader, figure, grid, select, seg, kpiRow, svgEl, widthOf, axisLeft, axisBottom, lineChart, legend, scatter, yearOptions,
+  pageHeader, figure, grid, select, seg, kpiRow, svgEl, widthOf, axisLeft, axisBottom, lineChart, legend, scatter, yearOptions, svgFlag, hasFlag,
 } from "./core.js";
 import { ols, feOLS, stars, fmtP } from "./stats.js";
 import { comparisonSeries, tex } from "./core.js";
@@ -166,7 +166,8 @@ function industryBrowser(IX, current) {
 
 function drawBars(host, data, f, euV, onClick) {
   if (!data.length) { host.append(h("p", { class: "empty" }, "No data are available for this selection.")); return; }
-  const width = widthOf(host), rowH = 18, m = { l: onClick ? 240 : 150, r: 72, t: 16, b: 4 };
+  const flags = data.some(d => hasFlag(d.geo));
+  const width = widthOf(host), rowH = 18, m = { l: onClick ? 240 : flags ? 172 : 150, r: 72, t: 16, b: 4 };
   const height = data.length * rowH + m.t + m.b;
   const svg = svgEl(host, width, height);
   const x = d3.scaleLinear([0, d3.max([...data.map(d => d.v), euV || 0])], [m.l, width - m.r]);
@@ -174,7 +175,8 @@ function drawBars(host, data, f, euV, onClick) {
     const y = m.t + i * rowH;
     const g = svg.append("g").style("cursor", onClick ? "pointer" : null).on("click", () => onClick && onClick(d))
       .on("mousemove", ev => showTip(ev, `<div class="tt-title">${d.name}</div>${ttRow("Value", f(d.v))}`)).on("mouseleave", hideTip);
-    g.append("text").attr("class", d.geo === S.focus ? "label-strong" : "label").attr("x", m.l - 8).attr("y", y + (rowH - 6) / 2).attr("text-anchor", "end").attr("dominant-baseline", "middle").text(d.name);
+    if (flags) svgFlag(g, d.geo, m.l - 24, y + (rowH - 6) / 2, 12);
+    g.append("text").attr("class", d.geo === S.focus ? "label-strong" : "label").attr("x", m.l - (flags ? 30 : 8)).attr("y", y + (rowH - 6) / 2).attr("text-anchor", "end").attr("dominant-baseline", "middle").text(d.name);
     g.append("rect").attr("x", m.l).attr("y", y).attr("height", rowH - 6).attr("fill", d.geo === S.focus || S.comps.includes(d.geo) ? countryColor(d.geo) : cssVar("--context"))
       .attr("width", 0).transition().duration(700).delay(i * 12).attr("width", Math.max(0, x(d.v) - m.l));
     g.append("text").attr("class", "label").attr("x", x(d.v) + 6).attr("y", y + (rowH - 6) / 2).attr("dominant-baseline", "middle").text(f(d.v));

@@ -11,8 +11,8 @@ const tip = document.getElementById("tooltip");
 // ---------------------------------------------------------------------------
 export const S = {
   view: "home",
-  focus: "RS",
-  comps: ["HU", "PL", "RO"],
+  focus: null,         // chosen at random on first load unless set in the link
+  comps: null,
   context: [],          // any number of grey context economies
   groups: [],           // regional groups shown as median line with min-max band
   base: 2016,
@@ -240,6 +240,18 @@ export function showTip(event, html) {
 }
 export const hideTip = () => { tip.style.opacity = 0; };
 export const ttRow = (k, v) => `<div class="tt-row"><span>${k}</span><b>${v}</b></div>`;
+
+// Flags (flag-icons, 4:3 SVG). Eurostat codes differ from ISO for Greece and the United Kingdom.
+const ISO2 = { EL: "gr", UK: "gb" };
+export const flagUrl = geo => `https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/${ISO2[geo] || geo.toLowerCase()}.svg`;
+export const hasFlag = geo => !!geo && D.name.has(geo) && geo !== EU;
+// Adds a small flag to an SVG selection, vertically centred on y
+export function svgFlag(sel, geo, x, y = 0, hgt = 12) {
+  if (!hasFlag(geo)) return;
+  sel.append("image").attr("class", "flag").attr("href", flagUrl(geo)).attr("x", x).attr("y", y - hgt / 2)
+    .attr("width", hgt * 4 / 3).attr("height", hgt).attr("preserveAspectRatio", "xMidYMid slice");
+}
+export const htmlFlag = geo => hasFlag(geo) ? h("img", { class: "flag", src: flagUrl(geo), alt: "", width: 24, height: 18 }) : null;
 
 export function pageHeader(kicker, title, desc) {
   return h("header", { class: "page-head" },
