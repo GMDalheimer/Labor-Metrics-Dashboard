@@ -235,12 +235,18 @@ for (id in c("GDP_211P_NOC_NB_A", "GDP_205U_NOC_NB_A")) {
 # Find the current ids for earnings and minimum wage in the ILOSTAT catalogue
 toc_ids <- tryCatch({
   toc <- Rilostat::get_ilostat_toc()
-  ids <- grep("^EAR_4M", toc$id, value = TRUE)
-  message("  ILOSTAT EAR_4M* ids: ", paste(ids, collapse = ", "))
+  message("  toc columns: ", paste(names(toc), collapse = ", "), " rows=", nrow(toc))
+  ids <- unique(grep("^EAR_", toc$id, value = TRUE))
+  message("  ILOSTAT EAR_* ids: ", paste(ids, collapse = ", "))
   ids
 }, error = function(e) character())
-first_id <- function(cands) { hit <- intersect(cands, toc_ids); if (length(hit)) hit[1] else cands[1] }
-earn <- ilo(first_id(c("EAR_4MTH_SEX_ECO_CUR_NB_A", "EAR_4MTH_SEX_CUR_NB_A", "EAR_4MTH_SEX_OCU_CUR_NB_A")), "monthly_earnings")
+first_id <- function(cands, pattern = NULL) {
+  hit <- intersect(cands, toc_ids)
+  if (length(hit)) return(hit[1])
+  if (!is.null(pattern)) { p <- grep(pattern, toc_ids, value = TRUE); if (length(p)) return(p[1]) }
+  cands[1]
+}
+earn <- ilo(first_id(c("EAR_4MTH_SEX_ECO_CUR_NB_A", "EAR_4MTH_SEX_CUR_NB_A", "EAR_4MTH_SEX_OCU_CUR_NB_A"), "^EAR_.*SEX_ECO_CUR_NB_A$"), "monthly_earnings")
 if (!is.null(earn) && !"classif1" %in% names(earn)) earn$classif1 <- "ECO_AGGREGATE_TOTAL"
 if (!is.null(earn) && !"classif2" %in% names(earn)) earn <- earn %>% rename(classif2 = classif1) %>% mutate(classif1 = "ECO_AGGREGATE_TOTAL")
 if (!is.null(earn)) tryCatch({
@@ -256,7 +262,7 @@ if (!is.null(earn)) tryCatch({
                 value = obs_value))
 }, error = function(e) message("  post-processing failed for earn: ", conditionMessage(e)))
 
-mmw <- ilo(first_id(c("EAR_4MMN_CUR_NB_A", "EAR_4MMN_CUR_NB_Q")), "minimum_wage")
+mmw <- ilo(first_id(c("EAR_4MMN_CUR_NB_A", "EAR_4MMN_CUR_NB_Q"), "^EAR_.*MMN.*_A$"), "minimum_wage")
 if (!is.null(mmw)) tryCatch({
   country_long$mmw <- mmw %>% filter(classif1 %in% c("CUR_TYPE_USD", "CUR_TYPE_PPP")) %>%
     transmute(geo, year, metric = ifelse(classif1 == "CUR_TYPE_USD", "ilo_min_wage_usd", "ilo_min_wage_ppp"),

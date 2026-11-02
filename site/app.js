@@ -114,7 +114,7 @@ function yearsWithData(m, nace = S.nace) {
   const counts = D.allYears.map(y => [y, snapshot(m, y, nace).length]);
   const best = d3.max(counts, d => d[1]) || 0;
   const ys = counts.filter(d => d[1] > 0).map(d => d[0]);
-  const good = counts.filter(d => d[1] >= 0.7 * best).map(d => d[0]);
+  const good = counts.filter(d => d[1] >= 0.9 * best).map(d => d[0]);
   return { years: ys, latest: d3.max(good) ?? d3.max(ys), best };
 }
 function rankOf(m, geo, year, nace = S.nace) {
@@ -443,14 +443,16 @@ function drawMap(host, color) {
   const kosovo = D.countries.find(c => c.geo === "XK");
   for (const f of feats) f.geo = byNum.get(String(f.id)) || (kosovo && f.properties?.name === "Kosovo" ? "XK" : null);
 
-  // Frame Europe and North Africa
-  const frame = { type: "FeatureCollection", features: feats.filter(f => f.geo && !["KE", "GH", "IS"].includes(f.geo)) };
-  const proj = d3.geoAzimuthalEqualArea().rotate([-14, -45]).fitExtent([[6, 6], [width - 6, height - 6]], frame);
+  // Frame Europe, the Western Balkans and North Africa (fixed box, so overseas territories do not distort it)
+  const box = { type: "Feature", geometry: { type: "MultiPoint", coordinates: [[-11, 34], [33, 71], [42, 37], [-8, 26], [32, 25], [25, 71]] } };
+  const proj = d3.geoAzimuthalEqualArea().rotate([-12, -50]).fitExtent([[10, 10], [width - 10, height - 10]], box);
   const path = d3.geoPath(proj);
-  const g = svg.append("g");
-  const paths = g.selectAll("path").data(feats.filter(f => {
-    const b = path.bounds(f); return b[1][0] > -50 && b[0][0] < width + 50 && b[1][1] > -50 && b[0][1] < height + 50;
-  })).join("path")
+  const clipId = "clip" + Math.random().toString(36).slice(2);
+  svg.append("clipPath").attr("id", clipId).append("rect").attr("width", width).attr("height", height).attr("rx", 10);
+  const g = svg.append("g").attr("clip-path", `url(#${clipId})`).append("g");
+  const near = f => { const [[x0, y0], [x1, y1]] = d3.geoBounds(f); return x1 > -40 && x0 < 75 && y1 > 5 && y0 < 85 && (x1 - x0) < 200; };
+  g.append("path").datum({ type: "Sphere" }).attr("d", path).attr("fill", cssVar("--bg"));
+  const paths = g.selectAll("path.country-path").data(feats.filter(near)).join("path")
     .attr("class", f => `country-path ${f.geo === S.focus ? "focus" : ""}`)
     .attr("d", path)
     .attr("fill", cssVar("--map-empty"))
@@ -557,9 +559,9 @@ function renderInsights(host) {
     .map(d => ({ ...d, ch: d.v / d.b - 1 })).sort((a, b) => b.ch - a.ch);
   const f = snap.find(d => d.geo === S.focus);
   const items = [
-    [fmt(S.metric, top.v), `Highest in ${S.year}: <b>${top.name}</b>, ${(top.v / bot.v).toFixed(1)}× the lowest (${bot.name}).`],
-    changes.length ? [pct(changes[0].ch), `Fastest rise since ${base}: <b>${changes[0].name}</b>. Slowest: ${changes[changes.length - 1].name} (${pct(changes[changes.length - 1].ch)}).`] : null,
-    f ? [fmt(S.metric, f.v), `<b>${f.name}</b> ranks ${snap.indexOf(f) + 1} of ${snap.length}${val(S.metric, EU, S.year) ? `, at ${d3.format(".0%")(f.v / val(S.metric, EU, S.year))} of the EU27 average` : ""}.`] : null,
+    [fmt(S.metric, top.v), `Highest in ${S.year}: <strong>${top.name}</strong>, ${(top.v / bot.v).toFixed(1)}× the lowest (${bot.name}).`],
+    changes.length ? [pct(changes[0].ch), `Fastest rise since ${base}: <strong>${changes[0].name}</strong>. Slowest: ${changes[changes.length - 1].name} (${pct(changes[changes.length - 1].ch)}).`] : null,
+    f ? [fmt(S.metric, f.v), `<strong>${f.name}</strong> ranks ${snap.indexOf(f) + 1} of ${snap.length}${val(S.metric, EU, S.year) ? `, at ${d3.format(".0%")(f.v / val(S.metric, EU, S.year))} of the EU27 average` : ""}.`] : null,
   ].filter(Boolean);
   for (const [big, txt] of items) host.append(h("div", { class: "insight" }, h("b", {}, big), h("span", { html: txt })));
 }
@@ -893,7 +895,8 @@ function renderSectors(root) {
     svg.append("g").selectAll("line").data(x.ticks(6)).join("line").attr("class", "grid-line").attr("x1", x).attr("x2", x).attr("y1", m.t).attr("y2", height - m.b);
     svg.append("g").attr("class", "axis").attr("transform", `translate(0,${height - m.b})`).call(d3.axisBottom(x).ticks(6).tickSizeOuter(0));
     const segs = rows.flatMap(r => [{ r, k: "Pay effect", v: r.comp, c: cssVar("--s1") }, { r, k: "Productivity effect", v: r.prod, c: cssVar("--s2") }]);
-    svg.selectAll("rect").data(segs).join("rect").attr("y", d => y(d.r.nace) + 3).attr("height", y.bandwidth() - 6).attr("rx", 3)
+    const bh = (y.bandwidth() - 4) / 2;
+    svg.selectAll("rect").data(segs).join("rect").attr("y", d => y(d.r.nace) + 1 + (d.k === "Pay effect" ? 0 : bh + 2)).attr("height", bh).attr("rx", 3)
       .attr("fill", d => d.c).attr("x", x(0)).attr("width", 0)
       .on("mousemove", (ev, d) => showTip(ev, `<div class="tt-title">${d.r.label}</div>${ttRow("Pay effect", d.r.comp.toFixed(1))}${ttRow("Productivity effect", d.r.prod.toFixed(1))}${ttRow("Net ULC change", d.r.net.toFixed(1))}`))
       .on("mouseleave", hideTip)
@@ -954,7 +957,8 @@ function renderIndustries(root) {
   const rowsAll = D.industry.filter(d => d.nace === S.industry);
   const years = [...new Set(rowsAll.map(d => d.year))].sort();
   const counts = years.map(y => rowsAll.filter(d => d.year === y && d.va_worker != null).length);
-  const yr = years[counts.lastIndexOf(d3.max(counts))] ?? d3.max(years);
+  const yrDefault = years[counts.lastIndexOf(d3.max(counts))] ?? d3.max(years);
+  const yr = S.indYear && years.includes(S.indYear) ? S.indYear : yrDefault;
   const rows = rowsAll.filter(d => d.year === yr && d.va_worker != null && D.name.has(d.geo));
   const indName = rowsAll[0]?.industry || S.industry;
 
@@ -963,6 +967,7 @@ function renderIndustries(root) {
   root.append(h("div", { class: "controls" },
     h("div", { class: "chips" }, inds.map(n => h("button", { class: `chip ${n === S.industry ? "on" : ""}`, onclick: () => { S.industry = n; writeHash(); render(); } },
       D.industry.find(d => d.nace === n)?.industry || n))),
+    select("Year", years.map(y => ({ value: String(y), label: String(y) })), String(yr), v => { S.indYear = +v; render(); }),
     select("Highlight", countryOptions(), S.focus, v => { S.focus = v; writeHash(); render(); })));
 
   const grid = h("div", { class: "grid g-2e" });
@@ -980,7 +985,7 @@ function renderIndustries(root) {
   const y = d3.scaleLinear([0, d3.max(pts, d => d.wage_share) * 1.08], [height - m.b, m.t]).nice();
   const r = d3.scaleSqrt([0, d3.max(pts, d => d.emp || 0)], [3, 30]);
   svg.append("g").selectAll("line").data(y.ticks(5)).join("line").attr("class", "grid-line").attr("x1", m.l).attr("x2", width - m.r).attr("y1", y).attr("y2", y);
-  svg.append("g").attr("class", "axis").attr("transform", `translate(0,${height - m.b})`).call(d3.axisBottom(x).ticks(5, "~s").tickFormat(v => "€" + d3.format("~s")(v)));
+  svg.append("g").attr("class", "axis").attr("transform", `translate(0,${height - m.b})`).call(d3.axisBottom(x).ticks(5).tickFormat(v => { const t = x.tickFormat(5, "~s")(v); return t ? "€" + t : ""; }));
   svg.append("g").attr("class", "axis").attr("transform", `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(".0%")).tickSize(0)).call(g => g.select(".domain").remove());
   svg.append("text").attr("class", "annot").attr("x", width - m.r).attr("y", height - 8).attr("text-anchor", "end").text("Value added per worker (log scale) →");
   svg.append("text").attr("class", "annot").attr("x", m.l).attr("y", 10).text("↑ Wages as share of value added");
@@ -992,7 +997,7 @@ function renderIndustries(root) {
     .on("mouseleave", hideTip)
     .transition().duration(900).delay((d, i) => i * 15).ease(d3.easeBackOut).attr("r", d => r(d.emp || 0));
   svg.selectAll("text.bl").data(pts).join("text").attr("class", d => d.geo === S.focus ? "bl label-strong" : "bl annot")
-    .attr("x", d => x(d.va_worker)).attr("y", d => y(d.wage_share) - r(d.emp || 0) - 4).attr("text-anchor", "middle").text(d => d.geo);
+    .attr("x", d => x(d.va_worker)).attr("y", d => y(d.wage_share) - r(d.emp || 0) - 4).attr("text-anchor", "middle").text(d => d.geo === EU ? "EU27" : d.geo);
 
   // Ranking bars
   const sortedVa = [...rows].sort((a, b) => b.va_worker - a.va_worker);
@@ -1095,7 +1100,7 @@ function renderData(root) {
   root.append(hero("Data and methods", "Every number, <em>traceable</em>.",
     `Rebuilt automatically from public sources. Last build: ${D.meta.built ? new Date(D.meta.built).toUTCString() : "unknown"}.`));
 
-  const grid = h("div", { class: "grid g-2e" });
+  const grid = h("div", { class: "grid" });
   const c1 = card({ title: "Coverage", sub: "Latest year with data, by country and indicator (whole economy). Darker: more recent.", png: true,
     csv: () => cov.map(d => ({ country: d.name, indicator: d.label, latest_year: d.y })) });
   const c2 = card({ title: "Source status", sub: "Result of the last automated build", png: false });

@@ -85,7 +85,7 @@ export const METRICS = [
     desc: "Labour share including an imputed wage for the self-employed. Better for countries with large self-employment, such as farming economies." },
   { key: "profit_share", table: "sector", cat: "Distribution", label: "Profit share",
     unit: "gross operating surplus and mixed income / nominal value added", fmt: ".1%",
-    source: "Derived from Eurostat nama_10_a64 (B2A3G)", desc: "Share of value added retained as gross operating surplus and mixed income." },
+    source: "Derived from Eurostat nama_10_a64 (B1G - D1 - D29X39)", desc: "Share of value added retained as gross operating surplus and mixed income." },
 
   // Working time
   { key: "hours_worker", table: "sector", cat: "Working time", label: "Annual hours per worker",
@@ -103,6 +103,6 @@ export const METRIC = Object.fromEntries(METRICS.map(m => [m.key, m]));
 
 // Metrics shown on a country profile, in order
 export const PROFILE_METRICS = [
-  "prod_hour", "lc_hour", "ulc", "min_wage_eur", "tax_wedge", "labour_share",
+  "prod_hour", "lc_hour", "lc_hour_c", "comp_ph", "min_wage_eur", "tax_wedge", "labour_share",
   "employer_rate", "hours_week", "ilo_output_worker_ppp", "min_wage_ratio", "profit_share", "nonwage_share",
 ];
