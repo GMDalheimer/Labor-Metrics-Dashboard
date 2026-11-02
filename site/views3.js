@@ -46,7 +46,7 @@ export async function casestudy(root) {
   root.append(h("header", { class: "page-head" },
     h("p", { class: "kicker" }, "Country brief"),
     h("h1", { class: "page-title" }, "Create a short country brief"),
-    h("p", { class: "page-desc" }, "The rest of the site has a lot of detail. If you need a short summary for one country, answer the five questions below. You get a few pages with the relevant charts and a short explanation of each, which you can save as a PDF.")));
+    h("p", { class: "page-desc" }, "The rest of the site has a lot of detail. A short summary for one country can be created by answering the five questions below. The result is a few pages with the relevant charts and a short explanation of each, which can be saved as a PDF.")));
 
   const form = h("ol", { class: "wizard" });
   root.append(form);
@@ -54,10 +54,10 @@ export async function casestudy(root) {
     h("div", { class: "step-no" }, String(n)),
     h("div", { class: "step-body" }, h("h2", { class: "step-q" }, title), help ? h("p", { class: "step-help" }, help) : null, ...body)));
 
-  step(1, "Which country do you want to know about?", null,
+  step(1, "Which country should the brief cover?", null,
     select("Country", countryOptions(), CS.geo, v => { CS.geo = v; const p = presets(v).find(x => x.value === CS.preset); if (p?.comps) CS.comps = p.comps; else CS.comps = CS.comps.filter(c => c !== v); rerender(); }));
 
-  step(2, "What would you like to find out?", "Choose up to three questions. Each one becomes a section of the brief.",
+  step(2, "Which questions should the brief answer?", "Up to three questions can be chosen. Each one becomes a section of the brief.",
     h("div", { class: "choice-col" }, TOPICS.map(t => {
       const on = CS.topics.includes(t.key), full = !on && CS.topics.length >= 3;
       return h("button", { class: `choice wide ${on ? "on" : ""} ${full ? "muted" : ""}`, role: "checkbox", "aria-checked": on ? "true" : "false", disabled: full ? "disabled" : false,
@@ -69,7 +69,7 @@ export async function casestudy(root) {
   step(3, "Who should it be compared with?", "The EU as a whole (EU27 aggregate) is always included.",
     h("div", { class: "choice-row" }, ps.map(p => h("button", { class: `choice ${CS.preset === p.value ? "on" : ""}`,
       onclick: () => { CS.preset = p.value; if (p.comps) CS.comps = p.comps; rerender(); } }, p.label))),
-    h("p", { class: "step-help" }, CS.comps.length ? `Selected: ${CS.comps.map(cname).join(", ")} and the EU27.` : "Selected: the EU27."),
+    h("p", { class: "step-help" }, CS.comps.length ? `The selection is ${CS.comps.map(cname).join(", ")} and the EU27.` : "The selection is the EU27 only."),
     custom ? h("div", { class: "tags" }, CS.comps.map(g => h("button", { class: "tag", onclick: () => { CS.comps = CS.comps.filter(x => x !== g); rerender(); } }, cname(g), h("span", { class: "x" }, "×"))),
       CS.comps.length < 3 ? h("select", { class: "select add", "aria-label": "Add a country", onchange: e => { if (e.target.value) { CS.comps.push(e.target.value); rerender(); } } },
         h("option", { value: "" }, "Add a country"), ...countryOptions().filter(o => o.value !== CS.geo && !CS.comps.includes(o.value)).map(o => h("option", { value: o.value }, o.label))) : null) : null);
@@ -77,7 +77,7 @@ export async function casestudy(root) {
   step(4, "How far back should it look?", null,
     h("div", { class: "choice-row" }, PERIODS.map(p => h("button", { class: `choice ${CS.period === p.value ? "on" : ""}`, onclick: () => { CS.period = p.value; rerender(); } }, p.label))));
 
-  step(5, "How much detail do you need?", null,
+  step(5, "How much detail is needed?", null,
     h("div", { class: "choice-col" }, DEPTH.map(p => h("button", { class: `choice wide ${CS.depth === p.value ? "on" : ""}`, onclick: () => { CS.depth = p.value; rerender(); } },
       h("span", { class: "check round", "aria-hidden": "true" }, CS.depth === p.value ? "●" : ""), h("span", {}, h("b", {}, p.label), h("small", {}, p.d))))));
 
@@ -114,11 +114,11 @@ async function brief(root) {
     pageNo += 1;
     const body = h("div", { class: "pg-body" });
     const el = h("section", { class: "pg" },
-      h("header", { class: "pg-head" }, h("span", { class: "pg-brand" }, h("span", { class: "brand-mark" }), "Labor Cost Atlas"), h("span", {}, `${name} · country brief`)),
+      h("header", { class: "pg-head" }, h("span", { class: "pg-brand" }, h("span", { class: "brand-mark" }), "Labor Cost Atlas"), h("span", {}, `Country brief for ${name}`)),
       kicker ? h("p", { class: "kicker" }, kicker) : null,
       title ? h("h2", { class: "pg-title" }, title) : null,
       body,
-      h("footer", { class: "pg-foot" }, h("span", {}, "Tony Blair Institute for Global Change · Gregor Dalheimer, Abaigeal Heneghan"), h("span", {}, `Sources: Eurostat, ILOSTAT · ${pageNo}`)));
+      h("footer", { class: "pg-foot" }, h("span", {}, "Gregor Dalheimer and Abaigeal Heneghan, Tony Blair Institute for Global Change."), h("span", {}, `Data are from Eurostat and ILOSTAT. Page ${pageNo}.`)));
     doc.append(el);
     return body;
   };
@@ -188,12 +188,12 @@ async function brief(root) {
   cover.append(
     h("p", { class: "kicker" }, "Country brief"),
     h("h1", { class: "cover-title" }, name),
-    h("p", { class: "cover-sub" }, `Labor costs and productivity, ${base}–${end}, compared with ${CS.comps.length ? CS.comps.map(cname).join(", ") + " and " : ""}the EU27`),
+    h("p", { class: "cover-sub" }, `Labor costs and productivity in ${base}–${end} are compared with ${CS.comps.length ? CS.comps.map(cname).join(", ") + " and " : ""}the EU27.`),
     kpiRow([
-      ph ? { label: "Value added per hour worked", value: fmt("prod_hour", ph.v), foot: `${ph.year}; EU ${fmt("prod_hour", val("prod_hour", EU, ph.year, "TOTAL"))}` } : null,
-      lc ? { label: "Hourly labor cost", value: fmt("lc_hour", lc.v), foot: `${lc.year}; EU ${fmt("lc_hour", val("lc_hour", EU, lc.year))}` } : null,
-      u != null ? { label: `Unit labor cost, ${base}–${end}`, value: pct(u), foot: `EU ${chg("ulc", EU) != null ? pct(chg("ulc", EU)) : "n/a"}` } : null,
-      latest("min_wage_eur", geo) ? { label: "Monthly minimum wage", value: fmt("min_wage_eur", latest("min_wage_eur", geo).v), foot: String(latest("min_wage_eur", geo).year) } : null,
+      ph ? { label: "Value added per hour worked", value: fmt("prod_hour", ph.v), foot: `Data for ${ph.year}. The EU value is ${fmt("prod_hour", val("prod_hour", EU, ph.year, "TOTAL"))}.` } : null,
+      lc ? { label: "Hourly labor cost", value: fmt("lc_hour", lc.v), foot: `Data for ${lc.year}. The EU value is ${fmt("lc_hour", val("lc_hour", EU, lc.year))}.` } : null,
+      u != null ? { label: `Unit labor cost, ${base}–${end}`, value: pct(u), foot: chg("ulc", EU) != null ? `The EU change is ${pct(chg("ulc", EU))}.` : "No EU value is available." } : null,
+      latest("min_wage_eur", geo) ? { label: "Monthly minimum wage", value: fmt("min_wage_eur", latest("min_wage_eur", geo).v), foot: `Data for ${latest("min_wage_eur", geo).year}.` } : null,
     ].filter(Boolean)),
     h("h3", { class: "cover-h" }, "Main findings"),
     h("ol", { class: "findings" }, CS.topics.map(k => h("li", {}, h("b", {}, TOPICS.find(t => t.key === k).q), " ", F[k].text))));
@@ -210,7 +210,7 @@ async function brief(root) {
         "The chart sets each country's level in the first year to 100, so the lines show change over time. Levels are not compared across countries because output is measured at national prices.",
         ...(F.cost.hr.length ? [`In manufacturing, labor costs ${"€" + F.cost.hr.find(r => r.g === geo)?.c.per100.toFixed(0)} for every €100 of value added in ${name}${F.cost.hr.filter(r => r.g !== geo).length ? ", compared with " + F.cost.hr.filter(r => r.g !== geo).map(r => `€${r.c.per100.toFixed(0)} in ${cname(r.g)}`).join(", ") : ""}.`] : []),
       ], host => {
-        lineChart(fig(host, "Unit labor cost", `Index, ${base} = 100`, "Source: Eurostat national accounts."), lines("ulc", idx), { height: 300, yFormat: d3.format(".0f"), indexLine: true });
+        lineChart(fig(host, "Unit labor cost", `The index is set to 100 in ${base}.`, "Data are from the Eurostat national accounts."), lines("ulc", idx), { height: 300, yFormat: d3.format(".0f"), indexLine: true });
         host.append(lgd());
       });
       if (detailed) {
@@ -218,7 +218,7 @@ async function brief(root) {
         twoCol(b2, [
           "The change in unit labor cost equals the growth of pay per employee minus the growth of output per worker (both in log points).",
           "A long bar to the right of the productivity marker means pay grew faster than output per worker.",
-        ], host => dumbbell(fig(host, `Cumulative growth, ${base}–${end}`, "Log points. Teal: output per worker. Blue: pay per employee.", "Source: Eurostat national accounts; author's calculation."), all, base, end, color));
+        ], host => dumbbell(fig(host, `Cumulative growth, ${base}–${end}`, "Growth is measured in log points. Teal marks output per worker and blue marks pay per employee.", "Data are from the Eurostat national accounts, with the authors' calculations."), all, base, end, color));
       }
     }
     if (F.catchup) {
@@ -227,13 +227,13 @@ async function brief(root) {
         "The lines show output per hour worked as a percentage of the EU27 aggregate in the same year. A rising line means the gap to the EU is narrowing.",
         "Output is measured in constant euros at national prices, so the comparison does not adjust for differences in price levels between countries.",
       ], host => {
-        lineChart(fig(host, "Output per hour worked relative to the EU", "Percent of the EU27 value", "Source: Eurostat national accounts."), lines("prod_hour", relEU("prod_hour")).filter(s => s.key !== EU), { height: 300, yFormat: v => v.toFixed(0) + "%", refLine: 100 });
+        lineChart(fig(host, "Output per hour worked relative to the EU", "Values are shown as a percentage of the EU27 value.", "Data are from the Eurostat national accounts."), lines("prod_hour", relEU("prod_hour")).filter(s => s.key !== EU), { height: 300, yFormat: v => v.toFixed(0) + "%", refLine: 100 });
         host.append(lgd());
       });
       if (detailed) {
         const b2 = page(TOPICS[1].q, "Pay per employee relative to the EU");
         twoCol(b2, ["Pay per employee in euros as a percentage of the EU27 aggregate. It includes employer social contributions."],
-          host => { lineChart(fig(host, "Pay per employee relative to the EU", "Percent of the EU27 value, nominal euros", "Source: Eurostat national accounts."), lines("comp_pe", relEU("comp_pe")).filter(s => s.key !== EU), { height: 300, yFormat: v => v.toFixed(0) + "%", refLine: 100 }); host.append(lgd()); });
+          host => { lineChart(fig(host, "Pay per employee relative to the EU", "Values are shown as a percentage of the EU27 value, in nominal euros.", "Data are from the Eurostat national accounts."), lines("comp_pe", relEU("comp_pe")).filter(s => s.key !== EU), { height: 300, yFormat: v => v.toFixed(0) + "%", refLine: 100 }); host.append(lgd()); });
       }
     }
     if (F.pay) {
@@ -242,12 +242,12 @@ async function brief(root) {
         "Pay per employee is the average yearly labor cost of an employee, including employer social contributions.",
         F.pay.ls ? `Workers receive ${p0(F.pay.ls.v)} of the value added in the economy as compensation (${F.pay.ls.year}).` : "",
       ].filter(Boolean), host => {
-        lineChart(fig(host, "Pay per employee", "EUR per year, nominal", "Source: Eurostat national accounts."), lines("comp_pe"), { height: 300, yFormat: v => "€" + d3.format(",.0f")(v) });
+        lineChart(fig(host, "Pay per employee", "Values are in nominal euros per year.", "Data are from the Eurostat national accounts."), lines("comp_pe"), { height: 300, yFormat: v => "€" + d3.format(",.0f")(v) });
         host.append(lgd());
       });
       if (detailed) {
         const rows = all.map(g => ({ label: cname(g), v: latest("min_wage_eur", g)?.v, color: color(g) })).filter(r => r.v != null);
-        if (rows.length) { const b2 = page(TOPICS[2].q, "Statutory minimum wage"); twoCol(b2, ["Gross monthly minimum wage set by law, latest semester available."], host => bars(fig(host, "Monthly minimum wage", "EUR, gross", "Source: Eurostat earn_mw_cur."), rows, v => "€" + d3.format(",.0f")(v))); }
+        if (rows.length) { const b2 = page(TOPICS[2].q, "Statutory minimum wage"); twoCol(b2, ["The gross monthly minimum wage set by law is shown for the latest semester available."], host => bars(fig(host, "Monthly minimum wage", "Values are gross amounts in euros.", "Data are from Eurostat earn_mw_cur."), rows, v => "€" + d3.format(",.0f")(v))); }
       }
     }
     if (F.breakdown) {
@@ -255,7 +255,7 @@ async function brief(root) {
       twoCol(b, [
         "Hourly labor cost is what an employer pays for one hour actually worked. It is split into the worker's net pay, the income tax and social contributions paid by the worker, and the contributions and other costs paid by the employer.",
         "The split uses the tax rates of a single worker on a low wage, so it is an approximation for the average job.",
-      ], host => stacked(fig(host, "Composition of hourly labor cost, manufacturing", "EUR per hour actually worked, latest year", "Sources: Eurostat lc_lci_lev, earn_nt_taxwedge."), F.breakdown.rows));
+      ], host => stacked(fig(host, "Composition of hourly labor cost, manufacturing", "Values are in euros per hour actually worked, for the latest year.", "Data are from Eurostat lc_lci_lev and earn_nt_taxwedge."), F.breakdown.rows));
     }
     if (F.industries && F.industries.rows.length) {
       const b = page(TOPICS[4].q, F.industries.text);
@@ -263,7 +263,7 @@ async function brief(root) {
         "Bars show each activity's share of all jobs. The color shows whether output per worker in the activity is above or below the national average.",
         "Activities with many jobs and below-average output per worker, often agriculture and parts of services, lower the national average.",
       ], host => {
-        bars(fig(host, `Employment by activity, ${F.industries.y}`, "Percent of persons employed", "Source: Eurostat nama_10_a64_e, nama_10_a64."),
+        bars(fig(host, `Employment by activity, ${F.industries.y}`, "Values are shown as a percentage of persons employed.", "Data are from Eurostat nama_10_a64_e and nama_10_a64."),
           F.industries.rows.slice(0, 9).map(r => ({ label: r.label.length > 34 ? r.label.slice(0, 33) + "…" : r.label, v: 100 * r.share, color: r.rel == null ? cssVar("--context-hi") : r.rel >= 1 ? cssVar("--s2") : cssVar("--s3"), extra: r.rel != null ? `${r.rel.toFixed(2)}×` : "" })), v => v.toFixed(0) + "%");
         host.append(legend([{ label: "Output per worker above national average", color: cssVar("--s2") }, { label: "Below national average", color: cssVar("--s3") }]));
       });
@@ -271,7 +271,7 @@ async function brief(root) {
     if (F.hours) {
       const b = page(TOPICS[5].q, F.hours.text);
       twoCol(b, ["Average hours actually worked per week by all employed people, from labor force surveys."],
-        host => bars(fig(host, "Weekly hours actually worked", "Hours per employed person", "Source: ILOSTAT."), all.map(g => ({ label: cname(g), v: latest("hours_week", g)?.v, color: color(g) })).filter(r => r.v != null), v => v.toFixed(1)));
+        host => bars(fig(host, "Weekly hours actually worked", "Values are hours per employed person.", "Data are from ILOSTAT."), all.map(g => ({ label: cname(g), v: latest("hours_week", g)?.v, color: color(g) })).filter(r => r.v != null), v => v.toFixed(1)));
     }
     // Notes
     const n = page("About this brief", "Data and definitions");

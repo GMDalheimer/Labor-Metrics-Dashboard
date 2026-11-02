@@ -260,8 +260,11 @@ export function tex(src, display = true) {
 }
 
 // A figure: title, one-line description, chart, and a collapsed "Source and method" section
+export const cap = v => typeof v === "string" && v ? v.charAt(0).toUpperCase() + v.slice(1) : v;
+
 export function figure({ title, sub, note, method, csv, png = true, span = 12, controls }) {
   figNo += 1;
+  title = cap(title); sub = cap(sub); note = cap(note);
   const body = h("div", { class: "fig-body" });
   const tools = h("div", { class: "fig-tools" });
   if (png) tools.append(h("button", { class: "link-btn", onclick: () => exportPNG(body.querySelector("svg"), title) }, "PNG"));
@@ -315,7 +318,7 @@ export function sectorOptions() {
 
 export function kpiRow(items) {
   return h("dl", { class: "kpis" }, items.map(it => h("div", { class: "kpi" },
-    h("dt", {}, it.label),
+    h("dt", {}, cap(it.label)),
     h("dd", { class: "kpi-value" }, it.value),
     it.foot ? h("dd", { class: "kpi-foot", html: it.foot }) : null)));
 }
@@ -471,8 +474,8 @@ export function scatter(container, pts, { xLabel, yLabel, xFmt, yFmt, fit, heigh
     .call(d3.axisBottom(x).tickValues(xTicks(x.domain())).tickFormat(xFmt).tickSizeOuter(0));
   else axisBottom(svg, x, height - m.b, xFmt, 6);
   if (y.domain()[0] < 0 && y.domain()[1] > 0) svg.append("line").attr("class", "ref-line").attr("x1", m.l).attr("x2", width - m.r).attr("y1", y(0)).attr("y2", y(0));
-  svg.append("text").attr("class", "annot").attr("x", width - m.r).attr("y", height - 6).attr("text-anchor", "end").text(xLabel + " →");
-  svg.append("text").attr("class", "annot").attr("x", m.l).attr("y", 6).text("↑ " + yLabel);
+  svg.append("text").attr("class", "annot").attr("x", width - m.r).attr("y", height - 6).attr("text-anchor", "end").text(cap(xLabel) + " →");
+  svg.append("text").attr("class", "annot").attr("x", m.l).attr("y", 6).text("↑ " + cap(yLabel));
   const clipId = "sc" + Math.random().toString(36).slice(2);
   svg.append("clipPath").attr("id", clipId).append("rect").attr("x", m.l).attr("y", m.t).attr("width", width - m.l - m.r).attr("height", height - m.t - m.b);
   if (fit) {
