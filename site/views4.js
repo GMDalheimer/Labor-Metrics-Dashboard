@@ -56,7 +56,7 @@ export function home(root) {
   const mail = a => h("a", { href: `mailto:${a}` }, a);
   root.append(h("section", { class: "home-section" }, h("h2", {}, "Authors and contact"),
     h("dl", { class: "imprint home-imprint" },
-      h("div", {}, h("dt", {}, "Authors"), h("dd", {}, "Gregor Dalheimer and Abaigeal Heneghan")),
+      h("div", {}, h("dt", {}, "Authors"), h("dd", {}, "Gregor Dalheimer", h("br"), "Abaigeal Heneghan")),
       h("div", {}, h("dt", {}, "Contact"), h("dd", {}, mail("gregor.dalheimer@institute.global"), h("br"), mail("abaigeal.heneghan@institute.global"))),
       h("div", {}, h("dt", {}, "Publisher"), h("dd", {}, "Tony Blair Institute for Global Change")),
       h("div", {}, h("dt", {}, "Suggested citation"), h("dd", {}, "Dalheimer, G. and Heneghan, A. (2026). Labor Cost Atlas. Tony Blair Institute for Global Change."))),
