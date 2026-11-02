@@ -262,7 +262,7 @@ if (!is.null(earn)) tryCatch({
                 value = obs_value))
 }, error = function(e) message("  post-processing failed for earn: ", conditionMessage(e)))
 
-mmw <- ilo(first_id(c("EAR_4MMN_CUR_NB_A", "EAR_4MMN_CUR_NB_Q"), "(MMN|MWG|MIN).*CUR.*_A$"), "minimum_wage")
+mmw <- ilo(first_id(c("EAR_INEE_CUR_NB_A", "EAR_4MMN_CUR_NB_A")), "minimum_wage")
 if (!is.null(mmw)) tryCatch({
   country_long$mmw <- mmw %>% filter(classif1 %in% c("CUR_TYPE_USD", "CUR_TYPE_PPP")) %>%
     transmute(geo, year, metric = ifelse(classif1 == "CUR_TYPE_USD", "ilo_min_wage_usd", "ilo_min_wage_ppp"),
