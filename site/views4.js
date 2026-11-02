@@ -33,8 +33,8 @@ export function home(root) {
     method: fit ? [`Slope ${fit.coefs[1].b.toFixed(2)} (robust SE ${fit.coefs[1].se.toFixed(2)}, p ${fmtP(fit.coefs[1].p)}), n = ${fit.n}, R² = ${fit.r2.toFixed(2)}. On average, a country that produces one euro more per hour has a labor cost that is ${fit.coefs[1].b.toFixed(2)} euros higher per hour.`] : [] });
   feat.append(h("div", { class: "grid" }, f.el));
   scatter(f.body, pts, { xLabel: "Value added per hour worked, EUR", yLabel: "Hourly labor cost, EUR", xFmt: v => "€" + v.toFixed(0), yFmt: v => "€" + v.toFixed(0),
-    fit: fit ? { predict: fit.predict } : null, highlight: p => p.geo === S.focus,
-    colorOf: p => p.geo === S.focus || S.comps.includes(p.geo) ? countryColor(p.geo) : cssVar("--context-hi"), height: 440 });
+    fit: fit ? { predict: fit.predict } : null, highlight: () => false,
+    colorOf: () => cssVar("--s1"), height: 440 });
 
   const paths = [
     ["ulc", "Unit labor costs", "This page shows how the labor cost of producing one unit of output has changed, and how much of that came from pay and how much from productivity."],
