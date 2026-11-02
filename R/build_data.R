@@ -53,7 +53,7 @@ estat <- function(id) {
 }
 
 show_codes <- function(x, col) {
-  if (col %in% names(x)) message("  ", col, ": ", paste(head(sort(unique(x[[col]])), 40), collapse = ", "))
+  if (col %in% names(x)) message("  ", col, ": ", paste(sort(unique(x[[col]])), collapse = ", "))
 }
 
 # ---- 1. National accounts by sector (core) -----------------------------------
@@ -64,13 +64,13 @@ a64 <- safely_fetch("eurostat:nama_10_a64", {
   show_codes(x, "na_item")
   x %>%
     filter((na_item == "B1G" & unit %in% c("CLV20_MEUR", "CP_MEUR")) |
-           (na_item %in% c("D1", "D11", "B2A3G") & unit == "CP_MEUR")) %>%
+           (na_item %in% c("D1", "D11", "D29X39") & unit == "CP_MEUR")) %>%
     mutate(var = case_when(
       na_item == "B1G" & unit == "CLV20_MEUR" ~ "gva_real",
       na_item == "B1G"                        ~ "gva_nom",
       na_item == "D1"                         ~ "comp",
       na_item == "D11"                        ~ "wages",
-      na_item == "B2A3G"                      ~ "gos"))
+      na_item == "D29X39"                     ~ "otax"))
 })
 
 a64e <- safely_fetch("eurostat:nama_10_a64_e", {
@@ -105,7 +105,8 @@ col_or_na <- function(df, col) if (col %in% names(df)) df[[col]] else NA_real_
 sector <- bind_rows(raw, resid) %>%
   filter(nace %in% sectors$nace) %>%
   mutate(
-    gos       = col_or_na(., "gos"),
+    otax      = col_or_na(., "otax"),
+    gos       = gva_nom - comp - otax,             # gross operating surplus and mixed income
     emp_hours = col_or_na(., "emp_hours"),
     sal_hours = col_or_na(., "sal_hours"),
     prod          = gva_real / emp * 1000,             # EUR (2020 prices) per person employed
@@ -117,7 +118,7 @@ sector <- bind_rows(raw, resid) %>%
     adj_labour_share = (comp / sal) * emp / gva_nom,   # imputes self-employed income at employee pay
     profit_share  = gos / gva_nom,
     employer_rate = (comp - wages) / wages,            # employer social contributions / gross wages
-    hours_worker  = emp_hours / emp * 1000             # annual hours per person employed
+    hours_worker  = emp_hours / emp                    # annual hours per person employed
   ) %>%
   select(geo, nace, year, gva_real, gva_nom, comp, emp, emp_hours,
          prod, prod_hour, comp_pe, comp_ph, ulc, labour_share, adj_labour_share,
@@ -153,9 +154,11 @@ country_long$kaitz <- kaitz
 # Tax wedge on labour cost, single earner without children at 100% of average wage
 wedge <- safely_fetch("eurostat:earn_nt_taxwedge", {
   x <- estat("earn_nt_taxwedge")
-  show_codes(x, "ecase")
-  ec <- grep("P1_NCH_AW100$", unique(x$ecase), value = TRUE)
-  x %>% filter(ecase %in% ec[1], !is.na(values)) %>%
+  message("  columns: ", paste(names(x), collapse = ", "))
+  ecol <- intersect(c("ecase", "estruct", "e_case"), names(x))[1]
+  show_codes(x, ecol)
+  ec <- grep("P1_NCH_AW100$", unique(x[[ecol]]), value = TRUE)
+  x %>% filter(.data[[ecol]] %in% ec[1], !is.na(values)) %>%
     transmute(geo, year, metric = "tax_wedge", value = values / 100)
 })
 country_long$wedge <- wedge
@@ -164,7 +167,10 @@ country_long$wedge <- wedge
 lc <- safely_fetch("eurostat:lc_lci_lev", {
   x <- estat("lc_lci_lev")
   show_codes(x, "lcstruct"); show_codes(x, "unit")
-  x <- x %>% filter(unit == "EUR", nace_r2 %in% c("B-S", "C"), !is.na(values))
+  show_codes(x, "nace_r2")
+  tot <- intersect(c("B-S", "B-S_X_O", "B-N"), unique(x$nace_r2))[1]
+  x <- x %>% filter(unit == "EUR", nace_r2 %in% c(tot, "C"), !is.na(values)) %>%
+    mutate(nace_r2 = ifelse(nace_r2 == "C", "C", "TOTAL"))
   w <- x %>% select(geo, year, nace_r2, lcstruct, values) %>%
     pivot_wider(names_from = lcstruct, values_from = values)
   bind_rows(
@@ -183,9 +189,10 @@ iso_map <- countries %>% filter(!is.na(iso3), geo != "EU27_2020") %>% select(geo
 ilo <- function(id, name) safely_fetch(paste0("ilostat:", name), {
   if (!ilo_ok) stop("Rilostat not installed")
   x <- Rilostat::get_ilostat(id, cache = FALSE, quiet = TRUE)
+  message("  ", id, " columns: ", paste(names(x), collapse = ", "), " rows=", nrow(x))
   x <- x %>% filter(ref_area %in% iso_map$ref_area) %>%
     mutate(year = as.integer(substr(as.character(time), 1, 4))) %>%
-    filter(year >= year_min, !is.na(obs_value))
+    filter(year >= year_min, year <= as.integer(format(Sys.Date(), "%Y")) - 1, !is.na(obs_value))
   show_codes(x, "classif1"); show_codes(x, "classif2")
   x %>% inner_join(iso_map, by = "ref_area")
 })
@@ -253,12 +260,13 @@ sbs_one <- function(id) {
   icol <- intersect(c("indic_sb", "indic_sbs"), names(x))[1]
   show_codes(x, icol)
   if ("size_emp" %in% names(x)) x <- x %>% filter(size_emp == "TOTAL")
+  show_codes(x %>% filter(substr(nace_r2, 1, 3) %in% c("C29", "C14", "C15", "C27")), "nace_r2")
   x %>% filter(nace_r2 %in% names(industries), !is.na(values)) %>%
     mutate(ind = .data[[icol]],
            var = case_when(
-             ind %in% c("V12150", "VA_FC_MEUR", "V12150_MEUR") ~ "va",
-             ind %in% c("V16110", "EMP_PERS", "V16110_NR") ~ "emp",
-             ind %in% c("V13320", "WAG_SAL_MEUR", "V13320_MEUR") ~ "wages",
+             ind %in% c("V12150", "AV_MEUR") ~ "va",
+             ind %in% c("V16110", "EMP_NR") ~ "emp",
+             ind %in% c("V13320", "EXPN_SAL_MEUR", "SAL_MEUR") ~ "wages",
              TRUE ~ NA_character_)) %>%
     filter(!is.na(var)) %>%
     select(geo, nace = nace_r2, year, var, values)
