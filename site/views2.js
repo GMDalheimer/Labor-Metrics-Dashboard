@@ -465,8 +465,15 @@ export function analysis(root) {
   }
 }
 
+// Formulas are typeset with KaTeX; plain LaTeX is shown if KaTeX could not be loaded
+export function tex(src, display = true) {
+  const el = h("span", { class: display ? "tex tex-display" : "tex" });
+  try { window.katex.render(src, el, { displayMode: display, throwOnError: false }); }
+  catch (e) { el.textContent = src; }
+  return el;
+}
 function formulaTable(rows) {
-  return h("table", { class: "data formulas" }, h("tbody", {}, rows.map(([k, f]) => h("tr", {}, h("td", {}, k), h("td", { class: "formula", html: f })))));
+  return h("table", { class: "data formulas" }, h("tbody", {}, rows.map(([k, f]) => h("tr", {}, h("td", {}, k), h("td", { class: "formula" }, tex(f))))));
 }
 
 function regTable(coefs, stats) {
@@ -509,30 +516,33 @@ export function methods(root) {
     h("h2", {}, "Sources"), src,
     h("p", { html: `Tables: <a href="data/sector.csv">sector.csv</a>, <a href="data/sector_full.csv">sector_full.csv</a>, <a href="data/country.csv">country.csv</a>, <a href="data/industry.csv">industry.csv</a>, <a href="data/nace.csv">nace.csv</a>.` }),
     h("h2", {}, "Formulas"),
-    h("p", {}, "Notation: GVA is gross value added (real: chain-linked volumes in 2020 euros; nominal: current prices), D1 compensation of employees, D11 wages and salaries, D29X39 other taxes less subsidies on production, E persons employed, L employees, H hours worked by persons employed, H_L hours worked by employees. Subscripts 0 and 1 denote the start and end year of a period of T years."),
+    h("p", {}, "Notation: economy ", tex("i", false), ", year ", tex("t", false), ", sector ", tex("s", false), ". ", tex(String.raw`\mathit{GVA}^{\,real}`, false), " is gross value added in chain-linked 2020 euros and ", tex(String.raw`\mathit{GVA}^{\,nom}`, false), " at current prices; ", tex("D1", false), " compensation of employees; ", tex("D11", false), " wages and salaries; ", tex("D29X39", false), " other taxes less subsidies on production; ", tex("E", false), " persons employed; ", tex("L", false), " employees; ", tex("H", false), " and ", tex("H^{L}", false), " hours worked by persons employed and by employees; ", tex(String.raw`\mathit{LC}^{h}`, false), " hourly labor cost from the labor cost survey; ", tex("s^{nw}", false), " non-wage share; ", tex(String.raw`\tau`, false), " tax wedge; ", tex("t_0, t_1", false), " start and end year of the period."),
     formulaTable([
-      ["Real productivity per person", "P = GVA<sub>real</sub> / E"],
-      ["Real productivity per hour", "P<sub>h</sub> = GVA<sub>real</sub> / H"],
-      ["Compensation per employee", "W = D1 / L"],
-      ["Compensation per employee hour", "W<sub>h</sub> = D1 / H<sub>L</sub>"],
-      ["Unit labor cost (per person; per hour)", "ULC = W / P; &nbsp; ULC<sub>h</sub> = W<sub>h</sub> / P<sub>h</sub>"],
-      ["Index", "I<sub>t</sub> = 100 × X<sub>t</sub> / X<sub>base</sub>"],
-      ["Log change and annual average", "Δln X = 100 × (ln X<sub>1</sub> − ln X<sub>0</sub>); &nbsp; g = Δln X / T"],
-      ["ULC decomposition (exact in logs)", "Δln ULC = Δln W − Δln P"],
-      ["Labor share (unadjusted; adjusted)", "LS = D1 / GVA<sub>nom</sub>; &nbsp; LS<sub>adj</sub> = (D1 / L) × E / GVA<sub>nom</sub>"],
-      ["Profit share", "(GVA<sub>nom</sub> − D1 − D29X39) / GVA<sub>nom</sub>"],
-      ["Employer contribution rate", "(D1 − D11) / D11"],
-      ["Annual hours per worker", "H / E"],
-      ["Value added per hour (nominal)", "VA<sub>h</sub> = GVA<sub>nom</sub> / H"],
-      ["Labor cost per EUR 100 of value added", "100 × LC<sub>h</sub> / VA<sub>h</sub>, with LC<sub>h</sub> the hourly labor cost from the labor cost survey"],
-      ["Components of hourly labor cost", "employer = LC<sub>h</sub> × s<sub>nw</sub>; &nbsp; employee taxes = LC<sub>h</sub> × max(0, τ − s<sub>nw</sub>); &nbsp; net = LC<sub>h</sub> − employer − employee taxes; s<sub>nw</sub> non-wage share, τ tax wedge"],
-      ["Break-even change in hourly labor cost", "c* = (LC<sub>h,B</sub> / VA<sub>h,B</sub>) / (LC<sub>h,A</sub> / VA<sub>h,A</sub>) − 1"],
-      ["Relative productivity (economy tree)", "P<sub>s</sub> / P<sub>total</sub> (national average) or P<sub>s</sub> / P<sub>s,EU27</sub>"],
-      ["σ-convergence", "σ<sub>t</sub> = standard deviation over economies i of ln X<sub>i,t</sub>, balanced panel"],
-      ["β-convergence", "g<sub>i</sub> = α + β ln X<sub>i,0</sub> + ε<sub>i</sub>; β &lt; 0 indicates convergence"],
-      ["OLS and robust variance (HC1)", "β̂ = (X′X)<sup>−1</sup>X′y; &nbsp; V̂ = n/(n−k) · (X′X)<sup>−1</sup>(Σ<sub>i</sub> e<sub>i</sub><sup>2</sup> x<sub>i</sub>x<sub>i</sub>′)(X′X)<sup>−1</sup>"],
-      ["Panel with economy fixed effects", "Δln W<sub>it</sub> = α<sub>i</sub> + β Δln P<sub>it</sub> + ε<sub>it</sub>, estimated on within-transformed data; V̂ = G/(G−1) · (N−1)/(N−K) · Σ<sub>g</sub>(Σ<sub>t</sub> x̃<sub>gt</sub>e<sub>gt</sub>)<sup>2</sup> / (Σ x̃<sup>2</sup>)<sup>2</sup>, K = G + 1"],
-      ["Inference", "t = β̂ / se; two-sided p-values from the t distribution with n − k (OLS) or G − 1 (clustered) degrees of freedom"],
+      ["Real productivity per person employed", String.raw`P_{it} = \frac{\mathit{GVA}^{\,real}_{it}}{E_{it}}`],
+      ["Real productivity per hour worked", String.raw`P^{h}_{it} = \frac{\mathit{GVA}^{\,real}_{it}}{H_{it}}`],
+      ["Compensation per employee", String.raw`W_{it} = \frac{D1_{it}}{L_{it}}`],
+      ["Compensation per employee hour", String.raw`W^{h}_{it} = \frac{D1_{it}}{H^{L}_{it}}`],
+      ["Unit labor cost", String.raw`\mathit{ULC}_{it} = \frac{W_{it}}{P_{it}}, \qquad \mathit{ULC}^{h}_{it} = \frac{W^{h}_{it}}{P^{h}_{it}}`],
+      ["Index", String.raw`I_{it} = 100 \cdot \frac{X_{it}}{X_{i,t_0}}`],
+      ["Log change and annual average", String.raw`\Delta \ln X_i = 100\,\big(\ln X_{i,t_1} - \ln X_{i,t_0}\big), \qquad g_i = \frac{\Delta \ln X_i}{t_1 - t_0}`],
+      ["Decomposition of unit labor cost", String.raw`\Delta \ln \mathit{ULC}_{i} = \Delta \ln W_{i} - \Delta \ln P_{i}`],
+      ["Labor share", String.raw`\mathit{LS}_{it} = \frac{D1_{it}}{\mathit{GVA}^{\,nom}_{it}}, \qquad \mathit{LS}^{adj}_{it} = \frac{D1_{it}/L_{it}\cdot E_{it}}{\mathit{GVA}^{\,nom}_{it}}`],
+      ["Profit share", String.raw`\Pi_{it} = \frac{\mathit{GVA}^{\,nom}_{it} - D1_{it} - D29X39_{it}}{\mathit{GVA}^{\,nom}_{it}}`],
+      ["Employer contribution rate", String.raw`c_{it} = \frac{D1_{it} - D11_{it}}{D11_{it}}`],
+      ["Annual hours per worker", String.raw`h_{it} = \frac{H_{it}}{E_{it}}`],
+      ["Nominal value added per hour", String.raw`V^{h}_{it} = \frac{\mathit{GVA}^{\,nom}_{it}}{H_{it}}`],
+      ["Labor cost per EUR 100 of value added", String.raw`\kappa_{it} = 100 \cdot \frac{\mathit{LC}^{h}_{it}}{V^{h}_{it}}`],
+      ["Components of hourly labor cost", String.raw`\begin{aligned} \text{employer} &= \mathit{LC}^{h}\, s^{nw} \\ \text{employee taxes} &= \mathit{LC}^{h} \max\!\big(0,\ \tau - s^{nw}\big) \\ \text{net} &= \mathit{LC}^{h} - \text{employer} - \text{employee taxes} \end{aligned}`],
+      ["Break-even change in hourly labor cost", String.raw`c^{*}_{A} = \frac{\mathit{LC}^{h}_{B} / V^{h}_{B}}{\mathit{LC}^{h}_{A} / V^{h}_{A}} - 1`],
+      ["Relative productivity (economy tree)", String.raw`\rho_{is} = \frac{P_{is}}{P_{i,\text{total}}} \quad\text{or}\quad \rho_{is} = \frac{P_{is}}{P_{\text{EU27},s}}`],
+      ["σ-convergence", String.raw`\sigma_t = \sqrt{\frac{1}{N-1}\sum_{i=1}^{N}\big(\ln X_{it} - \overline{\ln X}_{t}\big)^{2}}`],
+      ["β-convergence", String.raw`g_i = \alpha + \beta \ln X_{i,t_0} + \varepsilon_i, \qquad \beta < 0 \Rightarrow \text{convergence}`],
+      ["OLS estimator", String.raw`\hat{\beta} = (X'X)^{-1} X'y`],
+      ["Robust variance (HC1)", String.raw`\widehat{V}_{HC1}(\hat\beta) = \frac{n}{n-k}\,(X'X)^{-1}\Big(\sum_{i=1}^{n} \hat{e}_i^{2}\, x_i x_i'\Big)(X'X)^{-1}`],
+      ["Panel model with economy fixed effects", String.raw`\Delta \ln W_{it} = \alpha_i + \beta\, \Delta \ln P_{it} + \varepsilon_{it}`],
+      ["Within estimator", String.raw`\hat\beta_{FE} = \frac{\sum_{i}\sum_{t} \tilde{x}_{it}\tilde{y}_{it}}{\sum_{i}\sum_{t} \tilde{x}_{it}^{2}}, \qquad \tilde{z}_{it} = z_{it} - \bar{z}_{i}`],
+      ["Cluster-robust variance", String.raw`\widehat{V}_{CL}(\hat\beta_{FE}) = \frac{G}{G-1}\cdot\frac{N-1}{N-K}\cdot \frac{\sum_{g=1}^{G}\big(\sum_{t}\tilde{x}_{gt}\hat{e}_{gt}\big)^{2}}{\big(\sum_{g}\sum_{t}\tilde{x}_{gt}^{2}\big)^{2}}, \qquad K = G + 1`],
+      ["Inference", String.raw`t = \frac{\hat\beta}{\widehat{\mathrm{se}}(\hat\beta)} \sim t_{\nu}, \qquad \nu = n-k \ \text{(OLS)}, \quad \nu = G-1 \ \text{(clustered)}`],
     ]),
     h("h2", {}, "Limitations"),
     h("ul", {},
