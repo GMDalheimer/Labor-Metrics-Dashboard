@@ -114,7 +114,7 @@ function yearsWithData(m, nace = S.nace) {
   const counts = D.allYears.map(y => [y, snapshot(m, y, nace).length]);
   const best = d3.max(counts, d => d[1]) || 0;
   const ys = counts.filter(d => d[1] > 0).map(d => d[0]);
-  const good = counts.filter(d => d[1] >= 0.9 * best).map(d => d[0]);
+  const good = counts.filter(d => d[1] >= 0.8 * best).map(d => d[0]);
   return { years: ys, latest: d3.max(good) ?? d3.max(ys), best };
 }
 function rankOf(m, geo, year, nace = S.nace) {
@@ -842,7 +842,7 @@ function renderHour(root) {
       r.c.assumed.nonwage ? `${r.name}: non-wage share not available, 20% assumed` : null,
       r.c.assumed.wedge ? `${r.name}: tax wedge not available, estimated` : null,
     ]).filter(Boolean);
-    notes.innerHTML = `Method: hourly labour cost (Eurostat lc_lci_lev) is split using the non-wage share and the tax wedge for a single earner at the average wage, so the split is indicative. ` +
+    notes.innerHTML = `Method: hourly labour cost (Eurostat lc_lci_lev) is split using the non-wage share and the tax wedge for a single low-wage earner, so the split is indicative. ` +
       `The sick-leave scenario spreads employer-paid absence over the remaining hours worked per year (national accounts). Value added per hour is nominal GVA divided by hours worked. ` +
       (warn.length ? `<br>Caveats: ${warn.join("; ")}.` : "");
   }
@@ -921,7 +921,7 @@ function renderSectors(root) {
     const a = val("prod", g, S.base, s.nace), b = val("prod", g, S.end, s.nace);
     if (a > 0 && b > 0) heat.push({ geo: g, name: D.name.get(g) || "EU27", nace: s.nace, label: s.label, v: b / a - 1 });
   }
-  const hg = [...new Set(heat.map(d => d.geo))];
+  const hg = [...new Set(heat.map(d => d.geo))].sort((a, b) => (a === EU) - (b === EU) || (a === S.focus ? -1 : b === S.focus ? 1 : a.localeCompare(b)));
   if (!heat.length) c2.body.append(h("p", { class: "empty" }, "No data for this selection."));
   else {
     const width = widthOf(c2.body), m = { l: 200, r: 10, t: 40, b: 10 };
