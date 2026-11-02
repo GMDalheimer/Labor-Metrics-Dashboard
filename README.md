@@ -1,6 +1,6 @@
 # Labor Cost Atlas
 
-Unit labor costs, productivity, labor costs, wages and working time across Europe, the Western Balkans and North Africa. Built by TBI's Serbia team.
+Unit labor costs, productivity, labor costs, wages and working time across Europe, the Western Balkans and North Africa.
 
 **Live site:** https://gmdalheimer.github.io/Labor-Metrics-Dashboard/
 
