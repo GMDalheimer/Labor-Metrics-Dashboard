@@ -182,12 +182,14 @@ export function countryColor(geo) {
   const i = S.comps.filter(c => c !== S.focus).indexOf(geo);
   return i >= 0 ? cssVar(`--s${i + 2}`) : cssVar("--context-hi");
 }
+// Sequential: teal -> blue -> purple, light to dark (dark theme: low values recede into the surface)
 export const seqRamp = () => isDark()
-  ? ["#16365f", "#1c5cab", "#3987e5", "#86b6ef", "#cde2fb"]
-  : ["#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"];
+  ? ["#163b45", "#17707a", "#2c8fc6", "#7f8ff0", "#d6c8f8"]
+  : ["#d9f2ee", "#8ed3c8", "#3aa3bb", "#2f69c4", "#45289a"];
+// Diverging: purple (low) <- neutral grey -> teal (high)
 export const divRamp = () => isDark()
-  ? ["#d95926", "#6b3a26", "#2b2e33", "#1e4573", "#3987e5"]
-  : ["#eb6834", "#f6c4ad", "#efeee9", "#9ec5f4", "#2a78d6"];
+  ? ["#b36ae0", "#5a3a73", "#2b2e33", "#1c5c57", "#22b3a8"]
+  : ["#7b2fa8", "#d2b0e8", "#efeee9", "#95d6ce", "#0d7f78"];
 
 // ---------------------------------------------------------------------------
 // DOM helpers
