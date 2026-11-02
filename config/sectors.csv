@@ -1,0 +1,30 @@
+nace,label,tier,order
+TOTAL,Total economy,total,1
+A,Agriculture,a10,1
+B-E,Industry (excl. construction),a10,2
+C,Manufacturing,a10,3
+F,Construction,a10,4
+G-I,"Trade, transport, accommodation",a10,5
+J,Information and communication,a10,6
+K,Finance and insurance,a10,7
+L,Real estate,a10,8
+M_N,Professional and support services,a10,9
+O-Q,"Public admin, education, health",a10,10
+R-U,Other services,a10,11
+C10-C12,"Food, beverages, tobacco",manuf14,1
+C13-C15,"Textiles, apparel, leather",manuf14,2
+C16-C18,"Wood, paper, printing",manuf14,3
+C19,Coke and refined petroleum,manuf14,4
+C20,Chemicals,manuf14,5
+C21,Pharmaceuticals,manuf14,6
+C22_C23,Rubber/plastics and non-metallic minerals,manuf14,7
+C24_C25,Basic and fabricated metals,manuf14,8
+C26,Computer and electronics,manuf14,9
+C27,Electrical equipment,manuf14,10
+C28,Machinery n.e.c.,manuf14,11
+C29,Motor vehicles,manuf14,12
+C30,Other transport equipment,manuf14,13
+C31-C33,"Furniture, other, repair",manuf14,14
+C29,Automotive (C29),manuf3,1
+C26,Electronics (C26),manuf3,2
+C_RESID,Rest of manufacturing,manuf3,3

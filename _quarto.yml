@@ -1,0 +1,11 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - index.qmd
+  resources:
+    - data/*.csv
+    - config/*.csv
+
+website:
+  title: "Labor Metrics Dashboard"

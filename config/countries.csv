@@ -1,0 +1,32 @@
+geo,name,group
+RS,Serbia,Serbia
+MK,North Macedonia,Western Balkans
+AL,Albania,Western Balkans
+ME,Montenegro,Western Balkans
+BA,Bosnia and Herzegovina,Western Balkans
+TR,Türkiye,Other
+BG,Bulgaria,CEE
+CZ,Czechia,CEE
+EE,Estonia,CEE
+HR,Croatia,CEE
+HU,Hungary,CEE
+LT,Lithuania,CEE
+LV,Latvia,CEE
+PL,Poland,CEE
+RO,Romania,CEE
+SI,Slovenia,CEE
+SK,Slovakia,CEE
+AT,Austria,EU West
+BE,Belgium,EU West
+DE,Germany,EU West
+DK,Denmark,EU West
+ES,Spain,EU West
+FI,Finland,EU West
+FR,France,EU West
+GR,Greece,EU West
+IE,Ireland,EU West
+IT,Italy,EU West
+NL,Netherlands,EU West
+PT,Portugal,EU West
+SE,Sweden,EU West
+EU27_2020,EU27 average,Aggregate
