@@ -13,6 +13,8 @@ export const S = {
   view: "overview",
   focus: "RS",
   comps: ["HU", "PL", "RO"],
+  context: [],          // any number of grey context economies
+  groups: [],           // regional groups shown as median line with min-max band
   base: 2016,
   end: null,            // null = latest year with good coverage
   nace: "TOTAL",
@@ -32,6 +34,8 @@ export function readHash() {
   const num = k => (p.get(k) && !isNaN(+p.get(k)) ? +p.get(k) : null);
   if (p.get("f")) S.focus = p.get("f");
   if (p.has("c")) S.comps = p.get("c").split(",").filter(Boolean).slice(0, 3);
+  if (p.has("x")) S.context = p.get("x").split(",").filter(Boolean);
+  if (p.has("g")) S.groups = p.get("g").split("|").filter(Boolean);
   if (num("b")) S.base = num("b");
   if (num("e")) S.end = num("e");
   if (p.get("n")) S.nace = p.get("n");
@@ -44,6 +48,8 @@ export function writeHash(push = false) {
   const p = new URLSearchParams();
   p.set("f", S.focus);
   p.set("c", S.comps.join(","));
+  if (S.context.length) p.set("x", S.context.join(","));
+  if (S.groups.length) p.set("g", S.groups.join("|"));
   p.set("b", S.base);
   if (S.end) p.set("e", S.end);
   p.set("n", S.nace);
@@ -183,6 +189,23 @@ export function countryColor(geo) {
   return i >= 0 ? cssVar(`--s${i + 2}`) : cssVar("--context-hi");
 }
 // Sequential: teal -> blue -> purple, light to dark (dark theme: low values recede into the surface)
+// Series for line charts: focus, highlighted comparators and EU27 in color; context economies in grey
+// (highlighted on hover); regional groups as a median line with a min-max band.
+export function comparisonSeries(dataFn, { includeEU = true } = {}) {
+  const main = [...new Set([S.focus, ...S.comps, ...(includeEU ? [EU] : [])])];
+  const out = main.map(g => ({ key: g, label: cname(g), color: countryColor(g), width: g === S.focus ? 2.6 : 1.9, dash: g === EU ? "5 4" : null, data: dataFn(g) }));
+  for (const g of S.context.filter(c => !main.includes(c))) out.push({ key: g, label: cname(g), color: cssVar("--context-hi"), width: 1.3, role: "context", data: dataFn(g) });
+  for (const grp of S.groups) {
+    const members = D.countries.filter(c => c.region === grp).map(c => c.geo);
+    const per = new Map();
+    for (const g of members) for (const d of dataFn(g)) { if (!per.has(d.year)) per.set(d.year, []); per.get(d.year).push(d.v); }
+    const data = [...per].filter(([, vs]) => vs.length >= Math.max(2, Math.ceil(members.length / 2))).sort((a, b) => a[0] - b[0])
+      .map(([year, vs]) => ({ year, v: d3.median(vs), lo: d3.min(vs), hi: d3.max(vs), n: vs.length }));
+    out.push({ key: "grp:" + grp, label: `${grp} (median)`, color: cssVar("--text-2"), width: 1.8, dash: "2 3", band: true, data });
+  }
+  return out.filter(s => s.data.length);
+}
+
 export const seqRamp = () => isDark()
   ? ["#163b45", "#17707a", "#2c8fc6", "#7f8ff0", "#d6c8f8"]
   : ["#d9f2ee", "#8ed3c8", "#3aa3bb", "#2f69c4", "#45289a"];
@@ -345,7 +368,7 @@ export function sparkline(container, data, { width = 180, height = 36, color = c
 export function lineChart(container, list, { height = 340, yFormat, indexLine = false, labelEnds = true, xDomain, refLine } = {}) {
   const width = widthOf(container);
   const m = { t: 12, r: labelEnds ? 120 : 16, b: 28, l: 58 };
-  const all = list.flatMap(s => s.data);
+  const all = list.flatMap(s => s.data.flatMap(d => (d.lo != null ? [d, { ...d, v: d.lo }, { ...d, v: d.hi }] : [d])));
   if (!all.length) { container.append(h("p", { class: "empty" }, "No data are available for this selection.")); return; }
   const x = d3.scaleLinear(xDomain || d3.extent(all, d => d.year), [m.l, width - m.r]);
   const yd = d3.extent(all, d => d.v);
@@ -357,11 +380,26 @@ export function lineChart(container, list, { height = 340, yFormat, indexLine = 
   if (indexLine) svg.append("line").attr("class", "ref-line").attr("x1", m.l).attr("x2", width - m.r).attr("y1", y(100)).attr("y2", y(100));
   if (refLine != null) svg.append("line").attr("class", "ref-line").attr("x1", m.l).attr("x2", width - m.r).attr("y1", y(refLine)).attr("y2", y(refLine));
   const line = d3.line().x(d => x(d.year)).y(d => y(d.v)).curve(d3.curveMonotoneX);
+  for (const s of list.filter(s => s.band)) {
+    svg.append("path").datum(s.data).attr("class", "group-band")
+      .attr("d", d3.area().x(d => x(d.year)).y0(d => y(d.lo)).y1(d => y(d.hi)).curve(d3.curveMonotoneX));
+  }
   const ordered = [...list].sort((a, b) => (b.role === "context") - (a.role === "context"));
   for (const s of ordered) {
     const p = svg.append("path").datum(s.data).attr("fill", "none").attr("stroke", s.color)
       .attr("stroke-width", s.width || 2).attr("stroke-dasharray", s.dash || null).attr("d", line)
       .attr("opacity", s.role === "context" ? .55 : 1);
+    if (s.role === "context") {
+      // wide invisible hit area: hovering a grey line highlights it and names it
+      const lab = svg.append("text").attr("class", "label-strong").attr("opacity", 0);
+      svg.append("path").datum(s.data).attr("fill", "none").attr("stroke", "transparent").attr("stroke-width", 10).attr("d", line).style("cursor", "pointer")
+        .on("mouseenter", () => {
+          p.raise().attr("stroke", cssVar("--text")).attr("opacity", 1).attr("stroke-width", 2);
+          const e = s.data[s.data.length - 1];
+          lab.raise().attr("x", x(e.year) + 6).attr("y", y(e.v)).attr("dominant-baseline", "middle").text(s.label).attr("opacity", 1);
+        })
+        .on("mouseleave", () => { p.attr("stroke", s.color).attr("opacity", .55).attr("stroke-width", s.width); lab.attr("opacity", 0); });
+    }
     if (s.role !== "context" && !s.dash) {
       const len = p.node().getTotalLength();
       p.attr("stroke-dasharray", `${len} ${len}`).attr("stroke-dashoffset", len)
@@ -389,7 +427,9 @@ export function lineChart(container, list, { height = 340, yFormat, indexLine = 
       fl.attr("x1", x(yr)).attr("x2", x(yr)).attr("opacity", 1);
       dots.selectAll("circle").data(rows.filter(r => r.s.role !== "context")).join("circle")
         .attr("cx", x(yr)).attr("cy", r => y(r.d.v)).attr("r", 4).attr("fill", r => r.s.color).attr("stroke", cssVar("--bg")).attr("stroke-width", 2);
-      showTip(ev, `<div class="tt-title">${yr}</div>` + rows.slice(0, 12).map(r => ttRow(r.s.label, yFormat ? yFormat(r.d.v) : r.d.v)).join(""));
+      const f = v => (yFormat ? yFormat(v) : v);
+      showTip(ev, `<div class="tt-title">${yr}</div>` + rows.filter(r => r.s.role !== "context").slice(0, 12)
+        .map(r => ttRow(r.s.label, f(r.d.v) + (r.d.lo != null ? ` <span class="tt-range">(${f(r.d.lo)}–${f(r.d.hi)})</span>` : ""))).join(""));
     })
     .on("mouseleave", () => { fl.attr("opacity", 0); dots.selectAll("*").remove(); hideTip(); });
   return { svg, x, y };

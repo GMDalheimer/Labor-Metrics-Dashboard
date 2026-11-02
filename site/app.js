@@ -43,7 +43,23 @@ function buildContext() {
     const add = h("select", { class: "select add", "aria-label": "Add comparison country", onchange: e => { if (e.target.value) change({ comps: [...S.comps, e.target.value].slice(0, 3) }); } },
       h("option", { value: "" }, S.comps.length >= 3 ? "Maximum of three" : "Add country"),
       ...(S.comps.length >= 3 ? [] : countryOptions(true).filter(o => o.value !== S.focus && !S.comps.includes(o.value)).map(o => h("option", { value: o.value }, o.label))));
-    parts.push(h("div", { class: "field" }, h("span", { class: "field-label" }, "Compared with"), h("div", { class: "tags" }, tags, add)));
+    parts.push(h("div", { class: "field" }, h("span", { class: "field-label" }, "Compared with (highlighted)"), h("div", { class: "tags" }, tags, add)));
+    // Context: any number of grey economies and regional groups
+    const regions = [...new Set(D.countries.map(c => c.region))].filter(r => r !== "Aggregate");
+    const ctxTags = [
+      ...S.context.map(c => h("button", { class: "tag grey", title: `Remove ${cname(c)}`, onclick: () => change({ context: S.context.filter(x => x !== c) }) },
+        h("span", { class: "swatch", style: "background:var(--context-hi)" }), cname(c), h("span", { class: "x" }, "×"))),
+      ...S.groups.map(g => h("button", { class: "tag group", title: `Remove ${g}`, onclick: () => change({ groups: S.groups.filter(x => x !== g) }) },
+        h("span", { class: "swatch band" }), `${g} (median and range)`, h("span", { class: "x" }, "×"))),
+    ];
+    const addCtx = h("select", { class: "select add", "aria-label": "Add a context country", onchange: e => { if (e.target.value) change({ context: [...S.context, e.target.value] }); } },
+      h("option", { value: "" }, "Add country"),
+      ...countryOptions().filter(o => o.value !== S.focus && !S.comps.includes(o.value) && !S.context.includes(o.value)).map(o => h("option", { value: o.value }, o.label)));
+    const addGrp = h("select", { class: "select add", "aria-label": "Add a group", onchange: e => { if (e.target.value) change({ groups: [...S.groups, e.target.value] }); } },
+      h("option", { value: "" }, "Add group"), ...regions.filter(r => !S.groups.includes(r)).map(r => h("option", { value: r }, r)));
+    const allRegion = h("button", { class: "link-btn", title: "Add all economies of the selected country's region as grey context lines",
+      onclick: () => change({ context: [...new Set([...S.context, ...D.countries.filter(c => c.region === D.region.get(S.focus) && c.geo !== S.focus && !S.comps.includes(c.geo)).map(c => c.geo)])] }) }, "+ region");
+    parts.push(h("div", { class: "field" }, h("span", { class: "field-label" }, "Also show (grey; hover to identify)"), h("div", { class: "tags" }, ctxTags, addCtx, addGrp, allRegion)));
   }
   if (ctx.includes("period")) {
     const ys = coverage("prod", "TOTAL").years;
@@ -63,6 +79,7 @@ async function render() {
   if (!VIEWS[S.view]) S.view = "overview";
   if (!D.name.has(S.focus)) S.focus = D.countries[0].geo;
   S.comps = S.comps.filter(c => D.name.has(c) && c !== S.focus);
+  S.context = S.context.filter(c => D.name.has(c) && c !== S.focus && !S.comps.includes(c));
   buildNav(); buildContext();
   const token = ++rendering;
   const root = h("div", { class: "view" });

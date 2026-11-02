@@ -7,10 +7,20 @@ A03,Fishing and aquaculture
 B-E,Industry (except construction)
 B,Mining and quarrying
 B05,Mining of coal and lignite
+B051,Mining of hard coal
+B052,Mining of lignite
 B06,Extraction of crude petroleum and natural gas
+B061,Extraction of crude petroleum
+B062,Extraction of natural gas
 B07,Mining of metal ores
+B071,Mining of iron ores
+B072,Mining of non-ferrous metal ores
 B08,Other mining and quarrying
+B081,"Quarrying of stone, sand and clay"
+B089,Mining and quarrying n.e.c.
 B09,Mining support service activities
+B091,Support activities for petroleum and natural gas extraction
+B099,Support activities for other mining and quarrying
 C,Manufacturing
 C10-C12,Manufacture of food products; beverages and tobacco products
 C10,Manufacture of food products
@@ -141,68 +151,186 @@ C331,"Repair of fabricated metal products, machinery and equipment"
 C332,Installation of industrial machinery and equipment
 D,"Electricity, gas, steam and air conditioning supply"
 D35,"Electricity, gas, steam and air conditioning supply"
+D351,"Electric power generation, transmission and distribution"
+D352,Manufacture of gas; distribution of gaseous fuels through mains
+D353,Steam and air conditioning supply
 E,"Water supply; sewerage, waste management and remediation activities"
 E36,"Water collection, treatment and supply"
+E360,"Water collection, treatment and supply"
 E37-E39,"Sewerage, waste management, remediation activities"
 E37,Sewerage
+E370,Sewerage
 E38,"Waste collection, treatment and disposal activities; materials recovery"
+E381,Waste collection
+E382,Waste treatment and disposal
+E383,Materials recovery
 E39,Remediation activities and other waste management services
+E390,Remediation activities and other waste management services
 F,Construction
 F41,Construction of buildings
+F411,Development of building projects
+F412,Construction of residential and non-residential buildings
 F42,Civil engineering
+F421,Construction of roads and railways
+F422,Construction of utility projects
+F429,Construction of other civil engineering projects
 F43,Specialised construction activities
+F431,Demolition and site preparation
+F432,"Electrical, plumbing and other construction installation activities"
+F433,Building completion and finishing
+F439,Other specialised construction activities
 G-I,"Wholesale and retail trade, transport, accommodation and food service activities"
 G,Wholesale and retail trade; repair of motor vehicles and motorcycles
 G45,Wholesale and retail trade and repair of motor vehicles and motorcycles
+G451,Sale of motor vehicles
+G452,Maintenance and repair of motor vehicles
+G453,Sale of motor vehicle parts and accessories
+G454,"Sale, maintenance and repair of motorcycles and related parts and accessories"
 G46,"Wholesale trade, except of motor vehicles and motorcycles"
+G461,Wholesale on a fee or contract basis
+G462,Wholesale of agricultural raw materials and live animals
+G463,"Wholesale of food, beverages and tobacco"
+G464,Wholesale of household goods
+G465,Wholesale of information and communication equipment
+G466,"Wholesale of other machinery, equipment and supplies"
+G467,Other specialised wholesale
+G469,Non-specialised wholesale trade
 G47,"Retail trade, except of motor vehicles and motorcycles"
+G471,Retail sale in non-specialised stores
+G472,"Retail sale of food, beverages and tobacco in specialised stores"
+G473,Retail sale of automotive fuel in specialised stores
+G474,Retail sale of information and communication equipment in specialised stores
+G475,Retail sale of other household equipment in specialised stores
+G476,Retail sale of cultural and recreation goods in specialised stores
+G477,Retail sale of other goods in specialised stores
+G478,Retail sale via stalls and markets
+G479,"Retail trade not in stores, stalls or markets"
 H,Transportation and storage
 H49,Land transport and transport via pipelines
+H491,"Passenger rail transport, interurban"
+H492,Freight rail transport
+H493,Other passenger land transport
+H494,Freight transport by road and removal services
+H495,Transport via pipeline
 H50,Water transport
+H501,Sea and coastal passenger water transport
+H502,Sea and coastal freight water transport
+H503,Inland passenger water transport
+H504,Inland freight water transport
 H51,Air transport
+H511,Passenger air transport
+H512,Freight air transport and space transport
 H52,Warehousing and support activities for transportation
+H521,Warehousing and storage
+H522,Support activities for transportation
 H53,Postal and courier activities
+H531,Postal activities under universal service obligation
+H532,Other postal and courier activities
 I,Accommodation and food service activities
 I55,Accommodation
+I551,Hotels and similar accommodation
+I552,Holiday and other short-stay accommodation
+I553,"Camping grounds, recreational vehicle parks and trailer parks"
+I559,Other accommodation
 I56,Food and beverage service activities
+I561,Restaurants and mobile food service activities
+I562,Event catering and other food service activities
+I563,Beverage serving activities
 J,Information and communication
 J58-J60,"Publishing, motion picture, video, television programme production; sound recording, programming and broadcasting activities"
 J58,Publishing activities
+J581,"Publishing of books, periodicals and other publishing activities"
+J582,Software publishing
 J59_J60,"Motion picture, video, television programme production; programming and broadcasting activities"
 J59,"Motion picture, video and television programme production, sound recording and music publishing activities"
+J591,"Motion picture, video and television programme activities"
+J592,Sound recording and music publishing activities
 J60,Programming and broadcasting activities
+J601,Radio broadcasting
+J602,Television programming and broadcasting activities
 J61,Telecommunications
+J611,Wired telecommunications activities
+J612,Wireless telecommunications activities
+J613,Satellite telecommunications activities
+J619,Other telecommunications activities
 J62_J63,"Computer programming, consultancy, and information service activities"
 J62,"Computer programming, consultancy and related activities"
+J620,"Computer programming, consultancy and related activities"
 J63,Information service activities
+J631,"Data processing, hosting and related activities; web portals"
+J639,Other information service activities
 K,Financial and insurance activities
 K64,"Financial service activities, except insurance and pension funding"
+K641,Monetary intermediation
+K642,Activities of holding companies
+K643,"Trusts, funds and similar financial entities"
+K649,"Other financial service activities, except insurance and pension funding"
 K65,"Insurance, reinsurance and pension funding, except compulsory social security"
+K651,Insurance
+K652,Reinsurance
+K653,Pension funding
 K66,Activities auxiliary to financial services and insurance activities
 L,Real estate activities
 L68,Real estate activities
 L68A,Imputed rents of owner-occupied dwellings
+L681,Buying and selling of own real estate
+L682,Renting and operating of own or leased real estate
+L683,Real estate activities on a fee or contract basis
 M_N,"Professional, scientific and technical activities; administrative and support service activities"
 M,"Professional, scientific and technical activities"
 M69-M71,Legal and accounting activities; activities of head offices; management consultancy activities; architectural and engineering activities; technical testing and analysis
 M69_M70,Legal and accounting activities; activities of head offices; management consultancy activities
 M69,Legal and accounting activities
+M691,Legal activities
+M692,"Accounting, bookkeeping and auditing activities; tax consultancy"
 M70,Activities of head offices; management consultancy activities
+M701,Activities of head offices
+M702,Management consultancy activities
 M71,Architectural and engineering activities; technical testing and analysis
+M711,Architectural and engineering activities and related technical consultancy
+M712,Technical testing and analysis
 M72,Scientific research and development
+M721,Research and experimental development on natural sciences and engineering
+M722,Research and experimental development on social sciences and humanities
 M73-M75,"Advertising and market research; other professional, scientific and technical activities; veterinary activities"
 M73,Advertising and market research
+M731,Advertising
+M732,Market research and public opinion polling
 M74_M75,"Other professional, scientific and technical activities; veterinary activities"
 M74,"Other professional, scientific and technical activities"
+M741,Specialised design activities
+M742,Photographic activities
+M743,Translation and interpretation activities
+M749,"Other professional, scientific and technical activities n.e.c."
 M75,Veterinary activities
+M750,Veterinary activities
 N,Administrative and support service activities
 N77,Rental and leasing activities
+N771,Renting and leasing of motor vehicles
+N772,Renting and leasing of personal and household goods
+N773,"Renting and leasing of other machinery, equipment and tangible goods"
+N774,"Leasing of intellectual property and similar products, except copyrighted works"
 N78,Employment activities
+N781,Activities of employment placement agencies
+N782,Temporary employment agency activities
+N783,Other human resources provision
 N79,"Travel agency, tour operator and other reservation service and related activities"
+N791,Travel agency and tour operator activities
+N799,Other reservation service and related activities
 N80-N82,"Security and investigation, service and landscape, office administrative and support activities"
 N80,Security and investigation activities
+N801,Private security activities
+N802,Security systems service activities
+N803,Investigation activities
 N81,Services to buildings and landscape activities
+N811,Combined facilities support activities
+N812,Cleaning activities
+N813,Landscape service activities
 N82,"Office administrative, office support and other business support activities"
+N821,Office administrative and support activities
+N822,Activities of call centres
+N823,Organisation of conventions and trade shows
+N829,Business support service activities n.e.c.
 O-Q,"Public administration, defence, education, human health and social work activities"
 O,Public administration and defence; compulsory social security
 O84,Public administration and defence; compulsory social security

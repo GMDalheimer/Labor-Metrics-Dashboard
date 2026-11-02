@@ -6,6 +6,7 @@ import {
   pageHeader, figure, grid, select, seg, kpiRow, svgEl, widthOf, axisLeft, axisBottom, lineChart, legend, scatter, yearOptions,
 } from "./core.js";
 import { ols, feOLS, stars, fmtP } from "./stats.js";
+import { comparisonSeries } from "./core.js";
 
 const rerender = () => window.dispatchEvent(new Event("lca:render"));
 const set = (patch, push = false) => { Object.assign(S, patch); writeHash(push); rerender(); };
@@ -21,43 +22,79 @@ const IND_METRICS = {
   emp: { label: "Persons employed", unit: "number of persons", f: d3.format(",.0f") },
 };
 
+// ---- Industry data: business statistics for sections B–N, national accounts for the rest ----
+const SBS_SECTIONS = new Set("BCDEFGHIJKLMN".split(""));
+const naLevel = c => {
+  if (c === "TOTAL") return 0;
+  if (/^[A-U]$/.test(c)) return 1;
+  const parts = c.split(/[-_]/);
+  if (parts.every(t => /^[A-U]\d{2}$/.test(t)) && new Set(parts.map(t => t[0])).size === 1) return 2;
+  return -1;
+};
+function industryIndex() {
+  if (D.indIndex) return D.indIndex;
+  const sbs = new Set(D.industry.rows.map(r => r.nace).filter(c => level(c) >= 1 && level(c) <= 3));
+  // national-accounts codes for the parts of the economy not covered by business statistics
+  const na = new Set(D.full.rows.map(r => r.nace).filter(c => naLevel(c) >= 1 && !SBS_SECTIONS.has(c[0]) && !/^[TU]/.test(c)));
+  const codes = [...sbs, ...na].sort((x, y) => x.localeCompare(y, "en", { numeric: true }));
+  const src = c => (sbs.has(c) ? "sbs" : "na");
+  const lev = c => (src(c) === "sbs" ? level(c) : naLevel(c));
+  const parent = c => (lev(c) === 1 ? null : lev(c) === 2 ? c[0] : c.slice(0, 3));
+  D.indIndex = { codes, src, lev, parent, children: c => codes.filter(k => parent(k) === c) };
+  return D.indIndex;
+}
+// One row per economy, code and year in a common shape
+function indRow(geo, code, year) {
+  if (code === "TOTAL" || D.indIndex.src(code) === "na") {
+    const r = D.full.idx.get(`${geo}|${code}|${year}`);
+    if (!r || !r.emp) return null;
+    return { emp: r.emp * 1000, va_worker: r.va_nom != null ? r.va_nom / r.emp * 1000 : null, wage_share: r.labour_share ?? null, src: "na" };
+  }
+  const r = D.industry.idx.get(`${geo}|${code}|${year}`);
+  return r ? { ...r, src: "sbs" } : null;
+}
+
+const SRC_NOTE = {
+  sbs: "Source: Eurostat structural business statistics (sbs_na_ind_r2 to 2020, sbs_ovw_act from 2021). Value added at factor cost; wages and salaries exclude employer contributions. Values may be suppressed for confidentiality in small industries.",
+  na: "Source: Eurostat national accounts (nama_10_a64, nama_10_a64_e). Structural business statistics do not cover this activity; value added is gross value added at current prices and the wage share is compensation of employees (including employer contributions) over value added.",
+};
+
 export async function industries(root) {
   await loadFull();
-  const rows = D.industry.rows;
-  if (!rows.length) { root.append(pageHeader("Industries", "Industries", "Structural business statistics are not available in this build.")); return; }
-  const allCodes = [...new Set(rows.map(r => r.nace))].filter(c => level(c) >= 1 && level(c) <= 3).sort();
-  if (!allCodes.includes(S.industry)) S.industry = allCodes.includes("C29") ? "C29" : allCodes[0];
+  const IX = industryIndex();
+  if (!IX.codes.includes(S.industry) && S.industry !== "TOTAL") S.industry = IX.codes.includes("C") ? "C" : IX.codes[0];
   const code = S.industry, M = IND_METRICS[S.indMetric];
-  const sub = rows.filter(r => r.nace === code);
-  const years = [...new Set(sub.map(r => r.year))].sort();
-  const counts = years.map(y => sub.filter(r => r.year === y && r[S.indMetric] != null).length);
+  const src = code === "TOTAL" ? "na" : IX.src(code);
+  const years = D.allYears.filter(y => D.countries.some(c => indRow(c.geo, code, y)?.[S.indMetric] != null));
+  const counts = years.map(y => D.countries.filter(c => indRow(c.geo, code, y)?.[S.indMetric] != null).length);
   const best = d3.max(counts) || 0;
   const yDefault = years.filter((y, i) => counts[i] >= .8 * best).pop() ?? d3.max(years);
   const yr = S.indYear && years.includes(S.indYear) ? S.indYear : yDefault;
-  const get = (geo, y, c = code) => D.industry.idx.get(`${geo}|${c}|${y}`);
+  const get = (geo, y, c = code) => indRow(geo, c, y);
+  const title = code === "TOTAL" ? "Total economy" : `${code} ${naceName(code)}`;
 
-  root.append(pageHeader("Industries", `${code} ${naceName(code)}`,
-    `Structural business statistics report value added, employment and personnel costs for enterprises in the business economy, classified by NACE Rev. 2 at section (letter), division (two digits) and group (three digits) level. ` +
-    `Value added is measured at factor cost and differs from gross value added in the national accounts. The four FDI-intensive industries studied in the project are automotive parts (C293), wearing apparel (C14), leather and footwear (C15) and electrical equipment (C27).`));
+  root.append(pageHeader("Industries", title,
+    `Every activity in the economy can be selected in the browser below, from sections (letters) to divisions (two digits) and groups (three digits) of NACE Rev. 2. ` +
+    `For the business economy (sections B to N) the figures come from structural business statistics; agriculture and public and social services (A, O to S) are covered by the national accounts at section and division level.`));
 
-  root.append(industryBrowser(allCodes, code));
+  root.append(industryBrowser(IX, code));
   root.append(h("div", { class: "view-controls" },
     seg("Indicator", Object.entries(IND_METRICS).map(([value, m]) => ({ value, label: m.label })), S.indMetric, v => set({ indMetric: v })),
-    select("Year", yearOptions(years), yr, v => set({ indYear: +v }), { compact: true })));
+    years.length ? select("Year", yearOptions(years), yr, v => set({ indYear: +v }), { compact: true }) : null));
+  if (!years.length) { root.append(h("p", { class: "empty" }, "No data are available for this activity.")); return; }
 
-  // Ranking
   const snap = D.countries.map(c => ({ geo: c.geo, name: c.name, r: get(c.geo, yr) })).filter(d => d.r && d.r[S.indMetric] != null)
     .map(d => ({ ...d, v: d.r[S.indMetric] })).sort((a, b) => b.v - a.v);
   const euR = get(EU, yr);
-  const f1 = figure({ title: `${M.label}, ${yr}`, span: 5, sub: M.unit + (euR?.[S.indMetric] != null ? ". Dashed line: EU27." : "."),
-    note: "Source: Eurostat sbs_na_ind_r2 (to 2020) and sbs_ovw_act (from 2021). Values may be suppressed for confidentiality in small industries.",
-    csv: () => snap.map(d => ({ country: d.name, year: yr, value: d.v })) });
+  const unit = src === "na" && S.indMetric === "wage_share" ? "compensation of employees / gross value added" : src === "na" && S.indMetric === "va_worker" ? "gross value added per person employed, EUR (current prices)" : M.unit;
+  const f1 = figure({ title: `${M.label}, ${yr}`, span: 5, sub: unit + (euR?.[S.indMetric] != null ? ". Dashed line: EU27." : "."),
+    note: SRC_NOTE[src], csv: () => snap.map(d => ({ country: d.name, year: yr, value: d.v })) });
   const pts = D.countries.map(c => ({ geo: c.geo, name: c.name, r: get(c.geo, yr) }))
     .filter(d => d.r && d.r.va_worker > 0 && d.r.wage_share > 0 && d.r.wage_share < 2)
     .map(d => ({ geo: d.geo, name: d.name, x: Math.log10(d.r.va_worker), y: 100 * d.r.wage_share, emp: d.r.emp || 0 }));
   const fit = pts.length > 5 ? ols(pts.map(p => ({ y: p.y, x: [p.x] })), ["log10 VA per person"]) : null;
   const f2 = figure({ title: "Productivity and wage share", span: 7,
-    sub: `${yr}. Horizontal: value added per person employed (log scale). Vertical: wages and salaries in percent of value added. Marker area proportional to employment. Line: OLS fit with 95% band.`,
+    sub: `${yr}. Horizontal: value added per person employed (log scale). Vertical: ${src === "na" ? "compensation" : "wages and salaries"} in percent of value added. Marker area proportional to employment. Line: OLS fit with 95% band.`,
     note: fit ? `Slope ${fit.coefs[1].b.toFixed(1)} percentage points per tenfold increase in value added per person (SE ${fit.coefs[1].se.toFixed(1)}, p ${fmtP(fit.coefs[1].p)}, n = ${fit.n}, R² = ${fit.r2.toFixed(2)}).` : "",
     csv: () => pts.map(p => ({ country: p.name, va_per_person: 10 ** p.x, wage_share_pct: p.y, employed: p.emp })) });
   root.append(grid(f1.el, f2.el));
@@ -67,56 +104,63 @@ export async function industries(root) {
     xTicks: ([a, b]) => [1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6].map(Math.log10).filter(t => t >= a && t <= b),
     highlight: p => p.geo === S.focus, colorOf: p => p.geo === S.focus || S.comps.includes(p.geo) ? countryColor(p.geo) : cssVar("--context-hi"), height: 440 });
 
-  // Time series and children
-  const geos = [...new Set([S.focus, ...S.comps, EU])];
-  const list = geos.map(g => ({ key: g, label: cname(g), color: countryColor(g), width: g === S.focus ? 2.4 : 1.8, dash: g === EU ? "5 4" : null,
-    data: years.map(y => ({ year: y, v: get(g, y)?.[S.indMetric] })).filter(d => d.v != null) })).filter(s => s.data.length);
-  const f3 = figure({ title: `${M.label} over time`, span: 6, sub: `${M.unit}. Selected economies and EU27.`,
-    note: "A break in 2021 can occur where the source changes from sbs_na_ind_r2 to sbs_ovw_act.",
-    csv: () => list.flatMap(s => s.data.map(d => ({ country: s.label, year: d.year, value: d.v }))) });
-  const kids = [...new Set(rows.filter(r => r.nace.startsWith(code) && level(r.nace) === level(code) + 1).map(r => r.nace))].sort();
+  const list = comparisonSeries(g => years.map(y => ({ year: y, v: get(g, y)?.[S.indMetric] })).filter(d => d.v != null));
+  const f3 = figure({ title: `${M.label} over time`, span: 6, sub: `${unit}. Selected economies, EU27 and any context countries or groups chosen above.`,
+    note: src === "sbs" ? "A break in 2021 can occur where the source changes from sbs_na_ind_r2 to sbs_ovw_act." : "",
+    csv: () => list.flatMap(s => s.data.map(d => ({ series: s.label, year: d.year, value: d.v }))) });
+  const kids = code === "TOTAL" ? IX.codes.filter(c => IX.lev(c) === 1) : IX.children(code);
   const kidRows = kids.map(c => ({ code: c, name: naceName(c), r: get(S.focus, yr, c) })).filter(d => d.r && d.r[S.indMetric] != null).map(d => ({ ...d, v: d.r[S.indMetric] }));
-  const f4 = figure({ title: kids.length ? `Components of ${code} in ${cname(S.focus)}, ${yr}` : `${code} has no lower NACE level in this dataset`, span: 6,
-    sub: kids.length ? `${M.label} by NACE ${level(code) === 1 ? "division" : "group"}. Click a bar to open it.` : "",
+  const f4 = figure({ title: kids.length ? `Components of ${code === "TOTAL" ? "the total economy" : code} in ${cname(S.focus)}, ${yr}` : `${code} is not broken down further in the data`, span: 6,
+    sub: kids.length ? `${M.label} by ${code === "TOTAL" ? "section" : IX.lev(code) === 1 ? "division" : "group"}. Click a bar to open it.` : "",
     csv: () => kidRows.map(d => ({ nace: d.code, label: d.name, value: d.v })) });
   root.append(grid(f3.el, f4.el));
   lineChart(f3.body, list, { height: 320, yFormat: M.f, xDomain: d3.extent(years) });
   if (kidRows.length) drawBars(f4.body, kidRows.map(d => ({ geo: d.code, name: `${d.code} ${d.name}`.slice(0, 48), v: d.v })).sort((a, b) => b.v - a.v), M.f, null,
     d => set({ industry: d.geo, indYear: null }));
-  else if (kids.length) f4.body.append(h("p", { class: "empty" }, `No ${level(code) === 1 ? "division" : "group"} data for ${cname(S.focus)} in ${yr}.`));
+  else if (kids.length) f4.body.append(h("p", { class: "empty" }, `No data for the components of ${code} in ${cname(S.focus)} in ${yr}.`));
 }
 
-// Browsable, searchable list of every industry in the data, grouped by NACE section
-function industryBrowser(codes, current) {
-  const sections = codes.filter(c => level(c) === 1);
-  const project = ["C293", "C14", "C15", "C27"].filter(c => codes.includes(c));
-  const list = h("div", { class: "ind-list" });
-  const search = h("input", { class: "ind-search", type: "search", placeholder: "Search by name or code, e.g. “motor” or “C27”", "aria-label": "Search industries", value: S.indSearch || "" });
-  const levelSel = S.indLevelFilter || "all";
-  const fill = () => {
-    const q = (search.value || "").toLowerCase().trim();
-    list.innerHTML = "";
-    for (const sec of sections) {
-      const kids = codes.filter(c => c !== sec && c[0] === sec && (levelSel === "all" || level(c) === (levelSel === "division" ? 2 : 3)));
-      const match = c => !q || c.toLowerCase().includes(q) || naceName(c).toLowerCase().includes(q);
-      const shown = kids.filter(match);
-      if (!match(sec) && !shown.length) continue;
-      const grp = h("div", { class: "ind-group" },
-        h("button", { class: `ind-item sec ${sec === current ? "on" : ""}`, onclick: () => set({ industry: sec, indYear: null }) }, h("b", {}, sec), " ", naceName(sec)));
-      for (const c of shown) grp.append(h("button", { class: `ind-item l${level(c)} ${c === current ? "on" : ""}`, onclick: () => set({ industry: c, indYear: null }) }, h("b", {}, c), " ", naceName(c)));
-      list.append(grp);
-    }
-    if (!list.children.length) list.append(h("p", { class: "empty" }, "No industry matches the search."));
-  };
-  search.addEventListener("input", () => { S.indSearch = search.value; fill(); });
-  fill();
-  return h("div", { class: "picker" },
-    h("p", { class: "picker-title" }, `Industry `, h("span", {}, `· ${codes.length} industries available at section, division and group level; select one to update the charts`)),
-    h("div", { class: "ind-tools" }, search,
-      seg(null, [{ value: "all", label: "All levels" }, { value: "division", label: "Divisions" }, { value: "group", label: "Groups" }], levelSel, v => set({ indLevelFilter: v })),
-      h("div", { class: "quick-links" }, h("span", { class: "field-label" }, "Project industries:"), project.map(c =>
-        h("button", { class: `picker-opt ${c === current ? "on" : ""}`, onclick: () => set({ industry: c, indYear: null }) }, `${c} ${naceName(c).split(/[;,]/)[0].replace("Manufacture of ", "")}`)))),
-    list);
+// Column browser over the whole NACE tree: sections | divisions | groups, plus shortcuts and search
+function industryBrowser(IX, current) {
+  const path = [];
+  if (current !== "TOTAL") { let c = current; while (c) { path.unshift(c); c = IX.parent(c); } }
+  const sel = { sec: path[0], div: path[1], grp: path[2] };
+  const pick = c => set({ industry: c, indYear: null });
+  const item = (c, extra = "") => h("button", { class: `col-item ${c === current ? "on" : path.includes(c) ? "path" : ""} ${extra}`,
+    onclick: () => pick(c), title: `${c} ${naceName(c)}` },
+    h("b", {}, c), h("span", {}, naceName(c)), IX.children(c).length ? h("i", { "aria-hidden": "true" }, "›") : null);
+  const col = (label, codes, empty) => h("div", { class: "col" }, h("p", { class: "col-head" }, label),
+    h("div", { class: "col-list" }, codes.length ? codes.map(c => item(c)) : h("p", { class: "col-empty" }, empty)));
+
+  const sections = IX.codes.filter(c => IX.lev(c) === 1);
+  const divs = sel.sec ? IX.children(sel.sec) : [];
+  const grps = sel.div ? IX.children(sel.div) : [];
+  const columns = h("div", { class: "cols" },
+    col("Sections", sections, ""),
+    col(sel.sec ? `Divisions of ${sel.sec}` : "Divisions", divs, sel.sec ? "No divisions in the data." : "Select a section."),
+    col(sel.div ? `Groups of ${sel.div}` : "Groups", grps, sel.div ? "No groups in the data for this division." : "Select a division."));
+
+  const results = h("div", { class: "search-results", hidden: true });
+  const search = h("input", { class: "ind-search", type: "search", placeholder: "Search all activities by name or code", "aria-label": "Search activities" });
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase().trim();
+    results.innerHTML = "";
+    if (!q) { results.hidden = true; columns.hidden = false; return; }
+    const hits = IX.codes.filter(c => c.toLowerCase().includes(q) || naceName(c).toLowerCase().includes(q)).slice(0, 60);
+    results.append(...(hits.length ? hits.map(c => item(c, `l${IX.lev(c)}`)) : [h("p", { class: "col-empty" }, "No activity matches the search.")]));
+    results.hidden = false; columns.hidden = true;
+  });
+  const shortcuts = [["TOTAL", "Total economy"], ["C", "Manufacturing"], ["G", "Trade"], ["F", "Construction"], ["J", "Information and communication"], ["A", "Agriculture"]]
+    .filter(([c]) => c === "TOTAL" || IX.codes.includes(c));
+  const crumbs = h("div", { class: "crumbs" }, h("button", { class: `link-btn ${current === "TOTAL" ? "on" : ""}`, onclick: () => pick("TOTAL") }, "Total economy"),
+    path.map(c => [h("span", { class: "sep" }, "›"), h("button", { class: `link-btn ${c === current ? "on" : ""}`, onclick: () => pick(c) }, `${c} ${naceName(c).split(/[;,]/)[0]}`)]).flat());
+  return h("div", { class: "picker browser" },
+    h("div", { class: "browser-top" },
+      h("p", { class: "picker-title" }, "Activity ", h("span", {}, `· ${IX.codes.length} activities across the whole economy`)),
+      search),
+    h("div", { class: "shortcuts" }, h("span", { class: "field-label" }, "Quick access"),
+      shortcuts.map(([c, l]) => h("button", { class: `picker-opt ${c === current ? "on" : ""}`, onclick: () => pick(c) }, l))),
+    crumbs, columns, results);
 }
 
 function drawBars(host, data, f, euV, onClick) {
