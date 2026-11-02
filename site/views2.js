@@ -6,7 +6,7 @@ import {
   pageHeader, figure, grid, select, seg, kpiRow, svgEl, widthOf, axisLeft, axisBottom, lineChart, legend, scatter, yearOptions,
 } from "./core.js";
 import { ols, feOLS, stars, fmtP } from "./stats.js";
-import { comparisonSeries } from "./core.js";
+import { comparisonSeries, tex } from "./core.js";
 
 const rerender = () => window.dispatchEvent(new Event("lca:render"));
 const set = (patch, push = false) => { Object.assign(S, patch); writeHash(push); rerender(); };
@@ -509,13 +509,6 @@ export function analysis(root) {
   }
 }
 
-// Formulas are typeset with KaTeX; plain LaTeX is shown if KaTeX could not be loaded
-export function tex(src, display = true) {
-  const el = h("span", { class: display ? "tex tex-display" : "tex" });
-  try { window.katex.render(src, el, { displayMode: display, throwOnError: false }); }
-  catch (e) { el.textContent = src; }
-  return el;
-}
 function formulaTable(rows) {
   return h("table", { class: "data formulas" }, h("tbody", {}, rows.map(([k, f]) => h("tr", {}, h("td", {}, k), h("td", { class: "formula" }, tex(f))))));
 }
