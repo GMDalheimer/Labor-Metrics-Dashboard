@@ -9,18 +9,18 @@ import { hourData, computeHour } from "./views1.js";
 const rerender = () => window.dispatchEvent(new Event("lca:render"));
 
 const TOPICS = [
-  { key: "cost", q: "Is it a cost-competitive place to produce?", d: "How much labor costs per unit of output, and how that has changed compared with other countries" },
-  { key: "catchup", q: "Is it catching up with the EU?", d: "Output and pay per worker relative to the EU as a whole over time" },
-  { key: "pay", q: "How well are workers paid?", d: "Pay per employee, the minimum wage and the share of income that goes to workers" },
-  { key: "breakdown", q: "What does an hour of work cost an employer, and where does the money go?", d: "Take-home pay, taxes and contributions in one hour of labor cost" },
-  { key: "industries", q: "Which industries drive the economy?", d: "Where people work and how productive those activities are" },
-  { key: "hours", q: "How much do people work?", d: "Hours worked per week and per year" },
+  { key: "cost", q: "Is it a cost-competitive place to produce?", d: "This section covers labor cost per unit of output and how it has changed compared with other countries." },
+  { key: "catchup", q: "Is it catching up with the EU?", d: "This section compares output and pay per worker with the EU as a whole over time." },
+  { key: "pay", q: "How well are workers paid?", d: "This section covers pay per employee, the minimum wage and the share of income that goes to workers." },
+  { key: "breakdown", q: "What does an hour of work cost an employer, and where does the money go?", d: "This section splits one hour of labor cost into take-home pay, taxes and contributions." },
+  { key: "industries", q: "Which industries drive the economy?", d: "This section shows where people work and how productive those activities are." },
+  { key: "hours", q: "How much do people work?", d: "This section covers hours worked per week and per year." },
 ];
 const PERIODS = [{ value: "last5", label: "Recent years (last five)" }, { value: "2015", label: "Since the mid-2010s" }, { value: "2005", label: "Long term (since 2005)" }];
 const DEPTH = [
-  { value: "summary", label: "A one-page summary", d: "Key numbers and one finding per question" },
-  { value: "brief", label: "A short brief", d: "One page per question, with a chart and a plain-language explanation" },
-  { value: "detailed", label: "A detailed brief", d: "Additional charts, definitions and method notes" },
+  { value: "summary", label: "A one-page summary", d: "The summary gives the key numbers and one finding per question." },
+  { value: "brief", label: "A short brief", d: "The brief has one page per question, with a chart and a plain-language explanation." },
+  { value: "detailed", label: "A detailed brief", d: "The detailed brief adds charts, definitions and method notes." },
 ];
 
 const CS = { geo: null, comps: null, preset: "neighbours", topics: ["cost", "catchup"], period: "2015", depth: "brief", built: false };
@@ -29,7 +29,7 @@ function presets(geo) {
   const region = D.region.get(geo);
   const has = g => D.name.has(g) && g !== geo && latest("prod_hour", g, "TOTAL");
   return [
-    { value: "neighbours", label: `Its neighbours (${region})`, comps: D.countries.filter(c => c.region === region && has(c.geo)).map(c => c.geo).slice(0, 3) },
+    { value: "neighbours", label: `Its neighbors (${region})`, comps: D.countries.filter(c => c.region === region && has(c.geo)).map(c => c.geo).slice(0, 3) },
     { value: "investors", label: "Countries competing for the same investors", comps: ["PL", "HU", "RO", "BG", "SK", "CZ"].filter(has).slice(0, 3) },
     { value: "large", label: "Large EU economies", comps: ["DE", "FR", "IT"].filter(has) },
     { value: "eu", label: "Only the EU as a whole", comps: [] },
@@ -83,7 +83,7 @@ export async function casestudy(root) {
 
   root.append(h("div", { class: "wizard-go" },
     h("button", { class: "primary", disabled: CS.topics.length ? false : "disabled", onclick: () => { CS.built = true; rerender(); window.scrollTo(0, 0); } }, "Create the brief"),
-    CS.topics.length ? null : h("span", { class: "field-label" }, "Choose at least one question in step 2.")));
+    CS.topics.length ? null : h("span", { class: "field-label" }, "At least one question needs to be chosen in step 2.")));
 }
 
 // ---------------------------------------------------------------------------

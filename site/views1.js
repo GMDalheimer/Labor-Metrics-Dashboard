@@ -26,11 +26,11 @@ export async function overview(root) {
 
   root.append(pageHeader("Overview",
     `${M.label}, ${D.countries.length} economies`,
-    `${M.desc} Use the slider to change the year, or press play to step through all years. Colors use the same scale in every year, so a darker shade always means a higher value.`));
+    `${M.desc} The slider changes the year, and the play button steps through all years. Colors use the same scale in every year, so a darker shade always means a higher value.`));
 
   // Indicator selector grouped by category
   const picker = h("div", { class: "picker", role: "group", "aria-label": "Indicator" },
-    h("p", { class: "picker-title" }, "Indicator", h("span", {}, ". Select one to update the map and the ranking.")));
+    h("p", { class: "picker-title" }, "Indicator", h("span", {}, ". Selecting one updates the map and the ranking.")));
   for (const cat of CATEGORIES) {
     const ms = METRICS.filter(m => m.cat === cat);
     picker.append(h("div", { class: "picker-row" }, h("span", { class: "picker-cat" }, cat),
@@ -50,7 +50,7 @@ export async function overview(root) {
     note: `The source is ${M.source}. Countries in grey have no data for the selected year. Clicking a country opens its profile.`,
     method: [M.desc],
     csv: () => snapshot(S.metric, S.year).map(d => ({ country: d.name, year: S.year, value: d.v })) });
-  const f2 = figure({ title: "Ranking", span: 5, sub: "Economies are sorted from highest to lowest value in the year shown on the map. The dashed line marks the EU27.",
+  const f2 = figure({ title: "Ranking", span: 5, sub: "Economies are sorted from highest to lowest value.", text: "The year is the one shown on the map. The dashed line marks the EU27.",
     csv: () => snapshot(S.metric, S.year).sort((a, b) => b.v - a.v).map((d, i) => ({ rank: i + 1, country: d.name, value: d.v })) });
   f1.body.append(timeline);
   root.append(grid(f1.el, f2.el));
@@ -235,7 +235,8 @@ export function ulc(root) {
     return b ? D.allYears.map(y => ({ year: y, v: ulcOf(geo, y) })).filter(d => d.v != null).map(d => ({ year: d.year, v: 100 * d.v / b })) : [];
   });
   const f1 = figure({ title: `Unit labor cost index, ${sectorLabel(S.nace).toLowerCase()}`, span: 7,
-    sub: `The index is set to 100 in ${base}. It divides nominal compensation ${basis === "hour" ? "per hour worked by employees" : "per employee"} by real value added ${basis === "hour" ? "per hour worked" : "per person employed"}.`,
+    sub: `The index is set to 100 in ${base}.`,
+    text: `The index divides nominal compensation ${basis === "hour" ? "per hour worked by employees" : "per employee"} by real value added ${basis === "hour" ? "per hour worked" : "per person employed"}.`,
     note: "The data are from Eurostat (nama_10_a64 and nama_10_a64_e) and the index is calculated on this site. The dashed line is the EU27 aggregate, in which countries are weighted by size. Grey lines are additional countries, which are named on hover. A dotted line with a shaded band shows the unweighted median and range of a group.",
     method: [String.raw`$I_{it} = 100 \cdot \frac{\mathit{ULC}_{it}}{\mathit{ULC}_{i,t_0}}, \qquad \mathit{ULC}_{it} = \frac{D1_{it}/L_{it}}{\mathit{GVA}^{\,real}_{it}/E_{it}}`, "Each line is divided by its own value in the base year, so all lines start at 100. A value of 150 means that unit labor cost is 50% higher than in the base year."],
     csv: () => idxList.flatMap(s => s.data.map(d => ({ country: s.label, year: d.year, index: d.v }))) });
@@ -246,7 +247,8 @@ export function ulc(root) {
     return c != null && p != null ? { year: y, comp: c, prod: -p, ulc: c - p } : null;
   }).filter(Boolean);
   const f2 = figure({ title: `Annual change in unit labor cost, ${cname(S.focus)}`, span: 5,
-    sub: "Values are in log points. The blue bars show the contribution of compensation growth and the teal bars the contribution of productivity growth, with a negative sign. The dots show the change in ULC.",
+    sub: "Contributions of pay and productivity are shown in log points.",
+    text: "Blue bars show the contribution of compensation growth, and teal bars the contribution of productivity growth with a negative sign. The dots show the change in ULC.",
     note: "A negative productivity bar means that productivity rose and lowered unit labor cost. The data are from the Eurostat national accounts.",
     method: [String.raw`$\Delta \ln \mathit{ULC}_{it} = \underbrace{\Delta \ln W_{it}}_{\text{blue bar}} \; - \; \underbrace{\Delta \ln P_{it}}_{\text{teal bar}}`, "Changes are year-on-year log changes multiplied by 100. The two bars add up exactly to the dot."],
     csv: () => dec.map(d => ({ year: d.year, compensation_contribution: d.comp, productivity_contribution: d.prod, ulc_change: d.ulc })) });
@@ -261,7 +263,8 @@ export function ulc(root) {
     return gc != null && gp != null ? { geo: c.geo, name: c.name, comp: gc, prod: gp, ulc: gc - gp } : null;
   }).filter(Boolean).sort((a, b) => b.ulc - a.ulc);
   const f3 = figure({ title: `Compensation and productivity growth, ${base}–${end}`, span: 7,
-    sub: "Values are cumulative changes in log points. The distance between the two markers equals the change in unit labor cost, and economies are sorted by that change.",
+    sub: "Cumulative changes are shown in log points.",
+    text: "The distance between the two markers equals the change in unit labor cost, and economies are sorted by that change.",
     note: "The data are from the Eurostat national accounts.",
     method: [String.raw`$\Delta \ln \mathit{ULC}_{i} = \Delta \ln W_{i} - \Delta \ln P_{i}`, "The teal marker is the cumulative change in real productivity, the blue marker the cumulative change in compensation per employee, both in log points over the selected period. The number on the right is their difference: the change in unit labor cost."],
     csv: () => rows.map(r => ({ country: r.name, compensation_growth: r.comp, productivity_growth: r.prod, ulc_change: r.ulc })) });
@@ -270,7 +273,8 @@ export function ulc(root) {
   const pts = rows.map(r => ({ geo: r.geo, name: r.name, x: r.prod / (end - base), y: r.ulc / (end - base) }));
   const fit = pts.length > 5 ? ols(pts.map(p => ({ y: p.y, x: [p.x] })), ["Productivity growth"]) : null;
   const f4 = figure({ title: "ULC growth and productivity growth", span: 5,
-    sub: `Both axes show the average annual log change between ${base} and ${end}, in percent. The line is an OLS fit with a 95% confidence band based on robust (HC1) standard errors.`,
+    sub: `Both axes show average annual change, ${base}–${end}, in percent.`,
+    text: "Changes are measured as log differences. The line is an OLS fit with a 95% confidence band based on robust (HC1) standard errors.",
     method: [String.raw`$g^{\mathit{ULC}}_{i} = \alpha + \beta\, g^{P}_{i} + \varepsilon_i`, "Ordinary least squares across economies with heteroskedasticity-robust (HC1) standard errors; g denotes average annual log growth in percent. Since ULC growth equals compensation growth minus productivity growth, β = −1 would mean compensation growth is unrelated to productivity growth and β = 0 that it moves one for one."],
     note: fit ? `Slope ${fit.coefs[1].b.toFixed(2)} (SE ${fit.coefs[1].se.toFixed(2)}, p ${fmtP(fit.coefs[1].p)}), n = ${fit.n}, R² = ${fit.r2.toFixed(2)}. A slope of −1 would mean that productivity gains are not passed on to compensation at all; a slope of 0 means they are passed on one for one.` : "" });
   root.append(grid(f3.el, f4.el));
@@ -286,7 +290,8 @@ export function ulc(root) {
     return c != null && p != null ? { nace: s.nace, label: s.label, comp: c, prod: -p, ulc: c - p } : null;
   }).filter(Boolean).sort((a, b) => b.ulc - a.ulc);
   const f5 = figure({ title: `Decomposition by sector, ${cname(S.focus)}, ${base}–${end}`, span: 7,
-    sub: "Values are cumulative changes in log points. The upper bar shows the contribution of compensation and the lower bar the contribution of productivity, with a negative sign. The dot shows the change in ULC.",
+    sub: "Cumulative contributions are shown in log points.",
+    text: "The upper bar shows the contribution of compensation and the lower bar the contribution of productivity with a negative sign. The dot shows the change in ULC.",
     controls: seg(null, Object.entries(tiers).map(([value, label]) => ({ value, label })), S.tier, v => set({ tier: v })),
     note: "Other manufacturing (C minus C26 and C29) is exact in nominal terms and approximate in real terms because chain-linked volumes are not additive.",
     csv: () => secs.map(s => ({ sector: s.label, compensation_contribution: s.comp, productivity_contribution: s.prod, ulc_change: s.ulc })) });
@@ -294,7 +299,8 @@ export function ulc(root) {
   // Figure: official index cross-check
   const off = series(basis === "hour" ? "ulc_index_hw" : "ulc_index_per", S.focus);
   const f6 = figure({ title: `Cross-check with Eurostat's published index, ${cname(S.focus)}`, span: 5,
-    sub: `Both series cover the whole economy and are set to 100 in ${base}. The solid line is computed on this site, and the dashed line is Eurostat's nominal ULC index (nama_10_lp_ulc).`,
+    sub: `Both series cover the whole economy and are set to 100 in ${base}.`,
+    text: "The solid line is computed on this site, and the dashed line is Eurostat's nominal ULC index (nama_10_lp_ulc).",
     note: "Differences can arise from data revisions between releases, from the employment concept and from the treatment of the self-employed in the official index." });
   root.append(grid(f5.el, f6.el));
   drawSectorDecomp(f5.body, secs);
@@ -403,9 +409,10 @@ export function country(root) {
 
   if (!avail.includes(S.trend)) S.trend = avail[0] || "prod_hour";
   const f1 = figure({ title: "Position among all economies", span: 6,
-    sub: "Each grey marker is one economy, ordered from the lowest value on the left to the highest on the right, and the large marker is the selected economy. The latest year is used for each indicator.",
+    sub: "The selected economy is shown against all others.",
+    text: "Each grey marker is one economy, ordered from the lowest value on the left to the highest on the right, and the large marker is the selected economy. The latest year is used for each indicator.",
     note: "Ranks are within the economies that report the indicator; coverage differs by indicator." });
-  const f2 = figure({ title: `${METRIC[S.trend].label}`, span: 6, sub: `${METRIC[S.trend].unit} Thin lines show the other economies in ${region}. Selecting an indicator above changes the chart.`,
+  const f2 = figure({ title: `${METRIC[S.trend].label}`, span: 6, sub: METRIC[S.trend].unit, text: `Thin lines show the other economies in ${region}. Selecting an indicator above changes the chart.`,
     note: `Data are from ${METRIC[S.trend].source}.`,
     csv: () => series(S.trend, geo, "TOTAL").map(d => ({ country: cname(geo), year: d.year, value: d.v })) });
   root.append(grid(f1.el, f2.el));
@@ -516,7 +523,7 @@ export function hour(root) {
   const f1 = figure({ title: "Hourly labor cost by component", span: 7, sub: "Values are in euros per hour actually worked, for the latest available year.", note: " ",
     method: [String.raw`$\begin{aligned} \text{employer costs} &= \mathit{LC}^{h} s^{nw} \\ \text{taxes and employee contributions} &= \mathit{LC}^{h}\max(0,\ \tau - s^{nw}) \\ \text{net earnings} &= \mathit{LC}^{h} - \text{employer costs} - \text{taxes and employee contributions} \end{aligned}`],
     csv: () => [S.focus, other].map(g => ({ country: cname(g), ...computeHour(hourData(g), g === S.focus ? S.wageChange : 0) })) });
-  const f2 = figure({ title: "Labor cost per EUR 100 of value added", span: 5, sub: "Hourly labor cost is divided by nominal gross value added per hour worked and multiplied by 100.", note: " ",
+  const f2 = figure({ title: "Labor cost per EUR 100 of value added", span: 5, sub: "Labor cost is shown per EUR 100 of value added.", text: "Hourly labor cost is divided by nominal gross value added per hour worked and multiplied by 100.", note: " ",
     method: [String.raw`$\kappa_{i} = 100 \cdot \frac{\mathit{LC}^{h}_{i}}{\mathit{GVA}^{\,nom}_{i} / H_{i}}`] });
   root.append(grid(f1.el, f2.el));
   const summary = h("div", { class: "summary" });

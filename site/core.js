@@ -262,9 +262,11 @@ export function tex(src, display = true) {
 // A figure: title, one-line description, chart, and a collapsed "Source and method" section
 export const cap = v => typeof v === "string" && v ? v.charAt(0).toUpperCase() + v.slice(1) : v;
 
-export function figure({ title, sub, note, method, csv, png = true, span = 12, controls }) {
+export function figure({ title, sub, text, note, method, csv, png = true, span = 12, controls }) {
   figNo += 1;
-  title = cap(title); sub = cap(sub); note = cap(note);
+  title = cap(title); sub = cap(sub); note = cap(note); text = cap(text);
+  const textEl = h("p", { class: "fig-text", html: text || "" });
+  if (!text) textEl.hidden = true;
   const body = h("div", { class: "fig-body" });
   const tools = h("div", { class: "fig-tools" });
   if (png) tools.append(h("button", { class: "link-btn", onclick: () => exportPNG(body.querySelector("svg"), title) }, "PNG"));
@@ -282,8 +284,8 @@ export function figure({ title, sub, note, method, csv, png = true, span = 12, c
         sub ? h("p", { class: "fig-sub" }, sub) : null),
       tools),
     controls ? h("div", { class: "fig-controls" }, controls) : null,
-    body, more);
-  return { el, body, note: noteEl };
+    body, textEl, more);
+  return { el, body, note: noteEl, text: textEl };
 }
 // Collapsible block for definitions and formulas
 export function disclosure(label, ...kids) {

@@ -110,7 +110,7 @@ function initTheme() {
   readHash();
   try { await load(); }
   catch (e) { app.innerHTML = `<p class="empty">The data could not be loaded: ${e.message}</p>`; return; }
-  document.getElementById("build-date").textContent = D.meta.built ? `Data retrieved ${D.meta.built.slice(0, 10)}.` : "";
+  document.getElementById("build-date").textContent = D.meta.built ? `The data were retrieved on ${new Date(D.meta.built).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}.` : "";
   writeHash();
   render();
   addEventListener("lca:render", render);
