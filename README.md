@@ -2,7 +2,7 @@
 
 An interactive dashboard on Serbia's labour-market competitiveness (TBI). It compares productivity, compensation and unit labour costs against CEE, Western Balkan and EU comparators.
 
-**Live site:** https://gmdalheimer.github.io/labor-metrics-dashboard/
+**Live site:** https://gmdalheimer.github.io/Labor-Metrics-Dashboard/
 
 ## How it works
 
