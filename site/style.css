@@ -424,9 +424,8 @@ details.more.block { margin: 0 0 30px; max-width: 980px; }
   --text: #16181b; --text-2: #43474e; --text-3: #7a7f88;
   --line: #e3e6eb; --line-2: #c8cdd5;
   --context: #d5d9df; --context-hi: #9da3ad; --map-empty: #e6e9ee;
-  --navy: #1f4e79;
 }
-[data-theme="dark"] { --navy: #8db4e2; }
+:root, [data-theme="light"], [data-theme="dark"] { --navy: var(--s1); }
 :root {
   --grad: linear-gradient(90deg, var(--s1), var(--s2) 55%, var(--s3));
   --grad-soft: linear-gradient(90deg, color-mix(in srgb, var(--s1) 16%, transparent), color-mix(in srgb, var(--s2) 16%, transparent), color-mix(in srgb, var(--s3) 16%, transparent));
@@ -496,4 +495,4 @@ details.more > summary:hover::after, .home-path:hover b::after { color: var(--s3
 .ind-item.on b, .col-item.on b { color: var(--text); } .col-item.on i { color: var(--text-2); }
 .choice.on small { opacity: .85; }
 .step-no { background: var(--navy); }
-[data-theme="dark"] .step-no { color: #111213; }
+
