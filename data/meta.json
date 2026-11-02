@@ -1,0 +1,67 @@
+{
+  "built": "2026-11-02T10:12:57Z",
+  "sources": {
+    "eurostat:nama_10_a64": {
+      "ok": true,
+      "rows": 91873,
+      "note": ""
+    },
+    "eurostat:nama_10_a64_e": {
+      "ok": true,
+      "rows": 88878,
+      "note": ""
+    },
+    "eurostat:earn_mw_cur": {
+      "ok": true,
+      "rows": 1355,
+      "note": ""
+    },
+    "eurostat:earn_mw_avgr2": {
+      "ok": true,
+      "rows": 400,
+      "note": ""
+    },
+    "eurostat:earn_nt_taxwedge": {
+      "ok": false,
+      "rows": 0,
+      "note": "ℹ In argument: `ecase %in% ec[1]`.\nCaused by error:\n! object 'ecase' not found"
+    },
+    "eurostat:lc_lci_lev": {
+      "ok": true,
+      "rows": 595,
+      "note": ""
+    },
+    "ilostat:weekly_hours": {
+      "ok": true,
+      "rows": 93823,
+      "note": ""
+    },
+    "ilostat:output_per_worker_GDP_211P_NOC_NB_A": {
+      "ok": true,
+      "rows": 1204,
+      "note": ""
+    },
+    "ilostat:monthly_earnings": {
+      "ok": false,
+      "rows": 0,
+      "note": "ℹ In argument: `ref_area %in% iso_map$ref_area`.\nCaused by error:\n! object 'ref_area' not found"
+    },
+    "ilostat:minimum_wage": {
+      "ok": false,
+      "rows": 0,
+      "note": "ℹ In argument: `ref_area %in% iso_map$ref_area`.\nCaused by error:\n! object 'ref_area' not found"
+    },
+    "eurostat:sbs": {
+      "ok": true,
+      "rows": 2188,
+      "note": ""
+    }
+  },
+  "tiling_worst_gap": 0.0005,
+  "coverage": {
+    "sector_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE", "EL", "ES", "EU27_2020", "FI", "FR", "HR", "HU", "IE", "IS", "IT", "LT", "LU", "LV", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TR"],
+    "country_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "DZ", "EE", "EG", "EL", "ES", "EU27_2020", "FI", "FR", "GH", "HR", "HU", "IE", "IS", "IT", "KE", "LT", "LU", "LV", "MA", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TN", "TR", "UK"],
+    "country_metrics": ["hours_week", "hours_week_c", "ilo_output_worker_ppp", "lc_hour", "lc_hour_c", "min_wage_eur", "min_wage_pps", "min_wage_ratio", "nonwage_share", "nonwage_share_c"],
+    "industry_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE", "EL", "ES", "EU27_2020", "FI", "FR", "HR", "HU", "IE", "IS", "IT", "LT", "LU", "LV", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TR", "UK"]
+  }
+}
