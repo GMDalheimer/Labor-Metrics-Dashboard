@@ -54,9 +54,9 @@ export const METRICS = [
     unit: "share of hourly labour cost, business economy", fmt: ".1%",
     source: "Eurostat lc_lci_lev", desc: "Employer social contributions and other non-wage costs as a share of total labour cost." },
   { key: "tax_wedge", table: "country", cat: "Labour cost", label: "Tax wedge",
-    unit: "share of labour cost, single earner, 100% of average wage", fmt: ".1%",
+    unit: "share of labour cost, single low-wage earner (67% of average wage)", fmt: ".1%",
     source: "Eurostat earn_nt_taxwedge",
-    desc: "Income tax plus employee and employer social contributions as a share of total labour cost: the gap between what the employer pays and the worker takes home." },
+    desc: "Income tax plus employee and employer social contributions as a share of total labour cost for a single worker without children on a low wage: the gap between what the employer pays and the worker takes home." },
 
   // Wages
   { key: "min_wage_eur", table: "country", cat: "Wages", label: "Minimum wage",

@@ -155,10 +155,14 @@ country_long$kaitz <- kaitz
 wedge <- safely_fetch("eurostat:earn_nt_taxwedge", {
   x <- estat("earn_nt_taxwedge")
   message("  columns: ", paste(names(x), collapse = ", "))
+  show_codes(x, "unit")
   ecol <- intersect(c("ecase", "estruct", "e_case"), names(x))[1]
-  show_codes(x, ecol)
-  ec <- grep("P1_NCH_AW100$", unique(x[[ecol]]), value = TRUE)
-  x %>% filter(.data[[ecol]] %in% ec[1], !is.na(values)) %>%
+  if (!is.na(ecol)) {
+    ec <- grep("P1_NCH_AW100$", unique(x[[ecol]]), value = TRUE)
+    if (length(ec)) x <- x %>% filter(.data[[ecol]] == ec[1])
+  }
+  x %>% filter(!is.na(values)) %>%
+    distinct(geo, year, .keep_all = TRUE) %>%
     transmute(geo, year, metric = "tax_wedge", value = values / 100)
 })
 country_long$wedge <- wedge
@@ -168,9 +172,12 @@ lc <- safely_fetch("eurostat:lc_lci_lev", {
   x <- estat("lc_lci_lev")
   show_codes(x, "lcstruct"); show_codes(x, "unit")
   show_codes(x, "nace_r2")
-  tot <- intersect(c("B-S", "B-S_X_O", "B-N"), unique(x$nace_r2))[1]
-  x <- x %>% filter(unit == "EUR", nace_r2 %in% c(tot, "C"), !is.na(values)) %>%
-    mutate(nace_r2 = ifelse(nace_r2 == "C", "C", "TOTAL"))
+  prefs <- c("B-S_X_O", "B-S", "B-N")
+  tot <- x %>% filter(unit == "EUR", nace_r2 %in% prefs, !is.na(values)) %>%
+    mutate(rank = match(nace_r2, prefs)) %>%
+    group_by(geo, year) %>% filter(rank == min(rank)) %>% ungroup() %>%
+    mutate(nace_r2 = "TOTAL") %>% select(-rank)
+  x <- bind_rows(tot, x %>% filter(unit == "EUR", nace_r2 == "C", !is.na(values)))
   w <- x %>% select(geo, year, nace_r2, lcstruct, values) %>%
     pivot_wider(names_from = lcstruct, values_from = values)
   bind_rows(
@@ -190,6 +197,7 @@ ilo <- function(id, name) safely_fetch(paste0("ilostat:", name), {
   if (!ilo_ok) stop("Rilostat not installed")
   x <- Rilostat::get_ilostat(id, cache = FALSE, quiet = TRUE)
   message("  ", id, " columns: ", paste(names(x), collapse = ", "), " rows=", nrow(x))
+  if (!nrow(x)) stop("no rows returned for ", id)
   x <- x %>% filter(ref_area %in% iso_map$ref_area) %>%
     mutate(year = as.integer(substr(as.character(time), 1, 4))) %>%
     filter(year >= year_min, year <= as.integer(format(Sys.Date(), "%Y")) - 1, !is.na(obs_value))
@@ -204,14 +212,14 @@ pick_first <- function(x, col, prefs) {
 }
 
 hrs <- ilo("HOW_TEMP_SEX_ECO_NB_A", "weekly_hours")
-if (!is.null(hrs)) {
+if (!is.null(hrs)) tryCatch({
   hrs <- hrs %>% filter(sex == "SEX_T")
   tot <- pick_first(hrs, "classif1", c("ECO_AGGREGATE_TOTAL", "ECO_SECTOR_TOTAL", "ECO_ISIC4_TOTAL"))
   man <- pick_first(hrs, "classif1", c("ECO_ISIC4_C", "ECO_AGGREGATE_MAN", "ECO_ISIC3_D"))
   country_long$hrs <- bind_rows(
     tot %>% transmute(geo, year, metric = "hours_week", value = obs_value),
     man %>% transmute(geo, year, metric = "hours_week_c", value = obs_value))
-}
+}, error = function(e) message("  post-processing failed for hrs: ", conditionMessage(e)))
 
 opw <- NULL
 for (id in c("GDP_211P_NOC_NB_A", "GDP_205U_NOC_NB_A")) {
@@ -224,8 +232,18 @@ for (id in c("GDP_211P_NOC_NB_A", "GDP_205U_NOC_NB_A")) {
   }
 }
 
-earn <- ilo("EAR_4MTH_SEX_ECO_CUR_NB_A", "monthly_earnings")
-if (!is.null(earn)) {
+# Find the current ids for earnings and minimum wage in the ILOSTAT catalogue
+toc_ids <- tryCatch({
+  toc <- Rilostat::get_ilostat_toc()
+  ids <- grep("^EAR_4M", toc$id, value = TRUE)
+  message("  ILOSTAT EAR_4M* ids: ", paste(ids, collapse = ", "))
+  ids
+}, error = function(e) character())
+first_id <- function(cands) { hit <- intersect(cands, toc_ids); if (length(hit)) hit[1] else cands[1] }
+earn <- ilo(first_id(c("EAR_4MTH_SEX_ECO_CUR_NB_A", "EAR_4MTH_SEX_CUR_NB_A", "EAR_4MTH_SEX_OCU_CUR_NB_A")), "monthly_earnings")
+if (!is.null(earn) && !"classif1" %in% names(earn)) earn$classif1 <- "ECO_AGGREGATE_TOTAL"
+if (!is.null(earn) && !"classif2" %in% names(earn)) earn <- earn %>% rename(classif2 = classif1) %>% mutate(classif1 = "ECO_AGGREGATE_TOTAL")
+if (!is.null(earn)) tryCatch({
   e <- earn %>% filter(sex == "SEX_T", classif2 %in% c("CUR_TYPE_USD", "CUR_TYPE_PPP"))
   tot <- e %>% pick_first("classif1", c("ECO_AGGREGATE_TOTAL", "ECO_SECTOR_TOTAL", "ECO_ISIC4_TOTAL"))
   country_long$earn <- bind_rows(
@@ -236,14 +254,14 @@ if (!is.null(earn)) {
     e %>% filter(classif1 == "ECO_ISIC4_C") %>%
       transmute(geo, year, metric = ifelse(classif2 == "CUR_TYPE_USD", "ilo_earnings_c_usd", "ilo_earnings_c_ppp"),
                 value = obs_value))
-}
+}, error = function(e) message("  post-processing failed for earn: ", conditionMessage(e)))
 
-mmw <- ilo("EAR_4MMN_CUR_NB_A", "minimum_wage")
-if (!is.null(mmw)) {
+mmw <- ilo(first_id(c("EAR_4MMN_CUR_NB_A", "EAR_4MMN_CUR_NB_Q")), "minimum_wage")
+if (!is.null(mmw)) tryCatch({
   country_long$mmw <- mmw %>% filter(classif1 %in% c("CUR_TYPE_USD", "CUR_TYPE_PPP")) %>%
     transmute(geo, year, metric = ifelse(classif1 == "CUR_TYPE_USD", "ilo_min_wage_usd", "ilo_min_wage_ppp"),
               value = obs_value)
-}
+}, error = function(e) message("  post-processing failed for mmw: ", conditionMessage(e)))
 
 country <- bind_rows(country_long) %>%
   filter(!is.na(value), is.finite(value)) %>%
@@ -266,7 +284,7 @@ sbs_one <- function(id) {
            var = case_when(
              ind %in% c("V12150", "AV_MEUR") ~ "va",
              ind %in% c("V16110", "EMP_NR") ~ "emp",
-             ind %in% c("V13320", "EXPN_SAL_MEUR", "SAL_MEUR") ~ "wages",
+             ind %in% c("V13320", "WAGE_MEUR") ~ "wages",
              TRUE ~ NA_character_)) %>%
     filter(!is.na(var)) %>%
     select(geo, nace = nace_r2, year, var, values)
