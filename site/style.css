@@ -290,4 +290,10 @@ code { font-size: 12px; font-family: ui-monospace, "SF Mono", Menlo, monospace; 
 .ind-item:hover { background: var(--hl-strong); color: var(--text); }
 .ind-item.on { background: var(--s1); color: #fff; } .ind-item.on b { color: #fff; }
 .formulas td:first-child { width: 32%; color: var(--text-2); }
-.formula { font-family: var(--serif); font-size: 16px; color: var(--text); }
+.formula { color: var(--text); padding-top: 4px !important; padding-bottom: 4px !important; }
+.formula .katex-display { margin: .35em 0; text-align: left; }
+.formula .katex-display > .katex { text-align: left; }
+.katex { font-size: 1.12em; color: var(--text); }
+.tex:not(.tex-display) .katex { font-size: 1.05em; }
+.eq-block { margin: -4px 0 26px; padding: 14px 20px; background: var(--bg-2); max-width: 980px; overflow-x: auto; }
+.eq-block .katex-display { margin: 0; text-align: left; }

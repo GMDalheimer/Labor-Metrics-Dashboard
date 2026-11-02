@@ -7,6 +7,7 @@ import {
   sparkline, lineChart, legend, scatter, yearOptions,
 } from "./core.js";
 import { ols, stars, fmtP } from "./stats.js";
+import { tex } from "./views2.js";
 
 export const rerender = () => window.dispatchEvent(new Event("lca:render"));
 const set = (patch, push = false) => { Object.assign(S, patch); writeHash(push); rerender(); };
@@ -207,9 +208,10 @@ export function ulc(root) {
 
   root.append(pageHeader("Unit labor costs", "Unit labor costs",
     `Unit labor cost (ULC) is the cost of labor per unit of real output: compensation per employee divided by real value added per person employed. ` +
-    `Its change over time is decomposed exactly in logarithms: <span class="math">Δln ULC = Δln(compensation per employee) − Δln(real productivity)</span>. ` +
+    `Its change over time is decomposed exactly in logarithms, as shown below. ` +
     `ULC levels are not comparable across countries because output is measured in national price levels; comparisons are therefore made in growth rates and indices.`));
 
+  root.append(h("div", { class: "eq-block" }, tex(String.raw`\mathit{ULC}_{it} = \frac{W_{it}}{P_{it}} = \frac{D1_{it}/L_{it}}{\mathit{GVA}^{\,real}_{it}/E_{it}} \qquad\Longrightarrow\qquad \Delta\ln \mathit{ULC}_{i} = \underbrace{\Delta\ln W_{i}}_{\text{compensation}} \;-\; \underbrace{\Delta\ln P_{i}}_{\text{productivity}}`)));
   root.append(h("div", { class: "view-controls" },
     seg("Basis", [{ value: "per", label: "Per person" }, { value: "hour", label: "Per hour worked" }], basis, v => set({ ulcBasis: v }))));
 
