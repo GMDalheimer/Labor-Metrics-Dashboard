@@ -1,12 +1,12 @@
 /* Labor Cost Atlas
-   Typography: TBI typefaces when installed (Aeonik, PP Editorial New), open fallbacks otherwise.
+   Typography: the TBI typeface Aeonik when installed, Manrope otherwise.
    Layout: editorial. No boxes; figures are separated by whitespace and a short rule. */
 
 :root {
   /* Type scale: four sizes only */
   --t-s: 14px; --t-m: 17px; --t-l: 24px; --t-xl: 48px;
   --sans: "Aeonik", "Aeonik Pro", "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --serif: "PP Editorial New", "Editorial New", "PT Editorial", "Instrument Serif", Georgia, serif;
+  --serif: var(--sans);
   --max: 1440px;
   --ease: cubic-bezier(.2, .7, .1, 1);
 }
@@ -496,3 +496,12 @@ details.more > summary:hover::after, .home-path:hover b::after { color: var(--s3
 .choice.on small { opacity: .85; }
 .step-no { background: var(--navy); }
 
+
+/* One typeface: Aeonik throughout */
+
+.wordmark, .footer-brand { font-weight: 600; letter-spacing: -.01em; }
+.kpi-value, .home-facts div b, .year-display { font-weight: 500; }
+
+/* Selected options take the plain chart blue; the gradient is kept for hover */
+.picker-opt.on, .choice.on, .ind-item.on, .col-item.on { background: var(--s1); color: #fff; box-shadow: none; }
+.ind-item.on b, .col-item.on b, .col-item.on i { color: #fff; }
