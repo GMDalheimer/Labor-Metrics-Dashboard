@@ -487,9 +487,94 @@ function regTable(coefs, stats) {
 // ---------------------------------------------------------------------------
 // Methods: coverage, sources, definitions
 // ---------------------------------------------------------------------------
+const FORMULAS = [
+  { group: "Productivity", items: [
+    { t: "Real productivity per person employed", f: String.raw`P_{it} = \frac{\mathit{GVA}^{\,real}_{it}}{E_{it}}`,
+      x: "Output produced per worker in a year. Real gross value added (chain-linked volumes, 2020 prices) removes the effect of price changes, so a change in P reflects a change in the volume of output per worker. The denominator counts all persons employed, including the self-employed.",
+      read: "A value of €30,000 means that each person employed produced, on average, goods and services worth €30,000 at 2020 prices. Because prices are national, levels are best compared over time within a country; cross-country level comparisons also reflect price-level differences." },
+    { t: "Real productivity per hour worked", f: String.raw`P^{h}_{it} = \frac{\mathit{GVA}^{\,real}_{it}}{H_{it}}`,
+      x: "The same output measure divided by total hours worked instead of persons. It corrects for differences in working time: countries with long working hours have a higher productivity per person than per hour.",
+      read: "Preferred for comparisons between economies with different shares of part-time work or different statutory working time." },
+  ]},
+  { group: "Labor cost and unit labor cost", items: [
+    { t: "Compensation per employee", f: String.raw`W_{it} = \frac{D1_{it}}{L_{it}}`,
+      x: "Average yearly cost of an employee to the employer: gross wages and salaries plus employer social contributions (national accounts item D1), divided by the number of employees. The self-employed are excluded because they receive no compensation of employees.",
+      read: "Measured in nominal euros, so it includes the effect of inflation." },
+    { t: "Compensation per employee hour", f: String.raw`W^{h}_{it} = \frac{D1_{it}}{H^{L}_{it}}`,
+      x: "Compensation of employees divided by the hours worked by employees. It is the national-accounts counterpart of hourly labor cost." },
+    { t: "Unit labor cost", f: String.raw`\mathit{ULC}_{it} = \frac{W_{it}}{P_{it}} = \frac{D1_{it}/L_{it}}{\mathit{GVA}^{\,real}_{it}/E_{it}}, \qquad \mathit{ULC}^{h}_{it} = \frac{W^{h}_{it}}{P^{h}_{it}}`,
+      x: "The labor cost incurred to produce one unit of real output. It combines the two forces that determine cost competitiveness: what each worker costs (W) and how much each worker produces (P). The hourly version uses compensation and output per hour.",
+      read: "ULC rises when compensation grows faster than productivity, and falls when productivity grows faster. Because the denominator is measured at national prices, ULC levels are not comparable across countries; the atlas therefore compares ULC through indices and growth rates." },
+    { t: "Decomposition of the change in unit labor cost", f: String.raw`\Delta \ln \mathit{ULC}_{i} = \Delta \ln W_{i} - \Delta \ln P_{i}`,
+      x: "Taking logarithms turns the ratio into a difference, so the change in ULC splits exactly into the change in compensation per employee and the change in productivity. No interaction term is left over.",
+      read: "If compensation rose by 60 log points and productivity by 25, ULC rose by 35 log points. In the charts, productivity enters with a negative sign: productivity growth lowers ULC." },
+    { t: "Labor cost per EUR 100 of value added", f: String.raw`\kappa_{it} = 100 \cdot \frac{\mathit{LC}^{h}_{it}}{V^{h}_{it}}, \qquad V^{h}_{it} = \frac{\mathit{GVA}^{\,nom}_{it}}{H_{it}}`,
+      x: "Hourly labor cost from the labor cost survey divided by nominal value added per hour worked from the national accounts. Unlike ULC, both terms are in current euros, so the level can be compared across countries.",
+      read: "A value of 70 means that €70 of labor cost is incurred for every €100 of value added. Because the numerator and denominator come from different statistical sources, the measure is indicative and can exceed 100." },
+    { t: "Components of hourly labor cost", f: String.raw`\begin{aligned} \text{employer costs} &= \mathit{LC}^{h}\, s^{nw} \\ \text{employee taxes and contributions} &= \mathit{LC}^{h} \max\!\big(0,\ \tau - s^{nw}\big) \\ \text{net earnings} &= \mathit{LC}^{h} - \text{employer costs} - \text{employee taxes and contributions} \end{aligned}`,
+      x: "Hourly labor cost is split with two published shares: the non-wage share s (employer social contributions and other non-wage costs, labor cost survey) and the tax wedge τ (income tax plus employee and employer contributions as a share of labor cost, for a single low-wage earner). The part of the tax wedge not borne by the employer is attributed to the employee.",
+      read: "The split is an approximation: the tax wedge refers to one household type and wage level, while hourly labor cost is an average across all employees." },
+    { t: "Break-even change in hourly labor cost", f: String.raw`c^{*}_{A} = \frac{\mathit{LC}^{h}_{B} / V^{h}_{B}}{\mathit{LC}^{h}_{A} / V^{h}_{A}} - 1`,
+      x: "The percentage change in country A's hourly labor cost at which its labor cost per €100 of value added would equal country B's, holding value added per hour in both countries constant.",
+      read: "A value of +25% means that A's hourly labor cost could rise by a quarter before its labor cost per unit of value added reached B's level." },
+    { t: "Employer contribution rate", f: String.raw`c_{it} = \frac{D1_{it} - D11_{it}}{D11_{it}}`,
+      x: "Employer social contributions (compensation D1 minus wages and salaries D11) relative to gross wages. It shows how much an employer pays on top of the gross wage." },
+  ]},
+  { group: "Distribution and working time", items: [
+    { t: "Labor share", f: String.raw`\mathit{LS}_{it} = \frac{D1_{it}}{\mathit{GVA}^{\,nom}_{it}}, \qquad \mathit{LS}^{adj}_{it} = \frac{(D1_{it}/L_{it})\, E_{it}}{\mathit{GVA}^{\,nom}_{it}}`,
+      x: "The share of value added paid to employees. The unadjusted share counts only compensation of employees. The adjusted share imputes to each self-employed person the average compensation of an employee, so that labor income of the self-employed is included.",
+      read: "The adjusted labor share equals real unit labor cost: nominal ULC divided by the price deflator of value added. The adjusted share is more appropriate where self-employment is large, as in agriculture." },
+    { t: "Profit share", f: String.raw`\Pi_{it} = \frac{\mathit{GVA}^{\,nom}_{it} - D1_{it} - D29X39_{it}}{\mathit{GVA}^{\,nom}_{it}}`,
+      x: "Gross operating surplus and mixed income as a share of value added: what remains after compensation of employees and net taxes on production. Mixed income includes the income of the self-employed, so the profit share and the unadjusted labor share sum to slightly less than one." },
+    { t: "Annual hours per worker", f: String.raw`h_{it} = \frac{H_{it}}{E_{it}}`,
+      x: "Total hours worked in the national accounts divided by persons employed. It differs from statutory working time because it reflects part-time work, overtime, holidays and absence." },
+  ]},
+  { group: "Indices, growth and comparisons", items: [
+    { t: "Index", f: String.raw`I_{it} = 100 \cdot \frac{X_{it}}{X_{i,t_0}}`,
+      x: "Each series is divided by its own value in the base year and multiplied by 100. Indices compare changes over time across countries whose levels are not directly comparable." },
+    { t: "Log change and average annual growth", f: String.raw`\Delta \ln X_i = 100\,\big(\ln X_{i,t_1} - \ln X_{i,t_0}\big), \qquad g_i = \frac{\Delta \ln X_i}{t_1 - t_0}`,
+      x: "Changes are measured as differences in natural logarithms, multiplied by 100 (log points). Log changes add up over time and decompose exactly, which is why they are used for the ULC decomposition. For small changes they are close to percentage changes; for large changes they are smaller (a 50% increase equals 40.5 log points).",
+      read: "g is the average annual growth rate in percent over the period." },
+    { t: "Relative productivity", f: String.raw`\rho_{is} = \frac{P_{is}}{P_{i,\text{total}}} \qquad\text{or}\qquad \rho_{is} = \frac{P_{is}}{P_{\text{EU27},s}}`,
+      x: "Productivity of sector s relative to the whole economy of the same country, or relative to the same sector in the EU27. Used to color the economy tree.",
+      read: "A value above 1 means the sector produces more per worker than the comparison." },
+  ]},
+  { group: "Convergence", items: [
+    { t: "σ-convergence", f: String.raw`\sigma_t = \sqrt{\frac{1}{N-1}\sum_{i=1}^{N}\big(\ln X_{it} - \overline{\ln X}_{t}\big)^{2}}`,
+      x: "The standard deviation of the logarithm of a variable (for example productivity) across N economies in year t. It is computed on a balanced panel, so that the set of countries does not change over time.",
+      read: "A declining σ means that economies are becoming more similar: σ-convergence." },
+    { t: "β-convergence", f: String.raw`g_i = \alpha + \beta \ln X_{i,t_0} + \varepsilon_i`,
+      x: "Average annual growth over the period is regressed on the logarithm of the initial level.",
+      read: "A negative β means that economies starting from a lower level grew faster: β-convergence. β-convergence is necessary but not sufficient for σ-convergence, because shocks can widen dispersion even when poorer economies grow faster on average." },
+  ]},
+  { group: "Regression analysis", items: [
+    { t: "Ordinary least squares", f: String.raw`y_i = \alpha + \beta x_i + \varepsilon_i, \qquad \hat{\beta} = (X'X)^{-1} X'y`,
+      x: "The bivariate models in the Analysis tab are estimated by ordinary least squares across economies. X contains a constant and the explanatory variable; y is the dependent variable.",
+      read: "β is the expected difference in y between two economies whose x differs by one unit. It describes an association, not a causal effect." },
+    { t: "Heteroskedasticity-robust standard errors (HC1)", f: String.raw`\widehat{V}_{HC1}(\hat\beta) = \frac{n}{n-k}\,(X'X)^{-1}\Big(\sum_{i=1}^{n} \hat{e}_i^{2}\, x_i x_i'\Big)(X'X)^{-1}`,
+      x: "The variance of the estimates allows the error variance to differ across economies. The factor n/(n−k) is a small-sample correction (k is the number of estimated coefficients). These are the default robust standard errors in Stata (robust) and in R (sandwich, type HC1)." },
+    { t: "Panel model with economy fixed effects", f: String.raw`\Delta \ln W_{it} = \alpha_i + \beta\, \Delta \ln P_{it} + \varepsilon_{it}`,
+      x: "Annual compensation growth is regressed on annual productivity growth for all economy-years. The economy-specific constant α absorbs persistent differences between countries, for example in average inflation or wage-setting institutions.",
+      read: "β measures how much compensation growth moves with productivity growth within the same economy over time." },
+    { t: "Within estimator", f: String.raw`\hat\beta_{FE} = \frac{\sum_{i}\sum_{t} \tilde{x}_{it}\tilde{y}_{it}}{\sum_{i}\sum_{t} \tilde{x}_{it}^{2}}, \qquad \tilde{z}_{it} = z_{it} - \bar{z}_{i}`,
+      x: "The fixed effects are removed by subtracting each economy's own mean from every variable; the slope is then estimated on the demeaned data." },
+    { t: "Cluster-robust standard errors", f: String.raw`\widehat{V}_{CL}(\hat\beta_{FE}) = \frac{G}{G-1}\cdot\frac{N-1}{N-K}\cdot \frac{\sum_{g=1}^{G}\big(\sum_{t}\tilde{x}_{gt}\hat{e}_{gt}\big)^{2}}{\big(\sum_{g}\sum_{t}\tilde{x}_{gt}^{2}\big)^{2}}, \qquad K = G + 1`,
+      x: "Observations from the same economy are allowed to be correlated over time. Residuals are summed within each of the G economies before squaring. The factors in front are the usual small-sample corrections; K counts the slope and the G fixed effects." },
+    { t: "Tests and confidence intervals", f: String.raw`t = \frac{\hat\beta}{\widehat{\mathrm{se}}(\hat\beta)} \sim t_{\nu}, \qquad \hat\beta \pm t_{\nu,\,0.975}\,\widehat{\mathrm{se}}(\hat\beta)`,
+      x: "The t statistic tests whether the coefficient differs from zero. p-values and 95% confidence intervals use the t distribution with ν = n − k degrees of freedom for OLS and ν = G − 1 for clustered standard errors.",
+      read: "Stars in the regression tables mark p < 0.1 (*), p < 0.05 (**) and p < 0.01 (***)." },
+  ]},
+];
+
 export function methods(root) {
-  root.append(pageHeader("Methods and data", "Sources, definitions and coverage",
-    `All series are retrieved from public sources by an automated build and committed to the repository with each refresh. Last build: ${D.meta.built ? new Date(D.meta.built).toUTCString() : "unknown"}.`));
+  const tab = S.methodsTab || "data";
+  root.append(pageHeader("Methods", tab === "formulas" ? "Formulas and definitions" : tab === "limits" ? "Limitations" : "Sources, definitions and coverage",
+    tab === "formulas" ? "How every derived indicator, decomposition and regression in the atlas is computed, with an explanation of what each formula measures and how to read it."
+    : `All series are retrieved from public sources by an automated build and committed to the repository with each refresh. Last build: ${D.meta.built ? new Date(D.meta.built).toUTCString() : "unknown"}.`));
+  root.append(h("div", { class: "view-controls" },
+    seg(null, [{ value: "data", label: "Data and coverage" }, { value: "formulas", label: "Formulas" }, { value: "limits", label: "Limitations" }], tab, v => set({ methodsTab: v }))));
+  if (tab === "formulas") return formulasTab(root);
+  if (tab === "limits") return limitsTab(root);
   const cov = [];
   for (const c of D.countries) for (const M of METRICS) { const l = latest(M.key, c.geo, "TOTAL"); if (l) cov.push({ geo: c.geo, name: c.name, key: M.key, label: M.label, y: l.year }); }
   const f1 = figure({ title: "Coverage by economy and indicator", span: 12, sub: "Latest year with data, whole economy. Darker shading: more recent. Empty: not reported.",
@@ -514,36 +599,11 @@ export function methods(root) {
   root.append(h("section", { class: "prose" },
     h("h2", {}, "Indicators"), defs,
     h("h2", {}, "Sources"), src,
-    h("p", { html: `Tables: <a href="data/sector.csv">sector.csv</a>, <a href="data/sector_full.csv">sector_full.csv</a>, <a href="data/country.csv">country.csv</a>, <a href="data/industry.csv">industry.csv</a>, <a href="data/nace.csv">nace.csv</a>.` }),
-    h("h2", {}, "Formulas"),
-    h("p", {}, "Notation: economy ", tex("i", false), ", year ", tex("t", false), ", sector ", tex("s", false), ". ", tex(String.raw`\mathit{GVA}^{\,real}`, false), " is gross value added in chain-linked 2020 euros and ", tex(String.raw`\mathit{GVA}^{\,nom}`, false), " at current prices; ", tex("D1", false), " compensation of employees; ", tex("D11", false), " wages and salaries; ", tex("D29X39", false), " other taxes less subsidies on production; ", tex("E", false), " persons employed; ", tex("L", false), " employees; ", tex("H", false), " and ", tex("H^{L}", false), " hours worked by persons employed and by employees; ", tex(String.raw`\mathit{LC}^{h}`, false), " hourly labor cost from the labor cost survey; ", tex("s^{nw}", false), " non-wage share; ", tex(String.raw`\tau`, false), " tax wedge; ", tex("t_0, t_1", false), " start and end year of the period."),
-    formulaTable([
-      ["Real productivity per person employed", String.raw`P_{it} = \frac{\mathit{GVA}^{\,real}_{it}}{E_{it}}`],
-      ["Real productivity per hour worked", String.raw`P^{h}_{it} = \frac{\mathit{GVA}^{\,real}_{it}}{H_{it}}`],
-      ["Compensation per employee", String.raw`W_{it} = \frac{D1_{it}}{L_{it}}`],
-      ["Compensation per employee hour", String.raw`W^{h}_{it} = \frac{D1_{it}}{H^{L}_{it}}`],
-      ["Unit labor cost", String.raw`\mathit{ULC}_{it} = \frac{W_{it}}{P_{it}}, \qquad \mathit{ULC}^{h}_{it} = \frac{W^{h}_{it}}{P^{h}_{it}}`],
-      ["Index", String.raw`I_{it} = 100 \cdot \frac{X_{it}}{X_{i,t_0}}`],
-      ["Log change and annual average", String.raw`\Delta \ln X_i = 100\,\big(\ln X_{i,t_1} - \ln X_{i,t_0}\big), \qquad g_i = \frac{\Delta \ln X_i}{t_1 - t_0}`],
-      ["Decomposition of unit labor cost", String.raw`\Delta \ln \mathit{ULC}_{i} = \Delta \ln W_{i} - \Delta \ln P_{i}`],
-      ["Labor share", String.raw`\mathit{LS}_{it} = \frac{D1_{it}}{\mathit{GVA}^{\,nom}_{it}}, \qquad \mathit{LS}^{adj}_{it} = \frac{D1_{it}/L_{it}\cdot E_{it}}{\mathit{GVA}^{\,nom}_{it}}`],
-      ["Profit share", String.raw`\Pi_{it} = \frac{\mathit{GVA}^{\,nom}_{it} - D1_{it} - D29X39_{it}}{\mathit{GVA}^{\,nom}_{it}}`],
-      ["Employer contribution rate", String.raw`c_{it} = \frac{D1_{it} - D11_{it}}{D11_{it}}`],
-      ["Annual hours per worker", String.raw`h_{it} = \frac{H_{it}}{E_{it}}`],
-      ["Nominal value added per hour", String.raw`V^{h}_{it} = \frac{\mathit{GVA}^{\,nom}_{it}}{H_{it}}`],
-      ["Labor cost per EUR 100 of value added", String.raw`\kappa_{it} = 100 \cdot \frac{\mathit{LC}^{h}_{it}}{V^{h}_{it}}`],
-      ["Components of hourly labor cost", String.raw`\begin{aligned} \text{employer} &= \mathit{LC}^{h}\, s^{nw} \\ \text{employee taxes} &= \mathit{LC}^{h} \max\!\big(0,\ \tau - s^{nw}\big) \\ \text{net} &= \mathit{LC}^{h} - \text{employer} - \text{employee taxes} \end{aligned}`],
-      ["Break-even change in hourly labor cost", String.raw`c^{*}_{A} = \frac{\mathit{LC}^{h}_{B} / V^{h}_{B}}{\mathit{LC}^{h}_{A} / V^{h}_{A}} - 1`],
-      ["Relative productivity (economy tree)", String.raw`\rho_{is} = \frac{P_{is}}{P_{i,\text{total}}} \quad\text{or}\quad \rho_{is} = \frac{P_{is}}{P_{\text{EU27},s}}`],
-      ["σ-convergence", String.raw`\sigma_t = \sqrt{\frac{1}{N-1}\sum_{i=1}^{N}\big(\ln X_{it} - \overline{\ln X}_{t}\big)^{2}}`],
-      ["β-convergence", String.raw`g_i = \alpha + \beta \ln X_{i,t_0} + \varepsilon_i, \qquad \beta < 0 \Rightarrow \text{convergence}`],
-      ["OLS estimator", String.raw`\hat{\beta} = (X'X)^{-1} X'y`],
-      ["Robust variance (HC1)", String.raw`\widehat{V}_{HC1}(\hat\beta) = \frac{n}{n-k}\,(X'X)^{-1}\Big(\sum_{i=1}^{n} \hat{e}_i^{2}\, x_i x_i'\Big)(X'X)^{-1}`],
-      ["Panel model with economy fixed effects", String.raw`\Delta \ln W_{it} = \alpha_i + \beta\, \Delta \ln P_{it} + \varepsilon_{it}`],
-      ["Within estimator", String.raw`\hat\beta_{FE} = \frac{\sum_{i}\sum_{t} \tilde{x}_{it}\tilde{y}_{it}}{\sum_{i}\sum_{t} \tilde{x}_{it}^{2}}, \qquad \tilde{z}_{it} = z_{it} - \bar{z}_{i}`],
-      ["Cluster-robust variance", String.raw`\widehat{V}_{CL}(\hat\beta_{FE}) = \frac{G}{G-1}\cdot\frac{N-1}{N-K}\cdot \frac{\sum_{g=1}^{G}\big(\sum_{t}\tilde{x}_{gt}\hat{e}_{gt}\big)^{2}}{\big(\sum_{g}\sum_{t}\tilde{x}_{gt}^{2}\big)^{2}}, \qquad K = G + 1`],
-      ["Inference", String.raw`t = \frac{\hat\beta}{\widehat{\mathrm{se}}(\hat\beta)} \sim t_{\nu}, \qquad \nu = n-k \ \text{(OLS)}, \quad \nu = G-1 \ \text{(clustered)}`],
-    ]),
+    h("p", { html: `Tables: <a href="data/sector.csv">sector.csv</a>, <a href="data/sector_full.csv">sector_full.csv</a>, <a href="data/country.csv">country.csv</a>, <a href="data/industry.csv">industry.csv</a>, <a href="data/nace.csv">nace.csv</a>.` })));
+}
+
+function limitsTab(root) {
+  root.append(h("section", { class: "prose" },
     h("h2", {}, "Limitations"),
     h("ul", {},
       h("li", {}, "Price levels. Real productivity is measured in chain-linked euros at national prices, not at purchasing power parity. Cross-country comparisons of productivity levels therefore combine differences in output with differences in price levels, and unit labor cost levels are not comparable across economies; only their changes are."),
@@ -560,4 +620,29 @@ export function methods(root) {
     h("ul", {},
       h("li", {}, "Log changes are reported in log points (100 × Δln). For small changes they approximate percentage changes."),
       h("li", {}, "Structural business statistics measure value added at factor cost for the business economy. The source changes from sbs_na_ind_r2 to sbs_ovw_act in 2021."))));
+}
+
+function formulasTab(root) {
+  const nav = h("nav", { class: "f-toc" }, h("p", { class: "field-label" }, "Contents"),
+    FORMULAS.map((g, i) => h("a", { href: "#", onclick: e => { e.preventDefault(); document.getElementById(`fg-${i}`).scrollIntoView({ behavior: "smooth", block: "start" }); } }, g.group)));
+  const body = h("div", { class: "f-body" },
+    h("div", { class: "f-notation" }, h("h2", {}, "Notation"),
+      h("p", {}, "Subscripts: economy ", tex("i", false), ", year ", tex("t", false), ", sector ", tex("s", false), "; ", tex("t_0", false), " and ", tex("t_1", false), " are the first and last year of the period."),
+      h("dl", { class: "notation" }, [
+        [String.raw`\mathit{GVA}^{\,real},\ \mathit{GVA}^{\,nom}`, "Gross value added in chain-linked volumes (2020 euros) and at current prices"],
+        ["D1", "Compensation of employees: gross wages and salaries plus employer social contributions"],
+        ["D11", "Gross wages and salaries"],
+        ["D29X39", "Other taxes on production less other subsidies on production"],
+        [String.raw`E,\ L`, "Persons employed (employees and self-employed) and employees"],
+        [String.raw`H,\ H^{L}`, "Hours worked by persons employed and by employees"],
+        [String.raw`\mathit{LC}^{h}`, "Hourly labor cost per hour actually worked (labor cost survey)"],
+        [String.raw`s^{nw},\ \tau`, "Non-wage share of labor cost and tax wedge on labor"],
+      ].map(([sym, d]) => [h("dt", {}, tex(sym, false)), h("dd", {}, d)]).flat())),
+    FORMULAS.map((g, i) => h("section", { class: "f-group", id: `fg-${i}` }, h("h2", {}, g.group),
+      g.items.map(it => h("article", { class: "f-item" },
+        h("h3", {}, it.t),
+        h("div", { class: "f-eq" }, tex(it.f)),
+        h("p", {}, it.x),
+        it.read ? h("p", { class: "f-read" }, h("b", {}, "Reading. "), it.read) : null)))));
+  root.append(h("div", { class: "f-layout" }, nav, body));
 }

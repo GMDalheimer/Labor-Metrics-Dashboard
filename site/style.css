@@ -297,3 +297,24 @@ code { font-size: 12px; font-family: ui-monospace, "SF Mono", Menlo, monospace; 
 .tex:not(.tex-display) .katex { font-size: 1.05em; }
 .eq-block { margin: -4px 0 26px; padding: 14px 20px; background: var(--bg-2); max-width: 980px; overflow-x: auto; }
 .eq-block .katex-display { margin: 0; text-align: left; }
+
+/* ---- Formulas tab ------------------------------------------------------- */
+.f-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 48px; align-items: start; }
+.f-toc { position: sticky; top: 110px; display: grid; gap: 6px; font-size: 14px; }
+.f-toc a { text-decoration: none; color: var(--text-2); padding: 2px 0; }
+.f-toc a:hover { color: var(--s1); }
+.f-body { max-width: 900px; }
+.f-body h2 { font-family: var(--serif); font-weight: 400; font-size: 30px; margin: 10px 0 8px; padding-top: 8px; }
+.f-group { margin-bottom: 26px; scroll-margin-top: 110px; }
+.f-item { padding: 18px 0 20px; border-top: 1px solid var(--line); }
+.f-item h3 { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+.f-eq { margin: 6px 0 8px; overflow-x: auto; }
+.f-eq .katex-display { margin: .4em 0; text-align: left; }
+.f-eq .katex-display > .katex { text-align: left; }
+.f-item p { color: var(--text-2); font-size: 14.5px; line-height: 1.6; margin: 6px 0 0; max-width: 80ch; }
+.f-read { background: var(--bg-2); padding: 8px 12px; }
+.f-read b { color: var(--text); font-weight: 600; }
+.f-notation { margin-bottom: 30px; }
+.notation { display: grid; grid-template-columns: 200px 1fr; gap: 6px 18px; margin: 10px 0 0; font-size: 14px; color: var(--text-2); }
+.notation dt { text-align: right; } .notation dd { margin: 0; }
+@media (max-width: 900px) { .f-layout { grid-template-columns: 1fr; } .f-toc { position: static; } }
