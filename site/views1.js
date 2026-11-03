@@ -6,6 +6,7 @@ import {
   pageHeader, figure, grid, select, seg, sectorOptions, kpiRow, svgEl, widthOf, axisLeft, axisBottom,
   sparkline, lineChart, legend, scatter, yearOptions, comparisonSeries, tex, disclosure, svgFlag, htmlFlag,
 } from "./core.js";
+import { convergence } from "./views6.js";
 import { ols, stars, fmtP } from "./stats.js";
 
 
@@ -425,6 +426,9 @@ export function country(root) {
     { key: EU, label: "EU27", color: cssVar("--eu"), width: 1.8, dash: "5 4", data: series(S.trend, EU, "TOTAL") },
     { key: geo, label: cname(geo), color: cssVar("--s1"), width: 2.6, data: series(S.trend, geo, "TOTAL") },
   ], { height: 360, yFormat: v => fmt(S.trend, v) });
+  const conv = h("div", { class: "conv" });
+  root.append(conv);
+  convergence(conv);
 }
 
 function drawPosition(host, geo, metrics) {

@@ -199,8 +199,9 @@ country_long$wedge <- wedge
 gdppc <- safely_fetch("eurostat:prc_ppp_ind", {
   x <- estat("prc_ppp_ind")
   show_codes(x, "na_item"); show_codes(x, "ppp_cat")
-  item <- grep("^VI_PPS_EU27.*_HAB$", unique(x$na_item), value = TRUE)
-  if (!length(item)) stop("no VI_PPS_EU27_*_HAB item")
+  # The current EU27 (2020 composition); older compositions stop in 2020
+  item <- intersect(c("VI_PPS_EU27_2020_HAB", "VI_PPS_EU28_HAB"), unique(x$na_item))
+  if (!length(item)) stop("no VI_PPS_EU27_2020_HAB item")
   x %>% filter(na_item == item[1], ppp_cat == "GDP", !is.na(values)) %>%
     transmute(geo, year, metric = "gdppc_pps", value = values)
 })

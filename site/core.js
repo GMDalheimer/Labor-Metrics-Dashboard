@@ -25,6 +25,7 @@ export const S = {
   indLevel: "division", industry: "C29", indMetric: "va_worker", indYear: null,
   treeColor: "prod_nat", treeRoot: "TOTAL",
   gaBasis: "hour", gaEdu: false, gaAlpha: "country",
+  cvInd: "gdppc", cvTarget: 75, cvWin: 10,
   model: "passthrough", regions: null, customY: "comp_pe", customX: "prod", customTY: "growth", customTX: "growth",
 };
 
@@ -44,6 +45,7 @@ export function readHash() {
   if (num("y")) S.year = num("y");
   if (p.get("i")) S.industry = p.get("i");
   if (p.get("model")) S.model = p.get("model");
+  if (p.get("cv")) { const [ci, ct, cw] = p.get("cv").split(","); if (ci) S.cvInd = ci; if (+ct) S.cvTarget = +ct; if (+cw) S.cvWin = +cw; }
   if (p.get("ga")) { const [gb, ge, ga] = p.get("ga").split(","); if (gb) S.gaBasis = gb; S.gaEdu = ge === "1"; if (ga) S.gaAlpha = ga; }
 }
 export function writeHash(push = false) {
@@ -58,6 +60,7 @@ export function writeHash(push = false) {
   if (S.view === "overview") { p.set("m", S.metric); if (S.year) p.set("y", S.year); }
   if (S.view === "industries") p.set("i", S.industry);
   if (S.view === "analysis") p.set("model", S.model);
+  if (S.view === "country") p.set("cv", `${S.cvInd},${S.cvTarget},${S.cvWin}`);
   if (S.view === "growth") p.set("ga", `${S.gaBasis},${S.gaEdu ? 1 : 0},${S.gaAlpha}`);
   const h = `#/${S.view}?${p.toString()}`;
   if (push) history.pushState(null, "", h); else history.replaceState(null, "", h);

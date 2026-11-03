@@ -513,3 +513,13 @@ img.flag { display: inline-block; vertical-align: baseline; border-radius: 2px; 
 .page-title img.flag { width: .8em; height: .6em; margin-right: .3em; vertical-align: .02em; }
 svg image.flag { outline: 1px solid var(--line); }
 .view-note { color: var(--text-2); margin: -10px 0 22px; max-width: 80ch; }
+
+/* Sections within a page */
+.section-h { font-family: var(--sans); font-weight: 700; color: var(--navy); font-size: var(--t-l); margin: 56px 0 8px; padding-top: 28px; border-top: 1px solid var(--line); }
+.section-desc { margin: 0 0 22px; }
+/* Data tables in figures */
+.table-scroll { max-height: 440px; overflow-y: auto; }
+table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.data tr.focus td { font-weight: 700; background: var(--hl); }
+table.data img.flag { width: 16px; height: 12px; vertical-align: -1px; margin-right: 4px; }
+table.data thead th { position: sticky; top: 0; background: var(--bg); }
