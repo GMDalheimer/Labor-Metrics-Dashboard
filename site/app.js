@@ -4,16 +4,18 @@ import { overview, ulc, country, compare, hour, stopPlay } from "./views1.js";
 import { industries, structure, analysis, methods } from "./views2.js";
 import { casestudy } from "./views3.js";
 import { home } from "./views4.js";
+import { growth } from "./views5.js";
 
 const VIEWS = {
   home:       { label: "Home",              fn: home,       ctx: [] },
   overview:   { label: "Map",               fn: overview,   ctx: ["focus", "sector"] },
   ulc:        { label: "Unit labor costs",  fn: ulc,        ctx: ["focus", "comps", "period", "sector"] },
+  growth:     { label: "Growth accounting", fn: growth,     ctx: ["focus", "comps", "period"] },
   country:    { label: "Country profile",   fn: country,    ctx: ["focus", "period"] },
   compare:    { label: "Comparison",        fn: compare,    ctx: ["focus", "comps", "period"] },
   hour:       { label: "Cost of an hour",   fn: hour,       ctx: ["focus", "comps"] },
   industries: { label: "Industries",        fn: industries, ctx: ["focus", "comps"] },
-  structure:  { label: "Economy structure", fn: structure,  ctx: ["focus", "period"] },
+  structure:  { label: "Structure",         fn: structure,  ctx: ["focus", "period"] },
   analysis:   { label: "Analysis",          fn: analysis,   ctx: ["focus", "comps", "period", "sector"] },
   casestudy:  { label: "Country brief",      fn: casestudy, ctx: [] },
   methods:    { label: "Methods",           fn: methods,    ctx: [] },

@@ -47,7 +47,7 @@ button, select, input { font-family: inherit; color: inherit; font-size: inherit
 .theme { display: flex; gap: 14px; font-size: var(--t-s); }
 .theme button { background: none; border: none; padding: 2px 0; cursor: pointer; color: var(--text-3); border-bottom: 1.5px solid transparent; }
 .theme button.on { color: var(--text); border-bottom-color: var(--text); }
-.nav { display: flex; gap: 26px; overflow-x: auto; scrollbar-width: none; padding: 12px 0 0; border-bottom: 1px solid var(--line); }
+.nav { display: flex; gap: 18px; overflow-x: auto; scrollbar-width: none; padding: 12px 0 0; border-bottom: 1px solid var(--line); }
 .nav a { text-decoration: none; color: var(--text-2); font-size: var(--t-m); white-space: nowrap; padding-bottom: 11px; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .nav a:hover { color: var(--text); }
 .nav a.active { color: var(--text); border-bottom-color: var(--s1); font-weight: 600; }
@@ -512,3 +512,4 @@ details.more > summary:hover::after, .home-path:hover b::after { color: var(--s3
 img.flag { display: inline-block; vertical-align: baseline; border-radius: 2px; box-shadow: 0 0 0 1px var(--line); }
 .page-title img.flag { width: .8em; height: .6em; margin-right: .3em; vertical-align: .02em; }
 svg image.flag { outline: 1px solid var(--line); }
+.view-note { color: var(--text-2); margin: -10px 0 22px; max-width: 80ch; }
