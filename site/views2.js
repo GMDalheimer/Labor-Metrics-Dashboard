@@ -599,6 +599,11 @@ const FORMULAS = [
       x: "Average annual growth over the period is regressed on the logarithm of the initial level.",
       read: "A negative β means that economies starting from a lower level grew faster: β-convergence. β-convergence is necessary but not sufficient for σ-convergence, because shocks can widen dispersion even when poorer economies grow faster on average." },
   ]},
+  { group: "Convergence calculator", items: [
+    { t: "Years until a target share of the EU level", f: String.raw`\ln r_{it} = a_i + g_i\, t + e_{it}, \qquad T_i = \frac{\ln(\bar r / r_{i,t_1})}{g_i}, \qquad r_{it} = 100 \cdot \frac{x_{it}}{x_{\mathit{EU},t}}`,
+      x: "The level r of a country relative to the EU27 is regressed on time over the last 5, 10 or 15 years. The slope g is the trend, in log points per year. T is the number of years until the target r̄ is reached if the trend continues. GDP per capita in purchasing power standards comes from Eurostat (prc_ppp_ind). Output per hour uses output-side real GDP at chained PPPs from the Penn World Table, divided by hours worked, relative to the EU27 total.",
+      read: "A country at 50% of the EU level whose gap closes by 2 log points a year reaches 75% after ln(75/50)/0.02 ≈ 20 years. The calculation is a projection of a trend, not a forecast: convergence usually slows as the gap narrows." },
+  ]},
   { group: "Regression analysis", items: [
     { t: "Ordinary least squares", f: String.raw`y_i = \alpha + \beta x_i + \varepsilon_i, \qquad \hat{\beta} = (X'X)^{-1} X'y`,
       x: "The bivariate models in the Analysis tab are estimated by ordinary least squares across economies. X contains a constant and the explanatory variable; y is the dependent variable.",

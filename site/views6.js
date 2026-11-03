@@ -116,7 +116,7 @@ function drawProjection(host, s, t, r, target) {
   svg.append("path").attr("d", line(proj)).attr("fill", "none").attr("stroke", cssVar("--s1")).attr("stroke-width", 2).attr("stroke-dasharray", "5 4");
   if (r.status === "reached") {
     svg.append("circle").attr("cx", x(r.year)).attr("cy", y(target)).attr("r", 5).attr("fill", cssVar("--s3"));
-    svg.append("text").attr("class", "label-strong").attr("x", x(r.year)).attr("y", y(target) - 12).attr("text-anchor", "middle").text(r.year);
+    svg.append("text").attr("class", "label-strong").attr("x", x(r.year) - 10).attr("y", y(target) - 10).attr("text-anchor", "end").text(`${target}% in ${r.year}`);
   }
   svg.append("g").selectAll("circle.h").data(s).join("circle").attr("cx", d => x(d.year)).attr("cy", d => y(d.v)).attr("r", 6).attr("fill", "transparent")
     .on("mousemove", (ev, d) => showTip(ev, `<div class="tt-title">${d.year}</div>${ttRow("Relative level", d.v.toFixed(1))}`)).on("mouseleave", hideTip);
