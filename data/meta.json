@@ -1,5 +1,5 @@
 {
-  "built": "2026-11-03T10:03:21Z",
+  "built": "2026-11-03T10:08:33Z",
   "sources": {
     "eurostat:nama_10_a64": {
       "ok": true,
@@ -70,6 +70,41 @@
       "ok": true,
       "rows": 1032,
       "note": ""
+    },
+    "worldbank:SP.POP.1564.TO": {
+      "ok": true,
+      "rows": 2244,
+      "note": ""
+    },
+    "worldbank:SP.POP.TOTL": {
+      "ok": true,
+      "rows": 2244,
+      "note": ""
+    },
+    "worldbank:SP.POP.DPND.OL": {
+      "ok": true,
+      "rows": 2244,
+      "note": ""
+    },
+    "worldbank:SM.POP.NETM": {
+      "ok": true,
+      "rows": 1144,
+      "note": ""
+    },
+    "ilostat:participation": {
+      "ok": true,
+      "rows": 30186,
+      "note": ""
+    },
+    "ilostat:unemployment": {
+      "ok": true,
+      "rows": 10062,
+      "note": ""
+    },
+    "eurostat:jvs_a_rate_r2": {
+      "ok": true,
+      "rows": 571,
+      "note": ""
     }
   },
   "tiling_worst_gap": 0.0005,
@@ -79,6 +114,7 @@
     "country_metrics": ["gdppc_pps", "hours_week", "hours_week_c", "ilo_earnings_c_ppp", "ilo_earnings_c_usd", "ilo_earnings_ppp", "ilo_earnings_usd", "ilo_min_wage_ppp", "ilo_min_wage_usd", "ilo_output_worker_ppp", "lc_hour", "lc_hour_c", "min_wage_eur", "min_wage_pps", "min_wage_ratio", "nonwage_share", "nonwage_share_c", "rlp_index_hw", "rlp_index_per", "tax_wedge", "ulc_index_hw", "ulc_index_per"],
     "industry_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE", "EL", "ES", "EU27_2020", "FI", "FR", "HR", "HU", "IE", "IS", "IT", "LT", "LU", "LV", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TR", "UK"],
     "pwt_countries": ["AL", "AT", "BA", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "DZ", "EE", "EG", "EL", "ES", "FI", "FR", "GH", "HR", "HU", "IE", "IS", "IT", "KE", "LT", "LU", "LV", "MA", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "SE", "SI", "SK", "TN", "TR", "UK"],
+    "labor_supply_metrics": ["jvr", "lfpr", "netmig", "oadr", "pop", "unemp", "unemp_youth", "wap"],
     "pwt_columns": ["rgdpna", "rgdpo", "pop", "rkna", "rnna", "emp", "avh", "hc", "labsh", "delta", "rtfpna", "rwtfpna", "ctfp", "cwtfp"]
   }
 }
