@@ -346,9 +346,20 @@ industry <- safely_fetch("eurostat:sbs", {
 pwt_url  <- "https://dataverse.nl/api/access/datafile/554030"   # PWT 11.0, Stata format
 pwt_vars <- c("rgdpna", "rkna", "rnna", "emp", "avh", "hc", "labsh", "delta",
               "rtfpna", "rwtfpna", "ctfp", "cwtfp")
+# The Stata file is large: allow a long timeout and retry before giving up
+download_pwt <- function(dest, tries = 3) {
+  old <- options(timeout = max(900, getOption("timeout"))); on.exit(options(old))
+  for (i in seq_len(tries)) {
+    ok <- tryCatch({ download.file(pwt_url, dest, mode = "wb", quiet = TRUE); TRUE },
+                   error = function(e) { message("  PWT download attempt ", i, " failed: ", conditionMessage(e)); FALSE })
+    if (ok && file.exists(dest) && file.size(dest) > 1e6) return(invisible(TRUE))
+    Sys.sleep(20 * i)
+  }
+  stop("PWT download failed after ", tries, " attempts")
+}
 pwt <- safely_fetch("pwt:11.0", {
   f <- tempfile(fileext = ".dta")
-  download.file(pwt_url, f, mode = "wb", quiet = TRUE)
+  download_pwt(f)
   raw <- haven::read_dta(f)
   message("  PWT columns: ", paste(names(raw), collapse = ", "))
   keep <- intersect(pwt_vars, names(raw))
@@ -360,6 +371,12 @@ pwt <- safely_fetch("pwt:11.0", {
     mutate(across(all_of(keep), ~ ifelse(is.finite(.x), signif(.x, 7), NA_real_))) %>%
     arrange(geo, year)
 })
+
+# PWT changes only every few years: if the download fails, keep the previous extract
+if (is.null(pwt) && file.exists("data/pwt.csv")) {
+  pwt <- read_csv("data/pwt.csv", show_col_types = FALSE)
+  log_status("pwt:11.0", TRUE, nrow(pwt), "download failed; previous extract kept")
+}
 
 # ---- 5. Checks and output ------------------------------------------------------
 m14 <- sectors$nace[sectors$tier == "manuf14"]
