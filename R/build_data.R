@@ -195,6 +195,17 @@ wedge <- safely_fetch("eurostat:earn_nt_taxwedge", {
 })
 country_long$wedge <- wedge
 
+# GDP per capita in purchasing power standards, EU27 = 100 (standard convergence measure)
+gdppc <- safely_fetch("eurostat:prc_ppp_ind", {
+  x <- estat("prc_ppp_ind")
+  show_codes(x, "na_item"); show_codes(x, "ppp_cat")
+  item <- grep("^VI_PPS_EU27.*_HAB$", unique(x$na_item), value = TRUE)
+  if (!length(item)) stop("no VI_PPS_EU27_*_HAB item")
+  x %>% filter(na_item == item[1], ppp_cat == "GDP", !is.na(values)) %>%
+    transmute(geo, year, metric = "gdppc_pps", value = values)
+})
+country_long$gdppc <- gdppc
+
 # Hourly labour cost levels and their composition (labour cost survey based)
 lc <- safely_fetch("eurostat:lc_lci_lev", {
   x <- estat("lc_lci_lev")
@@ -344,7 +355,7 @@ industry <- safely_fetch("eurostat:sbs", {
 # Whole-economy output, capital, hours, human capital and labor share for every country
 # in the atlas. PWT is released every few years; the file is read from the GGDC Dataverse.
 pwt_url  <- "https://dataverse.nl/api/access/datafile/554030"   # PWT 11.0, Stata format
-pwt_vars <- c("rgdpna", "rkna", "rnna", "emp", "avh", "hc", "labsh", "delta",
+pwt_vars <- c("rgdpna", "rgdpo", "pop", "rkna", "rnna", "emp", "avh", "hc", "labsh", "delta",
               "rtfpna", "rwtfpna", "ctfp", "cwtfp")
 # The Stata file is large: allow a long timeout and retry before giving up
 download_pwt <- function(dest, tries = 3) {
