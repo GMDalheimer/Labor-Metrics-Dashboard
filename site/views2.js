@@ -579,6 +579,18 @@ const FORMULAS = [
       x: "Productivity of sector s relative to the whole economy of the same country, or relative to the same sector in the EU27. Used to color the economy tree.",
       read: "A value above 1 means the sector produces more per worker than the comparison." },
   ]},
+  { group: "Growth accounting", items: [
+    { t: "Decomposition of labor productivity growth", f: String.raw`\Delta \ln \frac{Y_{it}}{L_{it}} = \bar\alpha_{it}\, \Delta \ln \frac{K_{it}}{L_{it}} + (1-\bar\alpha_{it})\, \Delta \ln hc_{it} + \Delta \ln A_{it}`,
+      x: "The growth of output per unit of labor is split into three parts. Capital deepening is the growth of capital per unit of labor, weighted by the capital share. The education term is the growth of the human capital index, weighted by the labor share. Total factor productivity (TFP) is what remains. The page uses real GDP and capital services at constant national prices, persons engaged, average hours worked and the human capital index, all from the Penn World Table 11.0. With hours worked, education separated and country-specific capital shares, the result reproduces the table's own TFP index.",
+      read: "If output per hour grew by 3% a year, capital deepening contributed 1 percentage point and education 0.5, TFP grew by 1.5% a year. When education is not separated, its contribution is part of TFP." },
+    { t: "Capital share", f: String.raw`\bar\alpha_{it} = 1 - \tfrac{1}{2}\big(\mathit{labsh}_{it} + \mathit{labsh}_{i,t-1}\big) \qquad \text{or} \qquad \bar\alpha = \tfrac{1}{3}`,
+      x: "The weight on capital is one minus the labor share of GDP, averaged over two consecutive years (a Törnqvist weight). The labor share comes from the Penn World Table and includes an estimate of the labor income of the self-employed. The fixed share of one third is a common textbook value and is offered as a sensitivity check.",
+      read: "A higher capital share gives more weight to capital deepening and leaves less for TFP." },
+    { t: "Labor input", f: String.raw`L_{it} = \mathit{emp}_{it} \cdot \mathit{avh}_{it} \qquad \text{or} \qquad L_{it} = \mathit{emp}_{it}`,
+      x: "Labor is measured either as total hours worked (persons engaged times average annual hours) or as persons engaged. Hours are missing for a few economies, such as Montenegro, which then appear only in the per-person view." },
+    { t: "Period averages and the TFP index", f: String.raw`\overline{\Delta \ln A}_{i} = \frac{1}{t_1 - t_0} \sum_{t=t_0+1}^{t_1} \Delta \ln A_{it}, \qquad I^{A}_{it} = 100 \cdot \exp\!\Big(\sum_{\tau = t_0+1}^{t} \Delta \ln A_{i\tau}\Big)`,
+      x: "Annual contributions are averaged over the selected period, so the parts add up exactly to average growth. The TFP index cumulates the annual TFP terms from the base year." },
+  ]},
   { group: "Convergence", items: [
     { t: "σ-convergence", f: String.raw`\sigma_t = \sqrt{\frac{1}{N-1}\sum_{i=1}^{N}\big(\ln X_{it} - \overline{\ln X}_{t}\big)^{2}}`,
       x: "The standard deviation of the logarithm of a variable (for example productivity) across N economies in year t. It is computed on a balanced panel, so that the set of countries does not change over time.",
@@ -639,7 +651,7 @@ export function methods(root) {
   root.append(h("section", { class: "prose" },
     h("h2", {}, "Indicators"), defs,
     h("h2", {}, "Sources"), src,
-    h("p", { html: `Tables: <a href="data/sector.csv">sector.csv</a>, <a href="data/sector_full.csv">sector_full.csv</a>, <a href="data/country.csv">country.csv</a>, <a href="data/industry.csv">industry.csv</a>, <a href="data/nace.csv">nace.csv</a>.` })));
+    h("p", { html: `Tables: <a href="data/pwt.csv">pwt.csv</a>, <a href="data/sector.csv">sector.csv</a>, <a href="data/sector_full.csv">sector_full.csv</a>, <a href="data/country.csv">country.csv</a>, <a href="data/industry.csv">industry.csv</a>, <a href="data/nace.csv">nace.csv</a>.` })));
 }
 
 function limitsTab(root) {
@@ -655,6 +667,8 @@ function limitsTab(root) {
       h("li", {}, "Tax wedge. The split of hourly labor cost applies the tax wedge of a single low-wage earner without children to the average hourly cost, which does not represent the full wage distribution."),
       h("li", {}, "ILOSTAT. Output per worker is a modelled estimate in international dollars at purchasing power parity; earnings are converted to US dollars at market exchange rates and are sensitive to exchange-rate movements."),
       h("li", {}, "Regressions. Models are bivariate, estimated on small cross-sections, and sensitive to outliers such as Ireland and Luxembourg. In the compensation–productivity models, compensation is nominal and productivity real, so inflation differences enter the estimates. Coefficients describe associations and do not identify causal effects."),
+      h("li", {}, "Growth accounting. TFP is a residual, so it also contains measurement error, changes in capacity use and anything else that capital and labor do not capture. Annual TFP figures therefore move with the business cycle and are best read as averages over several years."),
+      h("li", {}, "Growth accounting data. The Penn World Table measures output as GDP at constant national prices, while the rest of the site uses gross value added from Eurostat, and the table ends in 2023. Productivity growth on the growth accounting page therefore differs somewhat from the figures on other pages. The human capital index is based on years of schooling and assumed returns to education, so it measures the quantity of schooling but not its quality."),
       h("li", {}, "Scope. Statutory sick-leave rules and legal working time from the project research are not yet included.")),
     h("h2", {}, "Notes"),
     h("ul", {},
