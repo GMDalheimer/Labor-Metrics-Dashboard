@@ -9,7 +9,8 @@ import { loadLaborSupply } from "./views7.js";
 const lsLatest = (m, geo, maxYear = new Date().getFullYear()) => {
   const g = D.ls?.idx.get(m)?.get(geo); if (!g) return null;
   const ys = [...g.keys()].filter(y => y <= maxYear).sort((a, b) => b - a);
-  return ys.length ? { year: ys[0], v: g.get(ys[0]) } : null;
+  const ok = ys.filter(y => g.get(y) > 0);   // zero prices are reporting gaps, not free energy
+  return ok.length ? { year: ok[0], v: g.get(ok[0]) } : null;
 };
 
 // Hourly labor cost for the sector (labor cost survey, national accounts as fallback) and per EUR 100 of value added
@@ -36,15 +37,15 @@ export async function locationCosts(root) {
 
   // Scorecard
   const cols = [
-    { k: "lc", label: "Labor cost per hour", get: r => r.l?.v, f: v => "€" + v.toFixed(1), yr: r => r.l?.year },
-    { k: "per100", label: "Labor cost per €100 of value added", get: r => r.l?.per100, f: v => "€" + v.toFixed(0), yr: r => r.l?.year },
+    { k: "lc", label: "Labor cost per hour", get: r => r.l?.v, f: v => "€" + v.toFixed(1), yr: r => r.l?.year, mark: r => r.l && !r.l.survey },
+    { k: "per100", label: "Labor cost per €100 of value added", get: r => r.l?.per100, f: v => "€" + v.toFixed(0), yr: r => r.l?.year, mark: r => r.l && !r.l.survey },
     { k: "elec", label: "Electricity, € per kWh", get: r => r.e?.v, f: v => v.toFixed(3), yr: r => r.e?.year },
     { k: "gas", label: "Gas, € per kWh", get: r => r.g?.v, f: v => v.toFixed(3), yr: r => r.g?.year },
     { k: "cit", label: "Corporate income tax", get: r => r.t?.v, f: v => v.toFixed(1) + "%", yr: r => r.t?.year },
   ];
   const f1 = figure({ title: `Location costs, ${sector}`, span: 12,
     sub: "Darker cells mean higher costs within each column.",
-    text: "Each value is the latest available year, shown on hover. Economies are sorted by labor cost per €100 of value added. An empty cell means the source does not cover that economy.",
+    text: "Each value is the latest available year, shown on hover. Economies are sorted by labor cost per €100 of value added. An asterisk marks labor cost taken from the national accounts because the labor cost survey does not cover the economy; these values are less comparable. Value added in Ireland and Luxembourg is inflated by the profits of multinational firms, which makes their labor cost per €100 of value added look low. An empty cell means the source does not cover that economy.",
     note: "Labor cost is from the Eurostat labor cost survey (lc_lci_lev) or, where it is missing, compensation per employee hour from the national accounts; value added per hour is from nama_10_a64. " +
       "Electricity (nrg_pc_205, consumption band 2 to 20 GWh a year) and gas (nrg_pc_203, band 10 to 100 TJ a year) are non-household prices excluding VAT and other recoverable taxes, averaged over the two half-years. " +
       "The corporate income tax rate is the combined statutory rate from the OECD Corporate Tax Statistics.",
@@ -106,7 +107,7 @@ function drawScorecard(host, rows, cols) {
         const v = c.get(r);
         if (v == null) return h("td", { class: "num empty-cell" }, "");
         const t = scales[c.k](v), bg = ramp(t);
-        return h("td", { class: "num heat", style: `background:${bg};color:${t > 0.5 ? "#fff" : "var(--text)"}`, title: `${c.label}: ${c.f(v)} (${c.yr(r)})` }, c.f(v));
+        return h("td", { class: "num heat", style: `background:${bg};color:${t > 0.5 ? "#fff" : "var(--text)"}`, title: `${c.label}: ${c.f(v)} (${c.yr(r)})` }, c.f(v) + (c.mark?.(r) ? "*" : ""));
       })))))));
 }
 
