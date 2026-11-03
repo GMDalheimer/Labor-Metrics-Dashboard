@@ -5,12 +5,14 @@ import { industries, structure, analysis, methods } from "./views2.js";
 import { casestudy } from "./views3.js";
 import { home } from "./views4.js";
 import { growth } from "./views5.js";
+import { laborsupply } from "./views7.js";
 
 const VIEWS = {
-  home:       { label: "Home",              fn: home,       ctx: [] },
+  home:       { label: "Home",              fn: home,       ctx: [], hidden: true },  // the wordmark links home
   overview:   { label: "Map",               fn: overview,   ctx: ["focus", "sector"] },
   ulc:        { label: "Unit labor costs",  fn: ulc,        ctx: ["focus", "comps", "period", "sector"] },
   growth:     { label: "Growth accounting", fn: growth,     ctx: ["focus", "comps", "period"] },
+  labor:      { label: "Labor supply",      fn: laborsupply, ctx: ["focus", "comps", "period"] },
   country:    { label: "Country profile",   fn: country,    ctx: ["focus", "period"] },
   compare:    { label: "Comparison",        fn: compare,    ctx: ["focus", "comps", "period"] },
   hour:       { label: "Cost of an hour",   fn: hour,       ctx: ["focus", "comps"] },
@@ -28,6 +30,7 @@ const ctxBar = document.getElementById("context");
 function buildNav() {
   nav.innerHTML = "";
   for (const [k, v] of Object.entries(VIEWS)) {
+    if (v.hidden) continue;
     nav.append(h("a", { href: `#/${k}`, class: k === S.view ? "active" : "", onclick: e => { e.preventDefault(); S.view = k; writeHash(true); render(); } }, v.label));
   }
 }

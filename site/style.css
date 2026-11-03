@@ -523,3 +523,4 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
 table.data tr.focus td { font-weight: 700; background: var(--hl); }
 table.data img.flag { width: 16px; height: 12px; vertical-align: -1px; margin-right: 4px; }
 table.data thead th { position: sticky; top: 0; background: var(--bg); }
+.proj-shade { fill: var(--bg-2); }

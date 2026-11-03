@@ -406,7 +406,7 @@ export function sparkline(container, data, { width = 180, height = 36, color = c
 }
 
 // Line chart with crosshair tooltip. series: [{key, label, color, width, dash, data, role}]
-export function lineChart(container, list, { height = 340, yFormat, indexLine = false, labelEnds = true, xDomain, refLine } = {}) {
+export function lineChart(container, list, { height = 340, yFormat, indexLine = false, labelEnds = true, xDomain, refLine, shadeFrom, shadeLabel = "Projection" } = {}) {
   const width = widthOf(container);
   const m = { t: 12, r: labelEnds ? 120 : 16, b: 28, l: 58 };
   const all = list.flatMap(s => s.data.flatMap(d => (d.lo != null ? [d, { ...d, v: d.lo }, { ...d, v: d.hi }] : [d])));
@@ -418,6 +418,10 @@ export function lineChart(container, list, { height = 340, yFormat, indexLine = 
   const svg = svgEl(container, width, height);
   axisLeft(svg, y, m.l, yFormat);
   axisBottom(svg, x, height - m.b, d3.format("d"), Math.min(10, width / 80));
+  if (shadeFrom != null && shadeFrom < x.domain()[1]) {
+    svg.append("rect").attr("class", "proj-shade").attr("x", x(shadeFrom)).attr("y", m.t).attr("width", width - m.r - x(shadeFrom)).attr("height", height - m.t - m.b);
+    svg.append("text").attr("class", "annot").attr("x", x(shadeFrom) + 6).attr("y", m.t + 12).text(shadeLabel);
+  }
   if (indexLine) svg.append("line").attr("class", "ref-line").attr("x1", m.l).attr("x2", width - m.r).attr("y1", y(100)).attr("y2", y(100));
   if (refLine != null) svg.append("line").attr("class", "ref-line").attr("x1", m.l).attr("x2", width - m.r).attr("y1", y(refLine)).attr("y2", y(refLine));
   const line = d3.line().x(d => x(d.year)).y(d => y(d.v)).curve(d3.curveMonotoneX);

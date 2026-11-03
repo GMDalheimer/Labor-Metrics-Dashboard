@@ -656,7 +656,7 @@ export function methods(root) {
   root.append(h("section", { class: "prose" },
     h("h2", {}, "Indicators"), defs,
     h("h2", {}, "Sources"), src,
-    h("p", { html: `Tables: <a href="data/pwt.csv">pwt.csv</a>, <a href="data/sector.csv">sector.csv</a>, <a href="data/sector_full.csv">sector_full.csv</a>, <a href="data/country.csv">country.csv</a>, <a href="data/industry.csv">industry.csv</a>, <a href="data/nace.csv">nace.csv</a>.` })));
+    h("p", { html: `Tables: <a href="data/pwt.csv">pwt.csv</a>, <a href="data/labor_supply.csv">labor_supply.csv</a>, <a href="data/sector.csv">sector.csv</a>, <a href="data/sector_full.csv">sector_full.csv</a>, <a href="data/country.csv">country.csv</a>, <a href="data/industry.csv">industry.csv</a>, <a href="data/nace.csv">nace.csv</a>.` })));
 }
 
 function limitsTab(root) {
@@ -674,6 +674,7 @@ function limitsTab(root) {
       h("li", {}, "Regressions. Models are bivariate, estimated on small cross-sections, and sensitive to outliers such as Ireland and Luxembourg. In the compensation–productivity models, compensation is nominal and productivity real, so inflation differences enter the estimates. Coefficients describe associations and do not identify causal effects."),
       h("li", {}, "Growth accounting. TFP is a residual, so it also contains measurement error, changes in capacity use and anything else that capital and labor do not capture. Annual TFP figures therefore move with the business cycle and are best read as averages over several years."),
       h("li", {}, "Growth accounting data. The Penn World Table measures output as GDP at constant national prices, while the rest of the site uses gross value added from Eurostat, and the table ends in 2023. Productivity growth on the growth accounting page therefore differs somewhat from the figures on other pages. The human capital index is based on years of schooling and assumed returns to education, so it measures the quantity of schooling but not its quality."),
+      h("li", {}, "Labor supply. Population projections from the World Bank depend on assumptions about fertility, mortality and migration and are revised with each round of the UN World Population Prospects. Participation and unemployment rates are ILO modelled estimates, which can differ from national labor force surveys. Net migration is partly estimated, and job vacancy rates are available for European countries only."),
       h("li", {}, "Scope. Statutory sick-leave rules and legal working time from the project research are not yet included.")),
     h("h2", {}, "Notes"),
     h("ul", {},
