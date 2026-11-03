@@ -7,6 +7,7 @@
 #   data/country.csv   country-level metrics, long format (Eurostat + ILOSTAT)
 #   data/industry.csv  FDI-intensive industries from structural business statistics
 #   data/pwt.csv       Penn World Table inputs for growth accounting (whole economy)
+#   data/labor_supply.csv  population and projections, participation, unemployment, migration, vacancies
 #   data/meta.json     build time, per-source status and row counts
 #
 # Each source is fetched independently: one failing source is logged in meta.json
@@ -195,6 +196,18 @@ wedge <- safely_fetch("eurostat:earn_nt_taxwedge", {
 })
 country_long$wedge <- wedge
 
+# GDP per capita in purchasing power standards, EU27 = 100 (standard convergence measure)
+gdppc <- safely_fetch("eurostat:prc_ppp_ind", {
+  x <- estat("prc_ppp_ind")
+  show_codes(x, "na_item"); show_codes(x, "ppp_cat")
+  # The current EU27 (2020 composition); older compositions stop in 2020
+  item <- intersect(c("VI_PPS_EU27_2020_HAB", "VI_PPS_EU28_HAB"), unique(x$na_item))
+  if (!length(item)) stop("no VI_PPS_EU27_2020_HAB item")
+  x %>% filter(na_item == item[1], ppp_cat == "GDP", !is.na(values)) %>%
+    transmute(geo, year, metric = "gdppc_pps", value = values)
+})
+country_long$gdppc <- gdppc
+
 # Hourly labour cost levels and their composition (labour cost survey based)
 lc <- safely_fetch("eurostat:lc_lci_lev", {
   x <- estat("lc_lci_lev")
@@ -344,7 +357,7 @@ industry <- safely_fetch("eurostat:sbs", {
 # Whole-economy output, capital, hours, human capital and labor share for every country
 # in the atlas. PWT is released every few years; the file is read from the GGDC Dataverse.
 pwt_url  <- "https://dataverse.nl/api/access/datafile/554030"   # PWT 11.0, Stata format
-pwt_vars <- c("rgdpna", "rkna", "rnna", "emp", "avh", "hc", "labsh", "delta",
+pwt_vars <- c("rgdpna", "rgdpo", "pop", "rkna", "rnna", "emp", "avh", "hc", "labsh", "delta",
               "rtfpna", "rwtfpna", "ctfp", "cwtfp")
 # The Stata file is large: allow a long timeout and retry before giving up
 download_pwt <- function(dest, tries = 3) {
@@ -378,6 +391,91 @@ if (is.null(pwt) && file.exists("data/pwt.csv")) {
   log_status("pwt:11.0", TRUE, nrow(pwt), "download failed; previous extract kept")
 }
 
+# ---- 4c. Labor supply ---------------------------------------------------------
+# Working-age population and its projection, dependency, migration (World Bank), participation
+# and unemployment (ILO modelled estimates) and job vacancies (Eurostat).
+wb <- function(indicator, source = NULL, from = year_min, to = 2050) {
+  iso <- paste(iso_map$ref_area, collapse = ";")
+  url <- sprintf("https://api.worldbank.org/v2/country/%s/indicator/%s?format=json&per_page=20000&date=%d:%d%s",
+                 iso, indicator, from, to, if (is.null(source)) "" else paste0("&source=", source))
+  old <- options(timeout = 300); on.exit(options(old))
+  js <- jsonlite::fromJSON(url, simplifyVector = TRUE)
+  if (length(js) < 2 || is.null(js[[2]]) || !length(js[[2]])) stop("no data for ", indicator)
+  d <- js[[2]]
+  tibble(ref_area = d$countryiso3code, year = as.integer(d$date), value = as.numeric(d$value)) %>%
+    filter(!is.na(value)) %>% inner_join(iso_map, by = "ref_area") %>% select(geo, year, value)
+}
+ls_long <- list()
+ls_long$wap   <- safely_fetch("worldbank:SP.POP.1564.TO", wb("SP.POP.1564.TO", source = 40) %>% mutate(metric = "wap"))
+ls_long$pop   <- safely_fetch("worldbank:SP.POP.TOTL", wb("SP.POP.TOTL", source = 40) %>% mutate(metric = "pop"))
+ls_long$oadr  <- safely_fetch("worldbank:SP.POP.DPND.OL", wb("SP.POP.DPND.OL", source = 40) %>% mutate(metric = "oadr"))
+ls_long$netm  <- safely_fetch("worldbank:SM.POP.NETM", wb("SM.POP.NETM", to = as.integer(format(Sys.Date(), "%Y"))) %>% mutate(metric = "netmig"))
+
+lfp <- ilo("EAP_2WAP_SEX_AGE_RT_A", "participation")
+if (!is.null(lfp)) tryCatch({
+  lfp <- lfp %>% filter(sex == "SEX_T")
+  ls_long$lfpr <- pick_first(lfp, "classif1", c("AGE_YTHADULT_Y15-64", "AGE_AGGREGATE_Y15-64", "AGE_YTHADULT_YGE15", "AGE_AGGREGATE_TOTAL")) %>%
+    transmute(geo, year, metric = "lfpr", value = obs_value)
+}, error = function(e) message("  post-processing failed for lfp: ", conditionMessage(e)))
+une <- ilo("UNE_2EAP_SEX_AGE_RT_A", "unemployment")
+if (!is.null(une)) tryCatch({
+  une <- une %>% filter(sex == "SEX_T")
+  ls_long$unemp <- pick_first(une, "classif1", c("AGE_YTHADULT_YGE15", "AGE_AGGREGATE_TOTAL")) %>%
+    transmute(geo, year, metric = "unemp", value = obs_value)
+  ls_long$unemp_youth <- pick_first(une, "classif1", c("AGE_YTHADULT_Y15-24")) %>%
+    transmute(geo, year, metric = "unemp_youth", value = obs_value)
+}, error = function(e) message("  post-processing failed for une: ", conditionMessage(e)))
+
+ls_long$jvr <- safely_fetch("eurostat:jvs_a_rate_r2", {
+  x <- estat("jvs_a_rate_r2")
+  show_codes(x, "nace_r2"); show_codes(x, "sizeclas"); show_codes(x, "indic_em")
+  if ("sizeclas" %in% names(x)) x <- x %>% filter(sizeclas %in% c("TOTAL", "GE1", "GE10"))
+  if ("indic_em" %in% names(x)) x <- x %>% filter(indic_em %in% c("JOBRATE", "JVR"))
+  pick_first(x %>% filter(!is.na(values)), "nace_r2", c("B-S", "B-S_X_O", "B-N")) %>%
+    transmute(geo, year, metric = "jvr", value = values)
+})
+# ---- 4d. Location costs: energy prices and corporate income tax ---------------
+# Non-household electricity (band ID, 2-20 GWh a year) and gas (band I3, 10-100 TJ a year),
+# excluding VAT and other recoverable taxes, EUR per kWh, averaged over the two semesters.
+energy <- function(id, band, metric) safely_fetch(paste0("eurostat:", id), {
+  x <- estat(id)
+  show_codes(x, "nrg_cons"); show_codes(x, "unit"); show_codes(x, "tax"); show_codes(x, "currency")
+  if ("unit" %in% names(x) && "KWH" %in% x$unit) x <- x %>% filter(unit == "KWH")
+  x %>% filter(nrg_cons == band, tax == "I_TAX", currency == "EUR", !is.na(values)) %>%
+    group_by(geo, year) %>% summarise(value = mean(values), n = n(), .groups = "drop") %>%
+    transmute(geo, year, metric = metric, value)
+})
+ls_long$elec <- energy("nrg_pc_205", "MWH2000-19999", "elec_price")
+ls_long$gas  <- energy("nrg_pc_203", "GJ10000-99999", "gas_price")
+
+# Statutory corporate income tax rate (combined central and sub-central), OECD Corporate Tax Statistics
+ls_long$cit <- safely_fetch("oecd:corporate_tax", {
+  url <- "https://sdmx.oecd.org/public/rest/data/OECD.CTP.TPS,DSD_TAX_CIT@DF_CIT,/all?dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
+  old <- options(timeout = 300); on.exit(options(old))
+  x <- read_csv(url, show_col_types = FALSE, col_types = cols(.default = "c"))
+  message("  OECD CIT columns: ", paste(names(x), collapse = ", "))
+  for (cc in intersect(c("MEASURE", "CORP_TAX", "TAX_RATE", "UNIT_MEASURE", "Measure"), names(x)))
+    message("  ", cc, ": ", paste(head(sort(unique(x[[cc]])), 30), collapse = ", "))
+  mcol <- intersect(c("MEASURE", "CORP_TAX"), names(x))[1]
+  want <- c("CIT_C", "CIT_COMB", "COMB_CIT_RATE")   # CIT_C = combined central and sub-central rate
+  m <- intersect(want, unique(x[[mcol]]))
+  if (!length(m)) m <- grep("COMB", unique(x[[mcol]]), value = TRUE)
+  if (!length(m)) stop("no combined CIT measure among: ", paste(unique(x[[mcol]]), collapse = ", "))
+  x %>% filter(.data[[mcol]] == m[1]) %>%
+    transmute(ref_area = REF_AREA, year = as.integer(substr(TIME_PERIOD, 1, 4)), value = as.numeric(OBS_VALUE)) %>%
+    filter(!is.na(value), year >= year_min) %>%
+    inner_join(iso_map, by = "ref_area") %>%
+    distinct(geo, year, .keep_all = TRUE) %>%
+    transmute(geo, year, metric = "cit_rate", value)
+})
+
+labor_supply <- bind_rows(ls_long) %>%
+  filter(!is.na(value), is.finite(value)) %>%
+  distinct(geo, year, metric, .keep_all = TRUE) %>%
+  mutate(value = signif(value, 6)) %>%
+  select(geo, year, metric, value) %>%
+  arrange(metric, geo, year)
+
 # ---- 5. Checks and output ------------------------------------------------------
 m14 <- sectors$nace[sectors$tier == "manuf14"]
 tiling <- sector %>%
@@ -404,6 +502,7 @@ write_csv(sector_full, "data/sector_full.csv", na = "")
 write_csv(nace_lab, "data/nace.csv", na = "")
 write_csv(country, "data/country.csv", na = "")
 if (!is.null(pwt)) write_csv(pwt, "data/pwt.csv", na = "")
+if (nrow(labor_supply)) write_csv(labor_supply, "data/labor_supply.csv", na = "")
 if (!is.null(industry)) write_csv(industry, "data/industry.csv", na = "") else
   write_csv(tibble(geo = character(), nace = character(), year = integer(),
                    emp = double(), va_worker = double(), wage_share = double()), "data/industry.csv")
@@ -418,6 +517,7 @@ meta <- list(
     country_metrics   = sort(unique(country$metric)),
     industry_countries = if (!is.null(industry)) sort(unique(industry$geo)) else list(),
     pwt_countries = if (!is.null(pwt)) sort(unique(pwt$geo)) else list(),
+    labor_supply_metrics = sort(unique(labor_supply$metric)),
     pwt_columns = if (!is.null(pwt)) setdiff(names(pwt), c("geo", "year")) else list())
 )
 write_json(meta, "data/meta.json", auto_unbox = TRUE, pretty = TRUE)

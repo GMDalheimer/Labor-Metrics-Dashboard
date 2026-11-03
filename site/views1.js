@@ -4,8 +4,10 @@ import {
   d3, EU, S, D, writeHash, loadWorld, isSector, val, series, latest, snapshot, coverage, rankOf, endYear, growth,
   fmt, pct, pp, cname, sectorLabel, cssVar, countryColor, seqRamp, divRamp, h, showTip, hideTip, ttRow,
   pageHeader, figure, grid, select, seg, sectorOptions, kpiRow, svgEl, widthOf, axisLeft, axisBottom,
-  sparkline, lineChart, legend, scatter, yearOptions, comparisonSeries, tex, disclosure, svgFlag, htmlFlag,
+  sparkline, lineChart, legend, scatter, yearOptions, comparisonSeries, tex, disclosure, svgFlag, htmlFlag, detectEvents,
 } from "./core.js";
+import { convergence } from "./views6.js";
+import { locationCosts } from "./views8.js";
 import { ols, stars, fmtP } from "./stats.js";
 
 
@@ -237,7 +239,7 @@ export function ulc(root) {
   });
   const f1 = figure({ title: `Unit labor cost index, ${sectorLabel(S.nace).toLowerCase()}`, span: 7,
     sub: `The index is set to 100 in ${base}.`,
-    text: `The index divides nominal compensation ${basis === "hour" ? "per hour worked by employees" : "per employee"} by real value added ${basis === "hour" ? "per hour worked" : "per person employed"}.`,
+    text: `The index divides nominal compensation ${basis === "hour" ? "per hour worked by employees" : "per employee"} by real value added ${basis === "hour" ? "per hour worked" : "per person employed"}. Purple markers show large changes detected in the data for ${cname(S.focus)}, such as minimum-wage increases well above the growth of average pay; hovering a marker lists them.`,
     note: "The data are from Eurostat (nama_10_a64 and nama_10_a64_e) and the index is calculated on this site. The dashed line is the EU27 aggregate, in which countries are weighted by size. Grey lines are additional countries, which are named on hover. A dotted line with a shaded band shows the unweighted median and range of a group.",
     method: [String.raw`$I_{it} = 100 \cdot \frac{\mathit{ULC}_{it}}{\mathit{ULC}_{i,t_0}}, \qquad \mathit{ULC}_{it} = \frac{D1_{it}/L_{it}}{\mathit{GVA}^{\,real}_{it}/E_{it}}`, "Each line is divided by its own value in the base year, so all lines start at 100. A value of 150 means that unit labor cost is 50% higher than in the base year."],
     csv: () => idxList.flatMap(s => s.data.map(d => ({ country: s.label, year: d.year, index: d.v }))) });
@@ -254,7 +256,7 @@ export function ulc(root) {
     method: [String.raw`$\Delta \ln \mathit{ULC}_{it} = \underbrace{\Delta \ln W_{it}}_{\text{blue bar}} \; - \; \underbrace{\Delta \ln P_{it}}_{\text{teal bar}}`, "Changes are year-on-year log changes multiplied by 100. The two bars add up exactly to the dot."],
     csv: () => dec.map(d => ({ year: d.year, compensation_contribution: d.comp, productivity_contribution: d.prod, ulc_change: d.ulc })) });
   root.append(grid(f1.el, f2.el));
-  lineChart(f1.body, idxList, { height: 380, yFormat: d3.format(".0f"), indexLine: true });
+  lineChart(f1.body, idxList, { height: 380, yFormat: d3.format(".0f"), indexLine: true, events: detectEvents(S.focus) });
   drawAnnualDecomp(f2.body, dec);
   f2.body.append(legend([{ label: "Compensation", color: cssVar("--s1") }, { label: "Productivity (inverted)", color: cssVar("--s2") }, { label: "ULC change", color: cssVar("--text"), shape: "dot" }]));
 
@@ -414,7 +416,7 @@ export function country(root) {
     sub: "The selected economy is shown against all others.",
     text: "Each grey marker is one economy, ordered from the lowest value on the left to the highest on the right, and the large marker is the selected economy. The latest year is used for each indicator.",
     note: "Ranks are within the economies that report the indicator; coverage differs by indicator." });
-  const f2 = figure({ title: `${METRIC[S.trend].label}`, span: 6, sub: METRIC[S.trend].unit, text: `Thin lines show the other economies in ${region}. Selecting an indicator above changes the chart.`,
+  const f2 = figure({ title: `${METRIC[S.trend].label}`, span: 6, sub: METRIC[S.trend].unit, text: `Thin lines show the other economies in ${region}. Selecting an indicator above changes the chart. Purple markers show large changes detected in the data for ${cname(S.focus)}, such as minimum-wage increases well above the growth of average pay; hovering a marker lists them.`,
     note: `Data are from ${METRIC[S.trend].source}.`,
     csv: () => series(S.trend, geo, "TOTAL").map(d => ({ country: cname(geo), year: d.year, value: d.v })) });
   root.append(grid(f1.el, f2.el));
@@ -424,7 +426,10 @@ export function country(root) {
     ...peers.map(p => ({ key: p, label: cname(p), color: cssVar("--context-hi"), width: 1, role: "context", data: series(S.trend, p, "TOTAL") })),
     { key: EU, label: "EU27", color: cssVar("--eu"), width: 1.8, dash: "5 4", data: series(S.trend, EU, "TOTAL") },
     { key: geo, label: cname(geo), color: cssVar("--s1"), width: 2.6, data: series(S.trend, geo, "TOTAL") },
-  ], { height: 360, yFormat: v => fmt(S.trend, v) });
+  ], { height: 360, yFormat: v => fmt(S.trend, v), events: detectEvents(geo) });
+  const conv = h("div", { class: "conv" });
+  root.append(conv);
+  convergence(conv);
 }
 
 function drawPosition(host, geo, metrics) {
@@ -590,4 +595,7 @@ export function hour(root) {
     f2.note.innerHTML = "Values above 100 indicate that hourly labor cost exceeds value added per hour; this can occur because the two series come from different statistical sources.";
   }
   update();
+  const loc = h("div", { class: "loc" });
+  root.append(loc);
+  locationCosts(loc);
 }

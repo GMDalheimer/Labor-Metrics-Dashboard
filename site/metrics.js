@@ -26,6 +26,11 @@ export const METRICS = [
     source: "ILOSTAT modelled estimates",
     desc: "Output per worker is measured for the whole economy. It is available for every country, including North and Sub-Saharan Africa." },
 
+  { key: "gdppc_pps", table: "country", cat: "Productivity", label: "GDP per capita (EU27 = 100)",
+    unit: "Values are GDP per head in purchasing power standards, with the EU27 set to 100.", fmt: ",.0f",
+    source: "Eurostat prc_ppp_ind",
+    desc: "GDP per head is converted with purchasing power parities, so price-level differences between countries are removed. It is the standard measure of income convergence in the EU." },
+
   // Labor cost
   { key: "lc_hour", table: "country", cat: "Labor cost", label: "Hourly labor cost",
     unit: "Values are in euros per hour for the business economy (NACE sections B to S).", fmt: ",.1f", prefix: "€",

@@ -599,6 +599,11 @@ const FORMULAS = [
       x: "Average annual growth over the period is regressed on the logarithm of the initial level.",
       read: "A negative β means that economies starting from a lower level grew faster: β-convergence. β-convergence is necessary but not sufficient for σ-convergence, because shocks can widen dispersion even when poorer economies grow faster on average." },
   ]},
+  { group: "Convergence calculator", items: [
+    { t: "Years until a target share of the EU level", f: String.raw`\ln r_{it} = a_i + g_i\, t + e_{it}, \qquad T_i = \frac{\ln(\bar r / r_{i,t_1})}{g_i}, \qquad r_{it} = 100 \cdot \frac{x_{it}}{x_{\mathit{EU},t}}`,
+      x: "The level r of a country relative to the EU27 is regressed on time over the last 5, 10 or 15 years. The slope g is the trend, in log points per year. T is the number of years until the target r̄ is reached if the trend continues. GDP per capita in purchasing power standards comes from Eurostat (prc_ppp_ind). Output per hour uses output-side real GDP at chained PPPs from the Penn World Table, divided by hours worked, relative to the EU27 total.",
+      read: "A country at 50% of the EU level whose gap closes by 2 log points a year reaches 75% after ln(75/50)/0.02 ≈ 20 years. The calculation is a projection of a trend, not a forecast: convergence usually slows as the gap narrows." },
+  ]},
   { group: "Regression analysis", items: [
     { t: "Ordinary least squares", f: String.raw`y_i = \alpha + \beta x_i + \varepsilon_i, \qquad \hat{\beta} = (X'X)^{-1} X'y`,
       x: "The bivariate models in the Analysis tab are estimated by ordinary least squares across economies. X contains a constant and the explanatory variable; y is the dependent variable.",
@@ -651,7 +656,7 @@ export function methods(root) {
   root.append(h("section", { class: "prose" },
     h("h2", {}, "Indicators"), defs,
     h("h2", {}, "Sources"), src,
-    h("p", { html: `Tables: <a href="data/pwt.csv">pwt.csv</a>, <a href="data/sector.csv">sector.csv</a>, <a href="data/sector_full.csv">sector_full.csv</a>, <a href="data/country.csv">country.csv</a>, <a href="data/industry.csv">industry.csv</a>, <a href="data/nace.csv">nace.csv</a>.` })));
+    h("p", { html: `Tables: <a href="data/pwt.csv">pwt.csv</a>, <a href="data/labor_supply.csv">labor_supply.csv</a>, <a href="data/sector.csv">sector.csv</a>, <a href="data/sector_full.csv">sector_full.csv</a>, <a href="data/country.csv">country.csv</a>, <a href="data/industry.csv">industry.csv</a>, <a href="data/nace.csv">nace.csv</a>.` })));
 }
 
 function limitsTab(root) {
@@ -669,9 +674,11 @@ function limitsTab(root) {
       h("li", {}, "Regressions. Models are bivariate, estimated on small cross-sections, and sensitive to outliers such as Ireland and Luxembourg. In the compensation–productivity models, compensation is nominal and productivity real, so inflation differences enter the estimates. Coefficients describe associations and do not identify causal effects."),
       h("li", {}, "Growth accounting. TFP is a residual, so it also contains measurement error, changes in capacity use and anything else that capital and labor do not capture. Annual TFP figures therefore move with the business cycle and are best read as averages over several years."),
       h("li", {}, "Growth accounting data. The Penn World Table measures output as GDP at constant national prices, while the rest of the site uses gross value added from Eurostat, and the table ends in 2023. Productivity growth on the growth accounting page therefore differs somewhat from the figures on other pages. The human capital index is based on years of schooling and assumed returns to education, so it measures the quantity of schooling but not its quality."),
+      h("li", {}, "Labor supply. Population projections from the World Bank depend on assumptions about fertility, mortality and migration and are revised with each round of the UN World Population Prospects. Participation and unemployment rates are ILO modelled estimates, which can differ from national labor force surveys. Net migration is partly estimated, and job vacancy rates are available for European countries only."),
       h("li", {}, "Scope. Statutory sick-leave rules and legal working time from the project research are not yet included.")),
     h("h2", {}, "Notes"),
     h("ul", {},
+      h("li", {}, "Event markers. Purple markers on time-series charts flag large year-on-year changes detected in the data for the selected economy: a rise in the minimum wage in euros of at least 10% that is also at least 8 percentage points faster than the growth of average compensation per employee, a change of 2 percentage points or more in the tax wedge or in the employer contribution rate, and a fall of 1% or more in real value added. They are generated automatically and are not a list of policy decisions; a minimum-wage jump in euros can also reflect exchange-rate movements."),
       h("li", {}, "Log changes are reported in log points (100 × Δln). For small changes they approximate percentage changes."),
       h("li", {}, "Structural business statistics measure value added at factor cost for the business economy. The source changes from sbs_na_ind_r2 to sbs_ovw_act in 2021."))));
 }

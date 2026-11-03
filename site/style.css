@@ -513,3 +513,23 @@ img.flag { display: inline-block; vertical-align: baseline; border-radius: 2px; 
 .page-title img.flag { width: .8em; height: .6em; margin-right: .3em; vertical-align: .02em; }
 svg image.flag { outline: 1px solid var(--line); }
 .view-note { color: var(--text-2); margin: -10px 0 22px; max-width: 80ch; }
+
+/* Sections within a page */
+.section-h { font-family: var(--sans); font-weight: 700; color: var(--navy); font-size: var(--t-l); margin: 56px 0 8px; padding-top: 28px; border-top: 1px solid var(--line); }
+.section-desc { margin: 0 0 22px; }
+/* Data tables in figures */
+.table-scroll { max-height: 440px; overflow-y: auto; }
+table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.data tr.focus td { font-weight: 700; background: var(--hl); }
+table.data img.flag { width: 16px; height: 12px; vertical-align: -1px; margin-right: 4px; }
+table.data thead th { position: sticky; top: 0; background: var(--bg); }
+.proj-shade { fill: var(--bg-2); }
+.sub-h { font-weight: 700; font-size: var(--t-m); margin: 40px 0 6px; }
+.view-controls.calc .slider { min-width: 260px; }
+.table-scroll.tall { max-height: 640px; }
+table.scorecard td.heat { font-variant-numeric: tabular-nums; }
+table.scorecard td.empty-cell { background: transparent; }
+table.scorecard tr.comp td:first-child { font-weight: 600; }
+.event-line { stroke: var(--s3); stroke-width: 1; stroke-dasharray: 2 3; opacity: .55; }
+.event-mark { fill: var(--s3); cursor: help; }
+.tt-events { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); color: var(--s3); }

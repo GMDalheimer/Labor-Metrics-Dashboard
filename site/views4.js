@@ -39,13 +39,13 @@ export function home(root) {
   const paths = [
     ["ulc", "Unit labor costs", "This page shows how the labor cost of producing one unit of output has changed, and how much of that came from pay and how much from productivity."],
     ["growth", "Growth accounting", "Productivity growth is split into capital per hour worked, education and total factor productivity."],
+    ["labor", "Labor supply", "Working-age population projections, participation, unemployment, migration and job vacancies are compared."],
     ["overview", "Map", "One indicator at a time is shown on a map and in a ranking, for any year since 2000."],
     ["country", "Country profile", "The main figures for one country are shown, together with its rank and how it has changed."],
     ["industries", "Industries", "Output per worker, the wage share and employment are shown by activity, down to three-digit industries."],
     ["analysis", "Analysis", "Regressions test whether poorer countries are catching up and how closely pay follows productivity."],
-    ["hour", "Cost of an hour", "An hour of labor cost is split into take-home pay, taxes and contributions, and compared with output per hour."],
+    ["hour", "Location costs", "An hour of labor cost is split into its parts and compared with energy prices and corporate tax across locations."],
     ["casestudy", "Country brief", "Five short questions produce a summary for one country that can be saved as a PDF."],
-    ["methods", "Methods", "Sources, formulas and limitations are documented, and the full tables can be downloaded."],
   ];
   root.append(h("section", { class: "home-section" }, h("h2", {}, "Where to start"),
     h("div", { class: "home-paths" }, paths.map(([v, t, d]) => h("a", { class: "home-path", href: `#/${v}`, onclick: e => { e.preventDefault(); go(v); } }, h("b", {}, t), h("span", {}, d))))));
