@@ -434,6 +434,41 @@ ls_long$jvr <- safely_fetch("eurostat:jvs_a_rate_r2", {
   pick_first(x %>% filter(!is.na(values)), "nace_r2", c("B-S", "B-S_X_O", "B-N")) %>%
     transmute(geo, year, metric = "jvr", value = values)
 })
+# ---- 4d. Location costs: energy prices and corporate income tax ---------------
+# Non-household electricity (band ID, 2-20 GWh a year) and gas (band I3, 10-100 TJ a year),
+# excluding VAT and other recoverable taxes, EUR per kWh, averaged over the two semesters.
+energy <- function(id, band, metric) safely_fetch(paste0("eurostat:", id), {
+  x <- estat(id)
+  show_codes(x, "nrg_cons"); show_codes(x, "unit"); show_codes(x, "tax"); show_codes(x, "currency")
+  if ("unit" %in% names(x) && "KWH" %in% x$unit) x <- x %>% filter(unit == "KWH")
+  x %>% filter(nrg_cons == band, tax == "I_TAX", currency == "EUR", !is.na(values)) %>%
+    group_by(geo, year) %>% summarise(value = mean(values), n = n(), .groups = "drop") %>%
+    transmute(geo, year, metric = metric, value)
+})
+ls_long$elec <- energy("nrg_pc_205", "MWH2000-19999", "elec_price")
+ls_long$gas  <- energy("nrg_pc_203", "GJ10000-99999", "gas_price")
+
+# Statutory corporate income tax rate (combined central and sub-central), OECD Corporate Tax Statistics
+ls_long$cit <- safely_fetch("oecd:corporate_tax", {
+  url <- "https://sdmx.oecd.org/public/rest/data/OECD.CTP.TPS,DSD_TAX_CIT@DF_CIT,/all?dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
+  old <- options(timeout = 300); on.exit(options(old))
+  x <- read_csv(url, show_col_types = FALSE, col_types = cols(.default = "c"))
+  message("  OECD CIT columns: ", paste(names(x), collapse = ", "))
+  for (cc in intersect(c("MEASURE", "CORP_TAX", "TAX_RATE", "UNIT_MEASURE", "Measure"), names(x)))
+    message("  ", cc, ": ", paste(head(sort(unique(x[[cc]])), 30), collapse = ", "))
+  mcol <- intersect(c("MEASURE", "CORP_TAX"), names(x))[1]
+  want <- c("CIT_COMB", "COMB_CIT_RATE", "CIT_RATE_COMB", "COMB")
+  m <- intersect(want, unique(x[[mcol]]))
+  if (!length(m)) m <- grep("COMB", unique(x[[mcol]]), value = TRUE)
+  if (!length(m)) stop("no combined CIT measure among: ", paste(unique(x[[mcol]]), collapse = ", "))
+  x %>% filter(.data[[mcol]] == m[1]) %>%
+    transmute(ref_area = REF_AREA, year = as.integer(substr(TIME_PERIOD, 1, 4)), value = as.numeric(OBS_VALUE)) %>%
+    filter(!is.na(value), year >= year_min) %>%
+    inner_join(iso_map, by = "ref_area") %>%
+    distinct(geo, year, .keep_all = TRUE) %>%
+    transmute(geo, year, metric = "cit_rate", value)
+})
+
 labor_supply <- bind_rows(ls_long) %>%
   filter(!is.na(value), is.finite(value)) %>%
   distinct(geo, year, metric, .keep_all = TRUE) %>%
