@@ -44,7 +44,7 @@ export function home(root) {
     ["country", "Country profile", "The main figures for one country are shown, together with its rank and how it has changed."],
     ["industries", "Industries", "Output per worker, the wage share and employment are shown by activity, down to three-digit industries."],
     ["analysis", "Analysis", "Regressions test whether poorer countries are catching up and how closely pay follows productivity."],
-    ["hour", "Cost of an hour", "An hour of labor cost is split into take-home pay, taxes and contributions, and compared with output per hour."],
+    ["hour", "Location costs", "An hour of labor cost is split into its parts and compared with energy prices and corporate tax across locations."],
     ["casestudy", "Country brief", "Five short questions produce a summary for one country that can be saved as a PDF."],
   ];
   root.append(h("section", { class: "home-section" }, h("h2", {}, "Where to start"),

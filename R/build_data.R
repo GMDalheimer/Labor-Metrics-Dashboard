@@ -457,7 +457,7 @@ ls_long$cit <- safely_fetch("oecd:corporate_tax", {
   for (cc in intersect(c("MEASURE", "CORP_TAX", "TAX_RATE", "UNIT_MEASURE", "Measure"), names(x)))
     message("  ", cc, ": ", paste(head(sort(unique(x[[cc]])), 30), collapse = ", "))
   mcol <- intersect(c("MEASURE", "CORP_TAX"), names(x))[1]
-  want <- c("CIT_COMB", "COMB_CIT_RATE", "CIT_RATE_COMB", "COMB")
+  want <- c("CIT_C", "CIT_COMB", "COMB_CIT_RATE")   # CIT_C = combined central and sub-central rate
   m <- intersect(want, unique(x[[mcol]]))
   if (!length(m)) m <- grep("COMB", unique(x[[mcol]]), value = TRUE)
   if (!length(m)) stop("no combined CIT measure among: ", paste(unique(x[[mcol]]), collapse = ", "))

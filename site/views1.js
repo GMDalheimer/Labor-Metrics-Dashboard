@@ -7,6 +7,7 @@ import {
   sparkline, lineChart, legend, scatter, yearOptions, comparisonSeries, tex, disclosure, svgFlag, htmlFlag,
 } from "./core.js";
 import { convergence } from "./views6.js";
+import { locationCosts } from "./views8.js";
 import { ols, stars, fmtP } from "./stats.js";
 
 
@@ -594,4 +595,7 @@ export function hour(root) {
     f2.note.innerHTML = "Values above 100 indicate that hourly labor cost exceeds value added per hour; this can occur because the two series come from different statistical sources.";
   }
   update();
+  const loc = h("div", { class: "loc" });
+  root.append(loc);
+  locationCosts(loc);
 }

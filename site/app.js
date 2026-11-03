@@ -15,7 +15,7 @@ const VIEWS = {
   labor:      { label: "Labor supply",      fn: laborsupply, ctx: ["focus", "comps", "period"] },
   country:    { label: "Country profile",   fn: country,    ctx: ["focus", "period"] },
   compare:    { label: "Comparison",        fn: compare,    ctx: ["focus", "comps", "period"] },
-  hour:       { label: "Cost of an hour",   fn: hour,       ctx: ["focus", "comps"] },
+  hour:       { label: "Location costs",    fn: hour,       ctx: ["focus", "comps"] },
   industries: { label: "Industries",        fn: industries, ctx: ["focus", "comps"] },
   structure:  { label: "Structure",         fn: structure,  ctx: ["focus", "period"] },
   analysis:   { label: "Analysis",          fn: analysis,   ctx: ["focus", "comps", "period", "sector"] },

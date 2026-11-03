@@ -524,3 +524,9 @@ table.data tr.focus td { font-weight: 700; background: var(--hl); }
 table.data img.flag { width: 16px; height: 12px; vertical-align: -1px; margin-right: 4px; }
 table.data thead th { position: sticky; top: 0; background: var(--bg); }
 .proj-shade { fill: var(--bg-2); }
+.sub-h { font-weight: 700; font-size: var(--t-m); margin: 40px 0 6px; }
+.view-controls.calc .slider { min-width: 260px; }
+.table-scroll.tall { max-height: 640px; }
+table.scorecard td.heat { font-variant-numeric: tabular-nums; }
+table.scorecard td.empty-cell { background: transparent; }
+table.scorecard tr.comp td:first-child { font-weight: 600; }
