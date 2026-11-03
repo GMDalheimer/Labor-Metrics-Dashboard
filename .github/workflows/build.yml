@@ -48,6 +48,7 @@ jobs:
             any::tidyr
             any::readr
             any::jsonlite
+            any::haven
       - name: Build data
         run: Rscript R/build_data.R
       - name: Commit data snapshot

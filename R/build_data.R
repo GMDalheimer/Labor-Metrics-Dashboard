@@ -6,6 +6,7 @@
 #   data/sector.csv    national accounts by country x NACE sector x year (Eurostat)
 #   data/country.csv   country-level metrics, long format (Eurostat + ILOSTAT)
 #   data/industry.csv  FDI-intensive industries from structural business statistics
+#   data/pwt.csv       Penn World Table inputs for growth accounting (whole economy)
 #   data/meta.json     build time, per-source status and row counts
 #
 # Each source is fetched independently: one failing source is logged in meta.json
@@ -339,6 +340,27 @@ industry <- safely_fetch("eurostat:sbs", {
     arrange(nace, geo, year)
 })
 
+# ---- 4b. Penn World Table (growth accounting inputs) --------------------------
+# Whole-economy output, capital, hours, human capital and labor share for every country
+# in the atlas. PWT is released every few years; the file is read from the GGDC Dataverse.
+pwt_url  <- "https://dataverse.nl/api/access/datafile/554030"   # PWT 11.0, Stata format
+pwt_vars <- c("rgdpna", "rkna", "rnna", "emp", "avh", "hc", "labsh", "delta",
+              "rtfpna", "rwtfpna", "ctfp", "cwtfp")
+pwt <- safely_fetch("pwt:11.0", {
+  f <- tempfile(fileext = ".dta")
+  download.file(pwt_url, f, mode = "wb", quiet = TRUE)
+  raw <- haven::read_dta(f)
+  message("  PWT columns: ", paste(names(raw), collapse = ", "))
+  keep <- intersect(pwt_vars, names(raw))
+  raw %>%
+    transmute(iso3 = as.character(countrycode), year = as.integer(year), across(all_of(keep), as.numeric)) %>%
+    inner_join(countries %>% select(geo, iso3), by = "iso3") %>%
+    filter(year >= year_min) %>%
+    select(geo, year, all_of(keep)) %>%
+    mutate(across(all_of(keep), ~ ifelse(is.finite(.x), signif(.x, 7), NA_real_))) %>%
+    arrange(geo, year)
+})
+
 # ---- 5. Checks and output ------------------------------------------------------
 m14 <- sectors$nace[sectors$tier == "manuf14"]
 tiling <- sector %>%
@@ -364,6 +386,7 @@ write_csv(sector, "data/sector.csv", na = "")
 write_csv(sector_full, "data/sector_full.csv", na = "")
 write_csv(nace_lab, "data/nace.csv", na = "")
 write_csv(country, "data/country.csv", na = "")
+if (!is.null(pwt)) write_csv(pwt, "data/pwt.csv", na = "")
 if (!is.null(industry)) write_csv(industry, "data/industry.csv", na = "") else
   write_csv(tibble(geo = character(), nace = character(), year = integer(),
                    emp = double(), va_worker = double(), wage_share = double()), "data/industry.csv")
@@ -376,7 +399,9 @@ meta <- list(
     sector_countries  = sort(unique(sector$geo)),
     country_countries = sort(unique(country$geo)),
     country_metrics   = sort(unique(country$metric)),
-    industry_countries = if (!is.null(industry)) sort(unique(industry$geo)) else list())
+    industry_countries = if (!is.null(industry)) sort(unique(industry$geo)) else list(),
+    pwt_countries = if (!is.null(pwt)) sort(unique(pwt$geo)) else list(),
+    pwt_columns = if (!is.null(pwt)) setdiff(names(pwt), c("geo", "year")) else list())
 )
 write_json(meta, "data/meta.json", auto_unbox = TRUE, pretty = TRUE)
 message("Done: sector=", nrow(sector), " country=", nrow(country),
