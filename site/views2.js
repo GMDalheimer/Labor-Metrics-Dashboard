@@ -678,6 +678,7 @@ function limitsTab(root) {
       h("li", {}, "Scope. Statutory sick-leave rules and legal working time from the project research are not yet included.")),
     h("h2", {}, "Notes"),
     h("ul", {},
+      h("li", {}, "Event markers. Purple markers on time-series charts flag large year-on-year changes detected in the data for the selected economy: a rise in the minimum wage in euros of at least 10% that is also at least 8 percentage points faster than the growth of average compensation per employee, a change of 2 percentage points or more in the tax wedge or in the employer contribution rate, and a fall of 1% or more in real value added. They are generated automatically and are not a list of policy decisions; a minimum-wage jump in euros can also reflect exchange-rate movements."),
       h("li", {}, "Log changes are reported in log points (100 × Δln). For small changes they approximate percentage changes."),
       h("li", {}, "Structural business statistics measure value added at factor cost for the business economy. The source changes from sbs_na_ind_r2 to sbs_ovw_act in 2021."))));
 }

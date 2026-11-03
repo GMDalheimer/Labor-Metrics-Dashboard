@@ -406,7 +406,7 @@ export function sparkline(container, data, { width = 180, height = 36, color = c
 }
 
 // Line chart with crosshair tooltip. series: [{key, label, color, width, dash, data, role}]
-export function lineChart(container, list, { height = 340, yFormat, indexLine = false, labelEnds = true, xDomain, refLine, shadeFrom, shadeLabel = "Projection" } = {}) {
+export function lineChart(container, list, { height = 340, yFormat, indexLine = false, labelEnds = true, xDomain, refLine, shadeFrom, shadeLabel = "Projection", events = [] } = {}) {
   const width = widthOf(container);
   const m = { t: 12, r: labelEnds ? 120 : 16, b: 28, l: 58 };
   const all = list.flatMap(s => s.data.flatMap(d => (d.lo != null ? [d, { ...d, v: d.lo }, { ...d, v: d.hi }] : [d])));
@@ -462,6 +462,12 @@ export function lineChart(container, list, { height = 340, yFormat, indexLine = 
       svg.append("text").attr("class", "label-strong").attr("x", e.x + 8).attr("y", e.y).attr("dominant-baseline", "middle").text(e.s.label);
     }
   }
+  // Event markers: a faint vertical line and a small numbered marker below the plot area's top
+  const evs = events.filter(e => e.year >= x.domain()[0] && e.year <= x.domain()[1]);
+  const evg = svg.append("g").attr("class", "events");
+  evs.forEach((e, i) => {
+    evg.append("line").attr("class", "event-line").attr("x1", x(e.year)).attr("x2", x(e.year)).attr("y1", m.t).attr("y2", height - m.b);
+  });
   const fl = svg.append("line").attr("class", "crosshair").attr("y1", m.t).attr("y2", height - m.b).attr("opacity", 0);
   const dots = svg.append("g");
   svg.append("rect").attr("x", m.l).attr("y", m.t).attr("width", width - m.l - m.r).attr("height", height - m.t - m.b).attr("fill", "transparent")
@@ -473,11 +479,43 @@ export function lineChart(container, list, { height = 340, yFormat, indexLine = 
       dots.selectAll("circle").data(rows.filter(r => r.s.role !== "context")).join("circle")
         .attr("cx", x(yr)).attr("cy", r => y(r.d.v)).attr("r", 4).attr("fill", r => r.s.color).attr("stroke", cssVar("--bg")).attr("stroke-width", 2);
       const f = v => (yFormat ? yFormat(v) : v);
+      const evHere = evs.filter(e => e.year === yr);
       showTip(ev, `<div class="tt-title">${yr}</div>` + rows.filter(r => r.s.role !== "context").slice(0, 12)
-        .map(r => ttRow(r.s.label, f(r.d.v) + (r.d.lo != null ? ` <span class="tt-range">(${f(r.d.lo)}–${f(r.d.hi)})</span>` : ""))).join(""));
+        .map(r => ttRow(r.s.label, f(r.d.v) + (r.d.lo != null ? ` <span class="tt-range">(${f(r.d.lo)}–${f(r.d.hi)})</span>` : ""))).join("") +
+        (evHere.length ? `<div class="tt-events">${evHere.flatMap(e => e.items).join("<br>")}</div>` : ""));
     })
     .on("mouseleave", () => { fl.attr("opacity", 0); dots.selectAll("*").remove(); hideTip(); });
+  // Markers sit above the transparent hover layer so they can be hovered on their own
+  evs.forEach(e => {
+    evg.raise();
+    evg.append("path").attr("class", "event-mark").attr("d", d3.symbol(d3.symbolTriangle, 46)()).attr("transform", `translate(${x(e.year)},${m.t + 5}) rotate(180)`)
+      .on("mousemove", ev => showTip(ev, `<div class="tt-title">${e.year}</div><div class="tt-events">${e.items.join("<br>")}</div>`)).on("mouseleave", hideTip);
+  });
   return { svg, x, y };
+}
+
+// Events detected in the data for one economy: large policy or economic changes from one year to the next.
+// Thresholds are deliberately high so that only clear breaks are marked.
+export function detectEvents(geo) {
+  const out = new Map();
+  const add = (y, t) => { if (!out.has(y)) out.set(y, []); out.get(y).push(t); };
+  const sgn = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1);
+  for (const y of D.allYears.slice(1)) {
+    const mw0 = val("min_wage_eur", geo, y - 1), mw1 = val("min_wage_eur", geo, y);
+    // Minimum wage: flagged when it rises at least 10% and at least 8 percentage points faster than average pay
+    const cp0 = val("comp_pe", geo, y - 1, "TOTAL"), cp1 = val("comp_pe", geo, y, "TOTAL");
+    if (mw0 > 0 && mw1 > 0 && cp0 > 0 && cp1 > 0) {
+      const gm = mw1 / mw0 - 1, gc = cp1 / cp0 - 1;
+      if (gm >= 0.10 && gm - gc >= 0.08) add(y, `Minimum wage in euros ${sgn(100 * gm)}%, against ${sgn(100 * gc)}% for average pay`);
+    }
+    const tw0 = val("tax_wedge", geo, y - 1), tw1 = val("tax_wedge", geo, y);
+    if (tw0 != null && tw1 != null && Math.abs(tw1 - tw0) >= 0.02) add(y, `Tax wedge ${sgn(100 * (tw1 - tw0))} percentage points`);
+    const er0 = val("employer_rate", geo, y - 1, "TOTAL"), er1 = val("employer_rate", geo, y, "TOTAL");
+    if (er0 != null && er1 != null && Math.abs(er1 - er0) >= 0.02) add(y, `Employer contribution rate ${sgn(100 * (er1 - er0))} percentage points`);
+    const g0 = D.sec.get(`${geo}|TOTAL|${y - 1}`)?.gva_real, g1 = D.sec.get(`${geo}|TOTAL|${y}`)?.gva_real;
+    if (g0 > 0 && g1 > 0 && g1 / g0 - 1 <= -0.01) add(y, `Real value added ${sgn(100 * (g1 / g0 - 1))}%`);
+  }
+  return [...out].sort((a, b) => a[0] - b[0]).map(([year, items]) => ({ year, items }));
 }
 
 // Legend as text items with swatches (identity is never colour-only: lines are also end-labelled)

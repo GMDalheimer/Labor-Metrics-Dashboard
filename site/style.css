@@ -530,3 +530,6 @@ table.data thead th { position: sticky; top: 0; background: var(--bg); }
 table.scorecard td.heat { font-variant-numeric: tabular-nums; }
 table.scorecard td.empty-cell { background: transparent; }
 table.scorecard tr.comp td:first-child { font-weight: 600; }
+.event-line { stroke: var(--s3); stroke-width: 1; stroke-dasharray: 2 3; opacity: .55; }
+.event-mark { fill: var(--s3); cursor: help; }
+.tt-events { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); color: var(--s3); }
